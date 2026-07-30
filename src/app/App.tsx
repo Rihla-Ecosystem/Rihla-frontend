@@ -2,6 +2,7 @@
 
 // @web-version
 import React, { useState } from "react";
+import { useAuth } from "@/lib/auth";
 import {
   MapPin, Bell, Navigation, Wind, Thermometer, Sun, Shield,
   Search, Map, User, AlertTriangle, Star, Clock, Camera,
@@ -340,12 +341,63 @@ function AuthShell({ children }: { children: React.ReactNode }) {
 
 // ─── SCREEN: Sign Up ───────────────────────────────────────────────────────────
 function WebSignUp({ go }: { go: (s: string) => void }) {
+  const { register, login, isLoading, error, clearError } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ name: "", email: "", password: "", nationality: "", gender: "", style: "" });
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm(f => ({ ...f, [k]: e.target.value }));
+  const [localErr, setLocalErr] = useState<string | null>(null);
+
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setLocalErr(null);
+    clearError();
+    setForm(f => ({ ...f, [k]: e.target.value }));
+  };
+
+  const handleNextStep = () => {
+    if (!form.name || !form.email || !form.password) {
+      setLocalErr("Please fill in your name, email, and password.");
+      return;
+    }
+    if (form.password.length < 8) {
+      setLocalErr("Password must be at least 8 characters long.");
+      return;
+    }
+    setLocalErr(null);
+    clearError();
+    setStep(2);
+  };
+
+  const handleSignUp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setLocalErr(null);
+    clearError();
+    try {
+      const genderVal = form.gender.toUpperCase() === "FEMALE" ? "FEMALE" : "MALE";
+      await register({
+        email: form.email,
+        password: form.password,
+        display_name: form.name,
+        gender: genderVal,
+        nationality: form.nationality || "Egyptian",
+        language: ["English"],
+        travel_style: form.style || "Explorer",
+      });
+      // Attempt login immediately after successful registration
+      try {
+        await login({ email: form.email, password: form.password });
+        go("arrival");
+      } catch {
+        go("login");
+      }
+    } catch {
+      // Error handled by AuthContext and displayed below
+    }
+  };
+
+  const activeError = localErr || error;
+
   return (
     <AuthShell>
-      <button onClick={() => step === 1 ? go("landing") : setStep(1)} style={{ background: "none", border: "none", display: "inline-flex", alignItems: "center", gap: 4, fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A", cursor: "pointer", marginBottom: 32, padding: 0 }}>
+      <button onClick={() => { clearError(); step === 1 ? go("landing") : setStep(1); }} style={{ background: "none", border: "none", display: "inline-flex", alignItems: "center", gap: 4, fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A", cursor: "pointer", marginBottom: 32, padding: 0 }}>
         <ChevronLeft size={15} strokeWidth={2}/> Back
       </button>
       <div style={{ display: "flex", gap: 6, marginBottom: 28, alignItems: "center" }}>
@@ -354,6 +406,14 @@ function WebSignUp({ go }: { go: (s: string) => void }) {
       </div>
       <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(28px,3vw,36px)", fontWeight: 400, color: C.nile, letterSpacing: "-0.025em", lineHeight: 1.15, marginBottom: 6 }}>{step === 1 ? "Create your account" : "Your travel profile"}</h1>
       <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", color: "#8B7E6A", marginBottom: 28 }}>{step === 1 ? "Start your Egyptian journey — free forever." : "Helps Rafiq personalise every recommendation."}</p>
+      
+      {activeError && (
+        <div style={{ background: `${C.signalRed}12`, border: `1px solid ${C.signalRed}30`, borderRadius: 10, padding: "10px 14px", marginBottom: 18, color: C.signalRed, fontFamily: "'Inter',sans-serif", fontSize: "13px", display: "flex", alignItems: "center", gap: 8 }}>
+          <AlertTriangle size={16} color={C.signalRed} style={{ flexShrink: 0 }} />
+          <span>{activeError}</span>
+        </div>
+      )}
+
       {step === 1 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <WebField label="Full Name" placeholder="Sara Al-Rashid" value={form.name} onChange={set("name")}/>
@@ -361,41 +421,66 @@ function WebSignUp({ go }: { go: (s: string) => void }) {
           <WebField label="Password" placeholder="Minimum 8 characters" type="password" value={form.password} onChange={set("password")}/>
           <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}><div style={{ flex: 1, height: 1, background: "rgba(27,26,23,0.1)" }}/><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880" }}>or</span><div style={{ flex: 1, height: 1, background: "rgba(27,26,23,0.1)" }}/></div>
           <button style={{ width: "100%", background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 10, padding: 13, fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 600, color: C.basalt, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><GoogleSVG/> Continue with Google</button>
-          <button onClick={() => setStep(2)} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>Continue <ArrowRight size={16} strokeWidth={2.5}/></button>
+          <button onClick={handleNextStep} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>Continue <ArrowRight size={16} strokeWidth={2.5}/></button>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880", textAlign: "center" }}>By continuing you agree to Rihla's <span style={{ color: C.faience, fontWeight: 600 }}>Terms</span> and <span style={{ color: C.faience, fontWeight: 600 }}>Privacy Policy</span></p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div><label style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile, display: "block", marginBottom: 7 }}>Nationality</label><div style={{ background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 10, padding: "12px 14px" }}><select value={form.nationality} onChange={set("nationality")} style={{ background: "transparent", border: "none", outline: "none", fontFamily: "'Inter',sans-serif", fontSize: "15px", color: form.nationality ? C.basalt : "#A89880", width: "100%", cursor: "pointer" }}><option value="" disabled>Select your nationality</option>{["German","British","American","French","Italian","Japanese","Australian","Canadian","Other"].map(o => <option key={o} value={o}>{o}</option>)}</select></div></div>
-          <div><label style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile, display: "block", marginBottom: 7 }}>Gender</label><div style={{ display: "flex", gap: 8 }}>{["Male","Female"].map(g => <button key={g} onClick={() => setForm(f => ({ ...f, gender: g }))} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${form.gender === g ? C.nile : "rgba(27,26,23,0.12)"}`, background: form.gender === g ? `${C.nile}08` : "#FAF7F0", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: form.gender === g ? 700 : 400, color: form.gender === g ? C.nile : "#8B7E6A", cursor: "pointer" }}>{g}</button>)}</div></div>
+        <form onSubmit={handleSignUp} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div><label style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile, display: "block", marginBottom: 7 }}>Nationality</label><div style={{ background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 10, padding: "12px 14px" }}><select value={form.nationality} onChange={set("nationality")} style={{ background: "transparent", border: "none", outline: "none", fontFamily: "'Inter',sans-serif", fontSize: "15px", color: form.nationality ? C.basalt : "#A89880", width: "100%", cursor: "pointer" }}><option value="" disabled>Select your nationality</option>{["German","British","American","French","Italian","Japanese","Australian","Canadian","Egyptian","Other"].map(o => <option key={o} value={o}>{o}</option>)}</select></div></div>
+          <div><label style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile, display: "block", marginBottom: 7 }}>Gender</label><div style={{ display: "flex", gap: 8 }}>{["Male","Female"].map(g => <button type="button" key={g} onClick={() => setForm(f => ({ ...f, gender: g }))} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${form.gender === g ? C.nile : "rgba(27,26,23,0.12)"}`, background: form.gender === g ? `${C.nile}08` : "#FAF7F0", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: form.gender === g ? 700 : 400, color: form.gender === g ? C.nile : "#8B7E6A", cursor: "pointer" }}>{g}</button>)}</div></div>
           <div><label style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile, display: "block", marginBottom: 7 }}>Travel Style</label><div style={{ background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 10, padding: "12px 14px" }}><select value={form.style} onChange={set("style")} style={{ background: "transparent", border: "none", outline: "none", fontFamily: "'Inter',sans-serif", fontSize: "15px", color: form.style ? C.basalt : "#A89880", width: "100%", cursor: "pointer" }}><option value="" disabled>How do you like to travel?</option>{["Explorer","Cultural","Adventure","Relaxation","Family","Business"].map(o => <option key={o} value={o}>{o}</option>)}</select></div></div>
           <div style={{ background: "linear-gradient(145deg,#FAF3E4,#F0E8D0)", borderRadius: 12, padding: "13px 15px", border: `1px solid ${C.sand}25` }}><div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", fontSize: "13px", color: C.nile, lineHeight: 1.65 }}>"This helps Rafiq personalise your experience."</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880", marginTop: 6 }}>◈ Your data is never sold or shared.</div></div>
-          <button onClick={() => go("arrival")} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>Create my account <ArrowRight size={16} strokeWidth={2.5}/></button>
-        </div>
+          <button type="submit" disabled={isLoading} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: isLoading ? "wait" : "pointer", opacity: isLoading ? 0.7 : 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>
+            {isLoading ? "Creating Account..." : "Create my account"} {!isLoading && <ArrowRight size={16} strokeWidth={2.5}/>}
+          </button>
+        </form>
       )}
-      <div style={{ textAlign: "center", marginTop: 20 }}><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A" }}>Already have an account? </span><button onClick={() => go("login")} style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.faience, cursor: "pointer" }}>Sign in</button></div>
+      <div style={{ textAlign: "center", marginTop: 20 }}><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A" }}>Already have an account? </span><button onClick={() => { clearError(); go("login"); }} style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.faience, cursor: "pointer" }}>Sign in</button></div>
     </AuthShell>
   );
 }
 
 // ─── SCREEN: Login ─────────────────────────────────────────────────────────────
 function WebLogin({ go }: { go: (s: string) => void }) {
+  const { login, isLoading, error, clearError } = useAuth();
   const [email, setEmail] = useState("");
   const [pw, setPw]       = useState("");
+
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    clearError();
+    try {
+      await login({ email, password: pw });
+      go("home");
+    } catch {
+      // Error is stored in AuthContext and displayed
+    }
+  };
+
   return (
     <AuthShell>
-      <button onClick={() => go("landing")} style={{ background: "none", border: "none", display: "inline-flex", alignItems: "center", gap: 4, fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A", cursor: "pointer", marginBottom: 36, padding: 0 }}><ChevronLeft size={15} strokeWidth={2}/> Back to Rihla</button>
+      <button onClick={() => { clearError(); go("landing"); }} style={{ background: "none", border: "none", display: "inline-flex", alignItems: "center", gap: 4, fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A", cursor: "pointer", marginBottom: 36, padding: 0 }}><ChevronLeft size={15} strokeWidth={2}/> Back to Rihla</button>
       <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(28px,3vw,36px)", fontWeight: 400, color: C.nile, letterSpacing: "-0.025em", marginBottom: 6 }}>Welcome back.</h1>
       <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", color: "#8B7E6A", marginBottom: 28 }}>Continue your Egyptian journey.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <WebField label="Email Address" placeholder="sara@example.com" type="email" value={email} onChange={e => setEmail(e.target.value)}/>
-        <WebField label="Password" placeholder="Your password" type="password" value={pw} onChange={e => setPw(e.target.value)}/>
-        <div style={{ textAlign: "right", marginTop: -6 }}><button style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.faience, cursor: "pointer" }}>Forgot password?</button></div>
-        <button onClick={() => go("home")} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>Sign in to Rihla <ArrowRight size={16} strokeWidth={2.5}/></button>
+      
+      {error && (
+        <div style={{ background: `${C.signalRed}12`, border: `1px solid ${C.signalRed}30`, borderRadius: 10, padding: "10px 14px", marginBottom: 18, color: C.signalRed, fontFamily: "'Inter',sans-serif", fontSize: "13px", display: "flex", alignItems: "center", gap: 8 }}>
+          <AlertTriangle size={16} color={C.signalRed} style={{ flexShrink: 0 }} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <WebField label="Email Address" placeholder="sara@example.com" type="email" value={email} onChange={e => { clearError(); setEmail(e.target.value); }}/>
+        <WebField label="Password" placeholder="Your password" type="password" value={pw} onChange={e => { clearError(); setPw(e.target.value); }}/>
+        <div style={{ textAlign: "right", marginTop: -6 }}><button type="button" style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.faience, cursor: "pointer" }}>Forgot password?</button></div>
+        <button type="submit" disabled={isLoading} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: isLoading ? "wait" : "pointer", opacity: isLoading ? 0.7 : 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>
+          {isLoading ? "Signing in..." : "Sign in to Rihla"} {!isLoading && <ArrowRight size={16} strokeWidth={2.5}/>}
+        </button>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ flex: 1, height: 1, background: "rgba(27,26,23,0.1)" }}/><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880" }}>or</span><div style={{ flex: 1, height: 1, background: "rgba(27,26,23,0.1)" }}/></div>
-        <button style={{ width: "100%", background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 10, padding: 13, fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 600, color: C.basalt, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><GoogleSVG/> Continue with Google</button>
-      </div>
-      <div style={{ textAlign: "center", marginTop: 24 }}><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A" }}>New to Rihla? </span><button onClick={() => go("signup")} style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.faience, cursor: "pointer" }}>Create an account</button></div>
+        <button type="button" style={{ width: "100%", background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 10, padding: 13, fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 600, color: C.basalt, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><GoogleSVG/> Continue with Google</button>
+      </form>
+      <div style={{ textAlign: "center", marginTop: 24 }}><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A" }}>New to Rihla? </span><button onClick={() => { clearError(); go("signup"); }} style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.faience, cursor: "pointer" }}>Create an account</button></div>
     </AuthShell>
   );
 }
@@ -487,6 +572,18 @@ const NAV_ITEMS = [
 
 function AppShell({ activePage, setPage, go, children }: { activePage: string; setPage: (s: string) => void; go: (s: string) => void; children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {}
+    go("landing");
+  };
+
+  const displayName = user?.displayName || "Sara Al-Rashid";
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
     <div style={{ display: "flex", height: "100vh", background: C.bg, overflow: "hidden" }}>
       <aside style={{ width: collapsed ? 64 : 220, background: "#111009", display: "flex", flexDirection: "column", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
@@ -510,14 +607,14 @@ function AppShell({ activePage, setPage, go, children }: { activePage: string; s
         <div style={{ padding: collapsed ? "12px 8px" : "12px", borderTop: `1px solid ${C.limestone}10`, display: "flex", flexDirection: "column", gap: 4 }}>
           {!collapsed && (
             <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px" }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg,${C.sand}40,${C.copper}40)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "13px", fontWeight: 500, color: C.limestone }}>S</span></div>
-              <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.limestone, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Sara Al-Rashid</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: `${C.limestone}45` }}>Explorer · Level 4</div></div>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg,${C.sand}40,${C.copper}40)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "13px", fontWeight: 500, color: C.limestone }}>{initial}</span></div>
+              <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.limestone, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: `${C.limestone}45` }}>Explorer · Level 4</div></div>
             </div>
           )}
           <button onClick={() => setCollapsed(c => !c)} style={{ background: "none", border: "none", color: `${C.limestone}40`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 6, padding: "8px 10px", borderRadius: 8 }}>
             <Menu size={16} strokeWidth={2}/>{!collapsed && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px" }}>Collapse</span>}
           </button>
-          <button onClick={() => go("landing")} style={{ background: "none", border: "none", color: `${C.limestone}35`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 6, padding: "8px 10px", borderRadius: 8 }}>
+          <button onClick={handleLogout} style={{ background: "none", border: "none", color: `${C.limestone}35`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 6, padding: "8px 10px", borderRadius: 8 }}>
             <LogOut size={15} strokeWidth={2}/>{!collapsed && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px" }}>Sign out</span>}
           </button>
         </div>
@@ -703,6 +800,8 @@ function RafiqDrawer({ onClose }: { onClose: () => void }) {
 
 function PageHome({ goSite }: { goSite?: (id: number) => void }) {
   const [rafiq, setRafiq] = useState(false);
+  const { user } = useAuth();
+  const displayName = user?.displayName || "Sara Al-Rashid";
   const tg = isEve ? `linear-gradient(160deg,#1B1A17 0%,#2A1A0A 40%,${C.nile} 100%)` : isMorn ? `linear-gradient(160deg,${C.nile} 0%,#1A6B5A 40%,#C4834A 100%)` : `linear-gradient(160deg,${C.nile} 0%,#0A3D4A 50%,#1A5253 100%)`;
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -712,7 +811,7 @@ function PageHome({ goSite }: { goSite?: (id: number) => void }) {
         <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", display: "grid", gridTemplateColumns: "1fr auto", alignItems: "end", gap: 32 }}>
           <div>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: `${C.limestone}55`, marginBottom: 4 }}>{greeting},</div>
-            <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(28px,3vw,40px)", fontWeight: 400, color: C.limestone, lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: 20 }}>Sara <span style={{ fontStyle: "italic", fontWeight: 300 }}>Al-Rashid</span></h1>
+            <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(28px,3vw,40px)", fontWeight: 400, color: C.limestone, lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: 20 }}>{displayName}</h1>
             <button onClick={() => setRafiq(true)} style={{ background: `${C.limestone}14`, backdropFilter: "blur(10px)", border: `1px solid ${C.limestone}20`, borderRadius: 12, padding: "14px 20px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", maxWidth: 480, textAlign: "left" }}>
               <Glyph size={22} light/>
               <div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: `${C.limestone}55`, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 3 }}>◈ Ask Rafiq</div><div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", fontSize: "14px", color: C.limestone }}>Ask about history, safety, food, local tips…</div></div>
@@ -1805,6 +1904,10 @@ const JOURNEY_IMPACT = [
 function PageProfile() {
   const [badgeCat, setBadgeCat] = useState("All");
   const [tab,      setTab]      = useState<"badges" | "stats" | "impact">("badges");
+  const { user } = useAuth();
+
+  const displayName = user?.displayName || "Sara Al-Rashid";
+  const initial = displayName.charAt(0).toUpperCase();
 
   const currentXP   = 550;
   const currentLevel = LEVEL_MAP[3];
@@ -1828,7 +1931,7 @@ function PageProfile() {
             {/* Avatar */}
             <div style={{ position: "relative" }}>
               <div style={{ width: 88, height: 88, borderRadius: "50%", background: `linear-gradient(135deg,${C.sand}50,${C.copper}60)`, border: `3px solid ${C.limestone}25`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 0 6px ${C.limestone}08` }}>
-                <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "38px", fontWeight: 500, color: C.limestone }}>S</span>
+                <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "38px", fontWeight: 500, color: C.limestone }}>{initial}</span>
               </div>
               <div style={{ position: "absolute", bottom: 2, right: 2, width: 20, height: 20, borderRadius: "50%", background: C.safeGreen, border: `2px solid #0F3D3E`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <CheckCircle size={11} color="#fff" strokeWidth={2.5}/>
@@ -1838,15 +1941,15 @@ function PageProfile() {
             <div>
               <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: `${C.limestone}45`, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>Verified traveler</div>
               <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(22px,3vw,36px)", fontWeight: 400, color: C.limestone, lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: 6 }}>
-                Sara <span style={{ fontStyle: "italic", fontWeight: 300 }}>Al-Rashid</span>
+                {displayName}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${currentLevel.color}20`, border: `1px solid ${currentLevel.color}40`, borderRadius: 99, padding: "4px 12px" }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: currentLevel.color }}/>
                   <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: currentLevel.color }}>Level {currentLevel.level} · {currentLevel.title}</span>
                 </div>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}45` }}>🇩🇪 German · Cultural explorer</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}35` }}>Member since Jul 2026</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}45` }}>{user?.nationality || "🇩🇪 German"} · {user?.travelStyle || "Cultural explorer"}</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}35` }}>Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "Jul 2026"}</span>
               </div>
             </div>
             {/* XP block */}
@@ -1996,12 +2099,12 @@ function PageProfile() {
           <div style={{ background: C.limestone, borderRadius: 16, padding: "20px", border: "1px solid rgba(27,26,23,0.07)" }}>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: "#A89880", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>Profile Details</div>
             {[
-              { label: "Full name",     val: "Sara Al-Rashid" },
-              { label: "Nationality",   val: "🇩🇪 German" },
-              { label: "Travel style",  val: "Cultural" },
-              { label: "Home city",     val: "Berlin" },
+              { label: "Full name",     val: displayName },
+              { label: "Email",         val: user?.email || "sara@example.com" },
+              { label: "Nationality",   val: user?.nationality || "🇩🇪 German" },
+              { label: "Travel style",  val: user?.travelStyle || "Cultural" },
               { label: "Journeys",      val: "1 complete · 1 active" },
-              { label: "Member since",  val: "July 2026" },
+              { label: "Member since",  val: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "July 2026" },
             ].map(({ label, val }) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid rgba(27,26,23,0.05)" }}>
                 <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880" }}>{label}</span>
@@ -2094,6 +2197,13 @@ const RAFIQ_PERSONAS = [
 const APP_LANGUAGES = ["English", "العربية", "Deutsch", "Français", "日本語", "Español"];
 
 function PageSettings({ go }: { go: (s: string) => void }) {
+  const { logout } = useAuth();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {}
+    go("landing");
+  };
   const [notifs, setNotifs] = useState({
     scamAlerts:   true,
     weatherWarn:  true,
@@ -2239,7 +2349,7 @@ function PageSettings({ go }: { go: (s: string) => void }) {
             <SettingsRow
               label="Sign Out"
               right={
-                <button onClick={() => go("landing")} style={{ background: "transparent", border: `1.5px solid ${C.terracotta}40`, borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.terracotta, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <button onClick={handleLogout} style={{ background: "transparent", border: `1.5px solid ${C.terracotta}40`, borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.terracotta, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <LogOut size={13} strokeWidth={2}/> Sign out
                 </button>
               }
