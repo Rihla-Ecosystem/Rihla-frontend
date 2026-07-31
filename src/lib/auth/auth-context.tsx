@@ -19,6 +19,41 @@ export interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+const extractAuthError = (err: unknown, fallback: string): string => {
+  const data = (
+    err as {
+      response?: {
+        data?: {
+          error?: string;
+          message?: string;
+          details?: Array<{ message?: string; path?: string[] }>;
+        };
+      };
+    }
+  )?.response?.data;
+
+  if (data?.details && Array.isArray(data.details) && data.details.length > 0) {
+    const detailMsg = data.details
+      .map((d) => d.message)
+      .filter(Boolean)
+      .join('. ');
+    if (detailMsg) return detailMsg;
+  }
+
+  const rawMsg = data?.error || data?.message;
+  if (rawMsg) {
+    if (rawMsg === 'Resource already exists') {
+      return 'An account with this email address already exists. Please sign in instead.';
+    }
+    if (rawMsg === 'Invalid credentials') {
+      return 'Invalid email address or password. Please try again.';
+    }
+    return rawMsg;
+  }
+
+  return fallback;
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -79,9 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(authData.user);
       return authData.user;
     } catch (err: unknown) {
-      const errorMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || 'Failed to login. Please check your credentials.';
+      const errorMessage = extractAuthError(err, 'Failed to login. Please check your credentials.');
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -97,9 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const createdUser = await authService.register(payload);
       return createdUser;
     } catch (err: unknown) {
-      const errorMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || 'Registration failed. Please check your details.';
+      const errorMessage = extractAuthError(err, 'Registration failed. Please check your details.');
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

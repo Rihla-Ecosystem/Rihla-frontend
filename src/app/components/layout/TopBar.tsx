@@ -1,0 +1,27 @@
+"use client";
+
+import { MapPin, Bell, Search } from "lucide-react";
+import { C } from "@/lib/constants/theme";
+
+export function TopBar({ location = "Giza Plateau, Cairo", onRafiq }: { location?: string; onRafiq?: () => void }) {
+  return (
+    <div style={{ background: "rgba(240,235,224,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(27,26,23,0.08)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60, flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <MapPin size={14} color={C.solar} strokeWidth={2.5}/>
+        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile }}>{location}</span>
+        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880" }}>· Egypt</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.1)", borderRadius: 8, padding: "7px 14px", display: "flex", alignItems: "center", gap: 8, width: 220, cursor: "text" }}>
+          <Search size={14} color="#A89880" strokeWidth={2}/><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#A89880" }}>Search places, stories…</span>
+        </div>
+        <button style={{ background: "none", border: "none", position: "relative", cursor: "pointer", color: "#6B6354" }}>
+          <Bell size={19} strokeWidth={1.8}/><span style={{ position: "absolute", top: -1, right: -1, width: 7, height: 7, borderRadius: "50%", background: C.alertAmber, border: "1.5px solid #F0EBE0" }}/>
+        </button>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${C.sand}50,${C.copper}50)`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "14px", fontWeight: 500, color: C.nile }}>S</span>
+        </div>
+      </div>
+    </div>
+  );
+}
