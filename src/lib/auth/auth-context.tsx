@@ -20,21 +20,16 @@ export interface AuthProviderProps {
 }
 
 const extractAuthError = (err: unknown, fallback: string): string => {
-  const data = (
-    err as {
-      response?: {
-        data?: {
-          error?: string;
-          message?: string;
-          details?: Array<{ message?: string; path?: string[] }>;
-        };
-      };
-    }
-  )?.response?.data;
+  let data: any = (err as any)?.response?.data;
+  
+  // Support openapi-fetch errors where err is the response body
+  if (!data && err && typeof err === 'object') {
+    data = err;
+  }
 
   if (data?.details && Array.isArray(data.details) && data.details.length > 0) {
     const detailMsg = data.details
-      .map((d) => d.message)
+      .map((d: any) => d.message)
       .filter(Boolean)
       .join('. ');
     if (detailMsg) return detailMsg;
@@ -111,8 +106,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null);
 
       const authData = await authService.login(payload);
-      setUser(authData.user);
-      return authData.user;
+      
+      // Store the token so middleware can use it
+      if (authData.accessToken) {
+        tokenManager.setAccessToken(authData.accessToken);
+      }
+      
+      setUser(authData.user as User);
+      return authData.user as User;
     } catch (err: unknown) {
       const errorMessage = extractAuthError(err, 'Failed to login. Please check your credentials.');
       setError(errorMessage);
