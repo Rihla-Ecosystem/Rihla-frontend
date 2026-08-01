@@ -35,48 +35,60 @@ export interface InteractionSummaryItem {
 
 export const historyService = {
   getTrips: async (): Promise<TripHistoryItem[]> => {
-    const token = tokenManager.getAccessToken();
-    const res = await fetch(`${API_BASE_URL}/memory/history`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    try {
+      const token = tokenManager.getAccessToken();
+      const res = await fetch(`${API_BASE_URL}/memory/history`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch trip history: ${res.statusText}`);
+      if (res.ok) {
+        return await res.json();
+      }
+      console.warn(`Trip history API returned status ${res.status}, using empty fallback.`);
+    } catch (err) {
+      console.warn("Failed to fetch trip history, using fallback:", err);
     }
-
-    return await res.json();
+    return [];
   },
 
   getBadges: async (userId: string): Promise<UserBadgeItem[]> => {
-    const token = tokenManager.getAccessToken();
-    const res = await fetch(`${API_BASE_URL}/users/${userId}/badges`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    try {
+      const token = tokenManager.getAccessToken();
+      const res = await fetch(`${API_BASE_URL}/users/${userId}/badges`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch badges: ${res.statusText}`);
+      if (res.ok) {
+        return await res.json();
+      }
+      console.warn(`Badges API returned status ${res.status}, using empty fallback.`);
+    } catch (err) {
+      console.warn("Failed to fetch badges, using fallback:", err);
     }
-
-    return await res.json();
+    return [];
   },
 
   getSummary: async (): Promise<InteractionSummaryItem | null> => {
-    const token = tokenManager.getAccessToken();
-    const res = await fetch(`${API_BASE_URL}/memory/summary`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    try {
+      const token = tokenManager.getAccessToken();
+      const res = await fetch(`${API_BASE_URL}/memory/summary`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch summary: ${res.statusText}`);
+      if (res.ok) {
+        return await res.json();
+      }
+      console.warn(`Summary API returned status ${res.status}, returning null.`);
+    } catch (err) {
+      console.warn("Failed to fetch interaction summary:", err);
     }
-
-    return await res.json();
+    return null;
   },
 
   createTrip: async (tripData: {
