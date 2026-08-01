@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../styles/index.css";
 import { AuthProvider } from "@/lib/auth";
+import { LocationProvider } from "@/providers/LocationProvider";
 
 export const metadata: Metadata = {
   title: "Rihla - AI Travel Companion",
@@ -19,9 +20,12 @@ export default function RootLayout({
         <style>{`html, body { height: 100%; margin: 0; } #root { height: 100%; }`}</style>
       </head>
       <body className="antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <LocationProvider>{children}</LocationProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
 
