@@ -181,7 +181,7 @@ export default function PageSafety() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar location={locationName || `${currentGov}, Egypt`} onRafiq={() => setRafiq(true)} />
+      <TopBar onRafiq={() => setRafiq(true)} />
 
       {/* Safety header */}
       <div style={{ background: `linear-gradient(135deg,#1A1209 0%,${C.basalt} 60%,#2A1A0A 100%)`, padding: '28px 32px', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>

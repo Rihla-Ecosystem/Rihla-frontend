@@ -7,25 +7,39 @@ import { useLocation } from "@/providers/LocationProvider";
 
 export function TopBar({ location: locationProp, onRafiq }: { location?: string; onRafiq?: () => void }) {
   const router = useRouter();
-  const { locationName, status, requestLocation } = useLocation();
+  const { locationName, governorate, status, requestLocation } = useLocation();
 
   let displayLocation = locationProp;
   if (!displayLocation) {
-    if (status === 'requesting') displayLocation = "Requesting location permission...";
+    if (status === 'requesting') displayLocation = "Requesting location...";
     else if (status === 'loading') displayLocation = "Locating user...";
-    else if (status === 'success') displayLocation = locationName || "Current Location";
-    else if (status === 'permission_denied') displayLocation = "Location access disabled";
-    else if (status === 'location_unavailable') displayLocation = "Location unavailable";
-    else displayLocation = "Detecting location...";
+    else {
+      const govName = governorate || "Giza";
+      const govFormatted = govName.includes("Governorate") || govName.includes("محافظة")
+        ? govName
+        : `${govName} Governorate`;
+
+      if (locationName) {
+        if (locationName.toLowerCase().includes(govName.toLowerCase())) {
+          displayLocation = locationName;
+        } else {
+          displayLocation = `${govFormatted} · ${locationName}`;
+        }
+      } else {
+        displayLocation = `${govFormatted}, Egypt`;
+      }
+    }
   }
 
   return (
     <div style={{ background: "rgba(240,235,224,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(27,26,23,0.08)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60, flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <MapPin size={14} color={status === 'success' ? C.safeGreen : status === 'permission_denied' ? C.signalRed : C.solar} strokeWidth={2.5}/>
+        <MapPin size={14} color={status === 'success' ? C.safeGreen : C.copper} strokeWidth={2.5}/>
         <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile }}>{displayLocation}</span>
-        {status === 'success' && (
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880" }}>· Live</span>
+        {status === 'success' ? (
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: C.safeGreen, fontWeight: 500 }}>· Live</span>
+        ) : (
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880" }}>· Default</span>
         )}
         {(status === 'permission_denied' || status === 'location_unavailable') && (
           <button

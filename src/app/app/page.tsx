@@ -11,6 +11,7 @@ import {
   Wind,
   Thermometer,
   Map,
+  MapPin,
   AlertTriangle,
   Camera,
   Phone,
@@ -32,7 +33,7 @@ export default function HomePage() {
   const { user, isInitialized } = useAuth();
   const displayName = user?.displayName || user?.email || 'Traveler';
 
-  const { lat, lon, accuracy, status, errorMessage, locationName, requestLocation } = useLocation();
+  const { lat, lon, accuracy, status, errorMessage, locationName, governorate, requestLocation } = useLocation();
 
   const [envData, setEnvData] = useState<any>(null);
   const [nearbySites, setNearbySites] = useState<any[]>([]);
@@ -41,6 +42,9 @@ export default function HomePage() {
   const [selectedCat, setSelectedCat] = useState('All');
   const [isLoadingPois, setIsLoadingPois] = useState(false);
   const [isLoadingEnv, setIsLoadingEnv] = useState(false);
+  const [searchScopeText, setSearchScopeText] = useState<string>('');
+  const [searchProgressMsg, setSearchProgressMsg] = useState<string>('');
+  const [isGovernorateFallback, setIsGovernorateFallback] = useState<boolean>(false);
 
   const filteredSites = React.useMemo(() => {
     if (selectedCat === 'All') return nearbySites;
@@ -61,19 +65,29 @@ export default function HomePage() {
     let isMounted = true;
     const fetchLocationData = async () => {
       if (!user) return;
-      if (status !== 'success' || lat === null || lon === null) return;
+      if (lat === null || lon === null) return;
 
       setIsLoadingPois(true);
       setIsLoadingEnv(true);
 
       try {
-        const [envRes, sitesRes] = await Promise.all([
+        const [envRes, progressiveRes] = await Promise.all([
           envService.getEnv(lat, lon).catch((err) => {
             console.error("Failed to fetch /env:", err);
             return null;
           }),
-          geoService.getPois(lat, lon).catch((err) => {
-            console.error("Failed to fetch /geo/pois:", err);
+          geoService.fetchPoisProgressive(
+            lat,
+            lon,
+            governorate || locationName || 'Egypt',
+            undefined,
+            (progress) => {
+              if (isMounted) {
+                setSearchProgressMsg(progress.message);
+              }
+            }
+          ).catch((err) => {
+            console.error("Failed progressive POI search:", err);
             return null;
           }),
         ]);
@@ -84,19 +98,27 @@ export default function HomePage() {
           setEnvData(envRes);
         }
 
-        const parsedSites = sitesRes?.pois;
-        if (parsedSites && Array.isArray(parsedSites)) {
-          setNearbySites(parsedSites.map((p: any) => ({
-            id: p.id,
-            name: p.name_en || p.name,
-            desc: p.details || (p.categories && p.categories.length > 0 ? p.categories[0] : 'Historical site'),
-            img: p.imageUrl || 'https://images.unsplash.com/photo-1539650116574-8efeb43e2b50?auto=format&fit=crop&q=80&w=600',
-            tag: (p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction',
-            cat: (p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction',
-            rating: p.rating || 4.5,
-            reviews: 120,
-            coords: [p.lat, p.lon]
-          })));
+        if (progressiveRes) {
+          setSearchScopeText(progressiveRes.message || '');
+          setIsGovernorateFallback(progressiveRes.source === 'governorate_fallback');
+          const parsedSites = progressiveRes.pois;
+          if (parsedSites && Array.isArray(parsedSites)) {
+            setNearbySites(parsedSites.map((p: any) => ({
+              id: p.id || p._id,
+              name: p.name_en || p.name || 'Historical Site',
+              desc: p.details || (p.categories && p.categories.length > 0 ? p.categories[0] : 'Historical site'),
+              img: p.imageUrl || 'https://images.unsplash.com/photo-1539650116574-8efeb43e2b50?auto=format&fit=crop&q=80&w=600',
+              tag: progressiveRes.source === 'governorate_fallback'
+                ? `Popular in ${governorate || 'Governorate'}`
+                : ((p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction'),
+              cat: (p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction',
+              rating: p.rating || 4.5,
+              reviews: 120,
+              coords: [p.lat || lat, p.lon || lon]
+            })));
+          } else {
+            setNearbySites([]);
+          }
         } else {
           setNearbySites([]);
         }
@@ -112,7 +134,7 @@ export default function HomePage() {
 
     fetchLocationData();
     return () => { isMounted = false; };
-  }, [user, lat, lon, status]);
+  }, [user, lat, lon, governorate, locationName]);
 
   // Fetch user journeys and initial metadata
   useEffect(() => {
@@ -178,6 +200,26 @@ export default function HomePage() {
           }}
         >
           <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'rgba(255,255,255,0.08)',
+                padding: '4px 10px',
+                borderRadius: 20,
+                border: '1px solid rgba(255,255,255,0.12)',
+                marginBottom: 8,
+              }}
+            >
+              <MapPin size={13} color={C.copper} />
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 700, color: C.limestone, letterSpacing: '0.03em' }}>
+                {governorate} Governorate
+              </span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: `${C.limestone}60` }}>
+                · {locationName || 'Egypt'}
+              </span>
+            </div>
             <div
               style={{
                 fontFamily: "'Inter',sans-serif",
@@ -260,7 +302,7 @@ export default function HomePage() {
               padding: '18px 22px',
               textAlign: 'center',
               flexShrink: 0,
-              minWidth: 180,
+              minWidth: 200,
             }}
           >
             <div
@@ -269,7 +311,7 @@ export default function HomePage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 7,
-                marginBottom: 6,
+                marginBottom: 4,
               }}
             >
               <div
@@ -284,24 +326,35 @@ export default function HomePage() {
               <span
                 style={{
                   fontFamily: "'Inter',sans-serif",
-                  fontSize: '16px',
+                  fontSize: '15px',
                   fontWeight: 800,
                   color: status === 'success' ? C.safeGreen : C.alertAmber,
                   letterSpacing: '0.04em',
                 }}
               >
-                {status === 'success' ? 'SECURE' : status === 'requesting' ? 'LOCATING' : 'LOCATION OFF'}
+                SECURE
               </span>
             </div>
             <div
               style={{
                 fontFamily: "'Inter',sans-serif",
+                fontSize: '13px',
+                fontWeight: 700,
+                color: C.limestone,
+                marginBottom: 2,
+              }}
+            >
+              📍 {governorate} Governorate
+            </div>
+            <div
+              style={{
+                fontFamily: "'Inter',sans-serif",
                 fontSize: '11px',
-                color: `${C.limestone}55`,
+                color: `${C.limestone}65`,
                 marginBottom: 14,
               }}
             >
-              {status === 'success' ? 'Live Coordinates' : 'Location Pending'}
+              {status === 'success' ? 'Live GPS Location' : 'Default Governorate'}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[
@@ -468,20 +521,47 @@ export default function HomePage() {
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'baseline',
+                alignItems: 'flex-start',
                 marginBottom: 14,
               }}
             >
-              <h2
-                style={{
-                  fontFamily: "'Cormorant Garamond',serif",
-                  fontSize: '20px',
-                  fontWeight: 500,
-                  color: C.nile,
-                }}
-              >
-                Nearby Sites
-              </h2>
+              <div>
+                <h2
+                  style={{
+                    fontFamily: "'Cormorant Garamond',serif",
+                    fontSize: '20px',
+                    fontWeight: 500,
+                    color: C.nile,
+                  }}
+                >
+                  Nearby Sites
+                </h2>
+                {searchScopeText && (
+                  <div
+                    style={{
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: '12px',
+                      color: isGovernorateFallback ? C.copper : C.faience,
+                      fontWeight: 600,
+                      marginTop: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        background: isGovernorateFallback ? C.copper : C.faience,
+                      }}
+                    />
+                    {searchScopeText}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => router.push('/app/explore')}
                 style={{
@@ -522,24 +602,42 @@ export default function HomePage() {
 
             {/* Skeletons while requesting / loading */}
             {(status === 'requesting' || status === 'loading' || isLoadingPois) && (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
-                  gap: 12,
-                }}
-              >
-                {[1, 2, 3, 4].map((i) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {searchProgressMsg && (
                   <div
-                    key={i}
                     style={{
-                      height: 220,
-                      background: 'rgba(27,26,23,0.06)',
-                      borderRadius: 14,
-                      animation: 'pulse 1.5s infinite',
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: '12px',
+                      color: C.faience,
+                      fontWeight: 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
                     }}
-                  />
-                ))}
+                  >
+                    <RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                    <span>{searchProgressMsg}</span>
+                  </div>
+                )}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
+                    gap: 12,
+                  }}
+                >
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      style={{
+                        height: 220,
+                        background: 'rgba(27,26,23,0.06)',
+                        borderRadius: 14,
+                        animation: 'pulse 1.5s infinite',
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
