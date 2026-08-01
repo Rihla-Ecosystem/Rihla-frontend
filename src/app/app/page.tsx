@@ -120,7 +120,7 @@ export default function HomePage() {
     const fetchJourneys = async () => {
       if (!user) return;
       try {
-        const { data, error } = await apiClient.GET('/memory/history', {});
+        const { data, error } = await (apiClient.GET as any)('/memory/history', {});
         if (!error && data && Array.isArray((data as any).history)) {
           if (isMounted) {
             setJourneys((data as any).history.map((j: any) => ({
@@ -873,7 +873,7 @@ export default function HomePage() {
                   color: C.limestone,
                 }}
               >
-                Level {user?.level || 1} · Explorer
+                Level {(user as any)?.level || 1} · Explorer
               </div>
               <div
                 style={{
@@ -883,7 +883,7 @@ export default function HomePage() {
                   color: C.sand,
                 }}
               >
-                {user?.xp || 0} XP
+                {(user as any)?.xp || 0} XP
               </div>
             </div>
             <div
@@ -898,7 +898,7 @@ export default function HomePage() {
               <div
                 style={{
                   height: '100%',
-                  width: `${Math.min(100, ((user?.xp || 0) / 1000) * 100)}%`,
+                  width: `${Math.min(100, (((user as any)?.xp || 0) / 1000) * 100)}%`,
                   background: `linear-gradient(90deg,${C.sand},${C.faience})`,
                   borderRadius: 99,
                 }}
@@ -911,7 +911,7 @@ export default function HomePage() {
                 color: `${C.limestone}45`,
               }}
             >
-              {1000 - ((user?.xp || 0) % 1000)} XP to Next Level
+              {1000 - (((user as any)?.xp || 0) % 1000)} XP to Next Level
             </div>
           </div>
         </div>
