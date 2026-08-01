@@ -27,7 +27,6 @@ import { TopBar } from '@/app/components/layout/TopBar';
 import { SiteCard } from '@/app/components/siteCard';
 import { RafiqDrawer } from '@/app/components/rafiqDrawer';
 import { geoService } from '@/services/geoService';
-import { safetyService, type SafetyData } from '@/services/safetyService';
 import { useLocation } from '@/providers/LocationProvider';
 import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
 import { mapApiPoiToRihlaSite } from '@/lib/poiMapping';
@@ -92,38 +91,10 @@ export default function ExplorePage() {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [safetyData, setSafetyData] = useState<SafetyData | null>(null);
-  const [safetyLoading, setSafetyLoading] = useState<boolean>(true);
-  const [safetyError, setSafetyError] = useState<string | null>(null);
-
-  // Sync gov with userGov when userGov changes (e.g. from LocationTester)
-  useEffect(() => {
-    if (userGov && EGYPT_GOVERNORATES.some(g => g.name.toLowerCase() === userGov.toLowerCase())) {
-      setGov(userGov);
-    }
-  }, [userGov]);
 
   const activeGovObj = useMemo(() => {
     return EGYPT_GOVERNORATES.find((g) => g.name.toLowerCase() === gov.toLowerCase()) || EGYPT_GOVERNORATES[0];
   }, [gov]);
-
-  const fetchSafetyInfo = useCallback(async () => {
-    setSafetyLoading(true);
-    setSafetyError(null);
-    try {
-      const data = await safetyService.getSafetyInfo(
-        userLat || activeGovObj.lat,
-        userLon || activeGovObj.lon,
-        gov
-      );
-      setSafetyData(data);
-    } catch (err: any) {
-      console.error('Failed to fetch area safety data:', err);
-      setSafetyError(err?.message || 'Failed to fetch safety info');
-    } finally {
-      setSafetyLoading(false);
-    }
-  }, [userLat, userLon, activeGovObj, gov, reloadKey]);
 
   const fetchExploreSites = useCallback(async () => {
     setIsLoading(true);
@@ -141,11 +112,8 @@ export default function ExplorePage() {
         );
         rawPois = (searchRes as any)?.pois || [];
       } else {
-        const targetLat = userLat && gov === 'Giza' ? userLat : activeGovObj.lat;
-        const targetLon = userLon && gov === 'Giza' ? userLon : activeGovObj.lon;
-
-        const poiRes = await geoService.getPois(targetLat, targetLon, 35000, queryCategory);
-        rawPois = (poiRes as any)?.pois || [];
+        const poiRes = await geoService.getSitesByGovernorate(gov, queryCategory);
+        rawPois = (poiRes as any)?.pois || (Array.isArray(poiRes) ? poiRes : []);
       }
 
       if (rawPois && rawPois.length > 0) {
@@ -175,12 +143,11 @@ export default function ExplorePage() {
     let isMounted = true;
     if (user) {
       fetchExploreSites();
-      fetchSafetyInfo();
     }
     return () => {
       isMounted = false;
     };
-  }, [user, fetchExploreSites, fetchSafetyInfo]);
+  }, [user, fetchExploreSites]);
 
   const filtered = useMemo(() => {
     let result = [...sites];
@@ -211,7 +178,7 @@ export default function ExplorePage() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <TopBar
-        location={locationName ? `${locationName}` : `${gov} Governorate`}
+        location={gov ? `${gov} Governorate` : 'Explore Egypt'}
         onRafiq={() => setRafiq(true)}
       />
 
@@ -771,315 +738,6 @@ export default function ExplorePage() {
                   onSelectSite={(site) => router.push(`/app/sites/${site.id}`)}
                   activeCategory={cat}
                 />
-              </div>
-
-              <div
-                style={{
-                  background: C.limestone,
-                  borderRadius: 14,
-                  padding: '16px 18px',
-                  border: '1px solid rgba(27,26,23,0.07)',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: "'Inter',sans-serif",
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      color: '#A89880',
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Area Safety · {gov}
-                  </div>
-                  {safetyLoading ? (
-                    <span
-                      style={{
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        background: '#E5E7EB',
-                        color: '#4B5563',
-                      }}
-                    >
-                      Loading...
-                    </span>
-                  ) : safetyError ? (
-                    <span
-                      style={{
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        background: '#FEE2E2',
-                        color: '#DC2626',
-                      }}
-                    >
-                      Error
-                    </span>
-                  ) : (
-                    <span
-                      style={{
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        background:
-                          safetyData?.status === 'safe'
-                            ? '#DCFCE7'
-                            : safetyData?.status === 'warning'
-                            ? '#FEE2E2'
-                            : '#FEF3C7',
-                        color:
-                          safetyData?.status === 'safe'
-                            ? '#166534'
-                            : safetyData?.status === 'warning'
-                            ? '#991B1B'
-                            : '#92400E',
-                      }}
-                    >
-                      {safetyData?.safetyLevel || 'Safe'}
-                    </span>
-                  )}
-                </div>
-
-                {safetyLoading ? (
-                  <div
-                    style={{
-                      padding: '16px 0',
-                      textAlign: 'center',
-                      fontFamily: "'Inter',sans-serif",
-                      fontSize: '12px',
-                      color: '#A89880',
-                    }}
-                  >
-                    <RefreshCw size={16} className="animate-spin" style={{ margin: '0 auto 6px auto' }} />
-                    Fetching safety information...
-                  </div>
-                ) : safetyError ? (
-                  <div
-                    style={{
-                      background: '#FFF5F5',
-                      border: '1px solid #FECACA',
-                      borderRadius: 8,
-                      padding: '10px 12px',
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        color: '#B91C1C',
-                        fontWeight: 600,
-                        fontSize: '12px',
-                      }}
-                    >
-                      <AlertTriangle size={14} /> Safety Info Unavailable
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: '11px',
-                        color: '#7F1D1D',
-                        marginTop: 4,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {safetyError}
-                    </div>
-                    <button
-                      onClick={fetchSafetyInfo}
-                      style={{
-                        marginTop: 8,
-                        background: '#DC2626',
-                        color: '#FFF',
-                        border: 'none',
-                        borderRadius: 4,
-                        padding: '4px 8px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Retry
-                    </button>
-                  </div>
-                ) : safetyData ? (
-                  <>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: '#FFF',
-                        borderRadius: 8,
-                        padding: '10px 12px',
-                        marginBottom: 12,
-                        border: '1px solid rgba(27,26,23,0.05)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <ShieldCheck size={18} color="#166534" />
-                        <div>
-                          <div
-                            style={{
-                              fontFamily: "'Inter',sans-serif",
-                              fontSize: '12px',
-                              fontWeight: 700,
-                              color: '#1B1A17',
-                            }}
-                          >
-                            Safety Index
-                          </div>
-                          <div
-                            style={{
-                              fontFamily: "'Inter',sans-serif",
-                              fontSize: '10px',
-                              color: '#8B7E6A',
-                            }}
-                          >
-                            Score: {safetyData.safetyScore}/100
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "'Inter',sans-serif",
-                          fontSize: '18px',
-                          fontWeight: 800,
-                          color:
-                            safetyData.safetyScore >= 80
-                              ? '#166534'
-                              : safetyData.safetyScore >= 60
-                              ? '#92400E'
-                              : '#991B1B',
-                        }}
-                      >
-                        {safetyData.safetyScore}%
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '8px 0',
-                        borderBottom: '1px solid rgba(27,26,23,0.05)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "'Inter',sans-serif",
-                          fontSize: '12px',
-                          color: '#8B7E6A',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                        }}
-                      >
-                        <ShieldAlert size={14} color="#D97706" />
-                        Scam Risk Level
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "'Inter',sans-serif",
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          color:
-                            safetyData.scamRiskLevel === 'Low'
-                              ? '#166534'
-                              : safetyData.scamRiskLevel === 'Moderate'
-                              ? '#D97706'
-                              : '#DC2626',
-                        }}
-                      >
-                        {safetyData.scamRiskLevel} ({safetyData.scamAlertsCount} alerts)
-                      </span>
-                    </div>
-
-                    {safetyData.emergencyContacts && (
-                      <div
-                        style={{
-                          padding: '10px 0 4px 0',
-                          borderBottom: '1px solid rgba(27,26,23,0.05)',
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontFamily: "'Inter',sans-serif",
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            color: '#1B1A17',
-                            marginBottom: 6,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          <PhoneCall size={12} color="#8B7E6A" /> Emergency Contacts
-                        </div>
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: 6,
-                            fontFamily: "'Inter',sans-serif",
-                            fontSize: '11px',
-                            color: '#555',
-                          }}
-                        >
-                          <div>Police: <strong style={{ color: '#1B1A17' }}>{safetyData.emergencyContacts.touristPolice}</strong></div>
-                          <div>Ambulance: <strong style={{ color: '#1B1A17' }}>{safetyData.emergencyContacts.ambulance}</strong></div>
-                        </div>
-                      </div>
-                    )}
-
-                    {safetyData.safetyTips && safetyData.safetyTips.length > 0 && (
-                      <div style={{ marginTop: 8 }}>
-                        <div
-                          style={{
-                            fontFamily: "'Inter',sans-serif",
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            color: '#1B1A17',
-                            marginBottom: 4,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          <Info size={12} color="#8B7E6A" /> Safety Tip
-                        </div>
-                        <div
-                          style={{
-                            fontFamily: "'Inter',sans-serif",
-                            fontSize: '11px',
-                            color: '#666',
-                            lineHeight: 1.35,
-                          }}
-                        >
-                          {safetyData.safetyTips[0]}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : null}
               </div>
             </div>
           </div>
