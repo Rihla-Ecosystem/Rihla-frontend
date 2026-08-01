@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
+import { apiClient } from '@/api';
 import { C } from '@/lib/constants/theme';
 import { Glyph, Geom } from '@/app/components/atoms';
-import { ALL_SITES, JOURNEYS } from '@/app/data/rihla-data';
 import {
   Sun,
   Wind,
@@ -16,17 +16,130 @@ import {
   Phone,
   BarChart2,
   ChevronRight,
+  RefreshCw,
+  MapPinOff,
 } from 'lucide-react';
 import { TopBar } from '@/app/components/layout/TopBar';
 import { SiteCard } from '@/app/components/siteCard';
 import { RafiqDrawer } from '@/app/components/rafiqDrawer';
+import { useLocation } from '@/providers/LocationProvider';
+import { geoService } from '@/services/geoService';
+import { envService } from '@/services/envService';
 
 export default function HomePage() {
   const router = useRouter();
   const [rafiq, setRafiq] = useState(false);
-  const { user } = useAuth();
-  const displayName = user?.displayName || 'Sara Al-Rashid';
-  
+  const { user, isInitialized } = useAuth();
+  const displayName = user?.displayName || user?.email || 'Traveler';
+
+  const { lat, lon, accuracy, status, errorMessage, locationName, requestLocation } = useLocation();
+
+  const [envData, setEnvData] = useState<any>(null);
+  const [nearbySites, setNearbySites] = useState<any[]>([]);
+  const [journeys, setJourneys] = useState<any[]>([]);
+  const [riskAlert, setRiskAlert] = useState<any>(null);
+  const [selectedCat, setSelectedCat] = useState('All');
+  const [isLoadingPois, setIsLoadingPois] = useState(false);
+  const [isLoadingEnv, setIsLoadingEnv] = useState(false);
+
+  const filteredSites = React.useMemo(() => {
+    if (selectedCat === 'All') return nearbySites;
+    if (selectedCat === 'Hidden gems') return nearbySites.filter(s => s.tag === 'Hidden gem');
+    if (selectedCat === 'Temples') return nearbySites.filter(s => s.cat === 'Temple' || s.name.includes('Temple'));
+    if (selectedCat === 'Museums') return nearbySites.filter(s => s.cat === 'Museum');
+    if (selectedCat === 'Markets') return nearbySites.filter(s => s.cat === 'Market');
+    return nearbySites;
+  }, [selectedCat, nearbySites]);
+
+  useEffect(() => {
+    if (isInitialized && !user) {
+      router.push('/login');
+    }
+  }, [isInitialized, user, router]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLocationData = async () => {
+      if (!user) return;
+      if (status !== 'success' || lat === null || lon === null) return;
+
+      setIsLoadingPois(true);
+      setIsLoadingEnv(true);
+
+      try {
+        const [envRes, sitesRes] = await Promise.all([
+          envService.getEnv(lat, lon).catch((err) => {
+            console.error("Failed to fetch /env:", err);
+            return null;
+          }),
+          geoService.getPois(lat, lon).catch((err) => {
+            console.error("Failed to fetch /geo/pois:", err);
+            return null;
+          }),
+        ]);
+
+        if (!isMounted) return;
+
+        if (envRes) {
+          setEnvData(envRes);
+        }
+
+        const parsedSites = sitesRes?.pois;
+        if (parsedSites && Array.isArray(parsedSites)) {
+          setNearbySites(parsedSites.map((p: any) => ({
+            id: p.id,
+            name: p.name_en || p.name,
+            desc: p.details || (p.categories && p.categories.length > 0 ? p.categories[0] : 'Historical site'),
+            img: p.imageUrl || 'https://images.unsplash.com/photo-1539650116574-8efeb43e2b50?auto=format&fit=crop&q=80&w=600',
+            tag: (p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction',
+            cat: (p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction',
+            rating: p.rating || 4.5,
+            reviews: 120,
+            coords: [p.lat, p.lon]
+          })));
+        } else {
+          setNearbySites([]);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingPois(false);
+          setIsLoadingEnv(false);
+        }
+      }
+    };
+
+    fetchLocationData();
+    return () => { isMounted = false; };
+  }, [user, lat, lon, status]);
+
+  // Fetch user journeys and initial metadata
+  useEffect(() => {
+    let isMounted = true;
+    const fetchJourneys = async () => {
+      if (!user) return;
+      try {
+        const { data, error } = await apiClient.GET('/memory/history', {});
+        if (!error && data && Array.isArray((data as any).history)) {
+          if (isMounted) {
+            setJourneys((data as any).history.map((j: any) => ({
+              name: j.title || j.name || 'Journey',
+              done: j.completedSites || 0,
+              total: j.totalSites || 1,
+              progress: j.progress || 0,
+              color: C.nile,
+            })));
+          }
+        }
+      } catch (e) {
+        console.warn('Could not fetch journeys:', e);
+      }
+    };
+    fetchJourneys();
+    return () => { isMounted = false; };
+  }, [user]);
+
   const hour = new Date().getHours();
   const isMorn = hour >= 6 && hour < 12;
   const isEve = hour >= 17 || hour < 6;
@@ -37,6 +150,7 @@ export default function HomePage() {
     : isMorn
       ? `linear-gradient(160deg,${C.nile} 0%,#1A6B5A 40%,#C4834A 100%)`
       : `linear-gradient(160deg,${C.nile} 0%,#0A3D4A 50%,#1A5253 100%)`;
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <TopBar onRafiq={() => setRafiq(true)} />
@@ -141,7 +255,7 @@ export default function HomePage() {
             style={{
               background: 'rgba(246,241,231,0.12)',
               backdropFilter: 'blur(14px)',
-              border: `1.5px solid ${C.safeGreen}40`,
+              border: `1.5px solid ${status === 'success' ? `${C.safeGreen}40` : `${C.alertAmber}40`}`,
               borderRadius: 16,
               padding: '18px 22px',
               textAlign: 'center',
@@ -163,8 +277,8 @@ export default function HomePage() {
                   width: 8,
                   height: 8,
                   borderRadius: '50%',
-                  background: C.safeGreen,
-                  boxShadow: `0 0 0 3px ${C.safeGreen}35`,
+                  background: status === 'success' ? C.safeGreen : C.alertAmber,
+                  boxShadow: `0 0 0 3px ${status === 'success' ? `${C.safeGreen}35` : `${C.alertAmber}35`}`,
                 }}
               />
               <span
@@ -172,11 +286,11 @@ export default function HomePage() {
                   fontFamily: "'Inter',sans-serif",
                   fontSize: '16px',
                   fontWeight: 800,
-                  color: C.safeGreen,
+                  color: status === 'success' ? C.safeGreen : C.alertAmber,
                   letterSpacing: '0.04em',
                 }}
               >
-                SECURE
+                {status === 'success' ? 'SECURE' : status === 'requesting' ? 'LOCATING' : 'LOCATION OFF'}
               </span>
             </div>
             <div
@@ -187,13 +301,13 @@ export default function HomePage() {
                 marginBottom: 14,
               }}
             >
-              Updated 4 min ago
+              {status === 'success' ? 'Live Coordinates' : 'Location Pending'}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[
-                { icon: <Sun size={12} />, l: 'UV', v: '7' },
-                { icon: <Thermometer size={12} />, l: '°C', v: '38' },
-                { icon: <Wind size={12} />, l: 'Air', v: '✓' },
+                { icon: <Sun size={12} />, l: 'UV', v: isLoadingEnv ? '...' : (envData?.uv !== undefined ? envData.uv : '--') },
+                { icon: <Thermometer size={12} />, l: '°C', v: isLoadingEnv ? '...' : (envData?.temperature ? String(envData.temperature).replace('C', '') : '--') },
+                { icon: <Wind size={12} />, l: 'Air', v: isLoadingEnv ? '...' : (envData?.airQuality || '--') },
               ].map(({ icon, l, v }) => (
                 <div
                   key={l}
@@ -254,6 +368,101 @@ export default function HomePage() {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Location status notification banner if permission is denied or unavailable */}
+          {status === 'permission_denied' && (
+            <div
+              style={{
+                background: '#FFFBEB',
+                border: '1.5px solid #FCD34D',
+                borderRadius: 14,
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <MapPinOff size={22} color="#D97706" />
+                <div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '14px', fontWeight: 700, color: '#92400E' }}>
+                    Location Permission Required
+                  </div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#B45309', marginTop: 2 }}>
+                    Please allow location permissions in your browser to view nearby historical sites and get real-time environmental context.
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={requestLocation}
+                style={{
+                  background: '#D97706',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 16px',
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexShrink: 0,
+                }}
+              >
+                <RefreshCw size={14} /> Enable Location
+              </button>
+            </div>
+          )}
+
+          {status === 'location_unavailable' && (
+            <div
+              style={{
+                background: '#FEF2F2',
+                border: '1.5px solid #FCA5A5',
+                borderRadius: 14,
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <AlertTriangle size={22} color="#DC2626" />
+                <div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '14px', fontWeight: 700, color: '#991B1B' }}>
+                    Location Unavailable
+                  </div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#B91C1C', marginTop: 2 }}>
+                    {errorMessage || 'Unable to retrieve location from your device. Please ensure location services are enabled.'}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={requestLocation}
+                style={{
+                  background: '#DC2626',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 16px',
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexShrink: 0,
+                }}
+              >
+                <RefreshCw size={14} /> Retry
+              </button>
+            </div>
+          )}
+
           <div>
             <div
               style={{
@@ -274,6 +483,7 @@ export default function HomePage() {
                 Nearby Sites
               </h2>
               <button
+                onClick={() => router.push('/app/explore')}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -288,37 +498,107 @@ export default function HomePage() {
               </button>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              {['All', 'Temples', 'Museums', 'Hidden gems', 'Markets'].map((cat, i) => (
+              {['All', 'Temples', 'Museums', 'Hidden gems', 'Markets'].map((cat) => (
                 <button
                   key={cat}
+                  onClick={() => setSelectedCat(cat)}
                   style={{
-                    background: i === 0 ? C.nile : 'transparent',
-                    border: `1.5px solid ${i === 0 ? C.nile : 'rgba(27,26,23,0.13)'}`,
+                    background: selectedCat === cat ? C.nile : 'transparent',
+                    border: `1.5px solid ${selectedCat === cat ? C.nile : 'rgba(27,26,23,0.13)'}`,
                     borderRadius: 99,
                     padding: '5px 14px',
                     fontFamily: "'Inter',sans-serif",
                     fontSize: '12px',
-                    fontWeight: i === 0 ? 600 : 400,
-                    color: i === 0 ? C.limestone : '#6B6354',
+                    fontWeight: selectedCat === cat ? 600 : 400,
+                    color: selectedCat === cat ? C.limestone : '#6B6354',
                     cursor: 'pointer',
+                    transition: 'all 0.2s',
                   }}
                 >
                   {cat}
                 </button>
               ))}
             </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
-                gap: 12,
-              }}
-            >
-              {ALL_SITES.slice(0, 4).map((s) => (
-                <SiteCard key={s.id} s={s} goSite={(id) => router.push(`/app/sites/${id}`)} />
-              ))}
-            </div>
+
+            {/* Skeletons while requesting / loading */}
+            {(status === 'requesting' || status === 'loading' || isLoadingPois) && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
+                  gap: 12,
+                }}
+              >
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      height: 220,
+                      background: 'rgba(27,26,23,0.06)',
+                      borderRadius: 14,
+                      animation: 'pulse 1.5s infinite',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Empty state when permission denied or location unavailable */}
+            {(status === 'permission_denied' || status === 'location_unavailable') && !isLoadingPois && (
+              <div
+                style={{
+                  background: C.limestone,
+                  border: '1px dashed rgba(27,26,23,0.15)',
+                  borderRadius: 14,
+                  padding: '32px 20px',
+                  textAlign: 'center',
+                }}
+              >
+                <MapPinOff size={32} color="#A89880" style={{ marginBottom: 8 }} />
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '14px', fontWeight: 600, color: C.nile }}>
+                  Nearby sites unavailable without location
+                </div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#A89880', marginTop: 4 }}>
+                  Grant browser location permission to discover real historical landmarks around you.
+                </div>
+              </div>
+            )}
+
+            {/* Success state with POIs list or empty response */}
+            {status === 'success' && !isLoadingPois && filteredSites.length === 0 && (
+              <div
+                style={{
+                  background: C.limestone,
+                  border: '1px dashed rgba(27,26,23,0.15)',
+                  borderRadius: 14,
+                  padding: '32px 20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '14px', fontWeight: 600, color: C.nile }}>
+                  No nearby sites found for your location
+                </div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#A89880', marginTop: 4 }}>
+                  Coordinates ({lat?.toFixed(4)}°, {lon?.toFixed(4)}°) returned no indexed landmarks.
+                </div>
+              </div>
+            )}
+
+            {status === 'success' && !isLoadingPois && filteredSites.length > 0 && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))',
+                  gap: 12,
+                }}
+              >
+                {filteredSites.slice(0, 4).map((s) => (
+                  <SiteCard key={s.id} s={s} goSite={(id) => router.push(`/app/sites/${id}`)} />
+                ))}
+              </div>
+            )}
           </div>
+
           <div>
             <div
               style={{
@@ -339,6 +619,7 @@ export default function HomePage() {
                 Your Journeys
               </h2>
               <button
+                onClick={() => router.push('/app/history')}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -353,84 +634,91 @@ export default function HomePage() {
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {JOURNEYS.map((j) => (
-                <div
-                  key={j.name}
-                  style={{
-                    background: C.limestone,
-                    borderRadius: 14,
-                    padding: '16px 18px',
-                    border: '1px solid rgba(27,26,23,0.07)',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto',
-                    gap: 16,
-                    alignItems: 'center',
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'baseline',
-                        marginBottom: 8,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontFamily: "'Inter',sans-serif",
-                          fontSize: '14px',
-                          fontWeight: 600,
-                          color: C.nile,
-                        }}
-                      >
-                        {j.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "'Inter',sans-serif",
-                          fontSize: '12px',
-                          color: '#A89880',
-                        }}
-                      >
-                        {j.done}/{j.total} sites
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        height: 5,
-                        background: '#EDE6D6',
-                        borderRadius: 99,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: '100%',
-                          width: `${j.progress}%`,
-                          background: `linear-gradient(90deg,${j.color},${j.color}99)`,
-                          borderRadius: 99,
-                        }}
-                      />
-                    </div>
-                  </div>
+              {journeys.length === 0 ? (
+                <div style={{ background: C.limestone, borderRadius: 14, padding: 16, border: '1px solid rgba(27,26,23,0.07)', fontSize: '13px', color: '#A89880' }}>
+                  No active journeys found. Start exploring to record your trips!
+                </div>
+              ) : (
+                journeys.map((j) => (
                   <div
+                    key={j.name}
                     style={{
-                      fontFamily: "'Cormorant Garamond',serif",
-                      fontSize: '22px',
-                      fontWeight: 600,
-                      color: j.color,
-                      minWidth: 48,
-                      textAlign: 'right',
+                      background: C.limestone,
+                      borderRadius: 14,
+                      padding: '16px 18px',
+                      border: '1px solid rgba(27,26,23,0.07)',
+                      display: 'grid',
+                      gridTemplateColumns: '1fr auto',
+                      gap: 16,
+                      alignItems: 'center',
                     }}
                   >
-                    {j.progress}%
+                    <div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'baseline',
+                          marginBottom: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontFamily: "'Inter',sans-serif",
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: C.nile,
+                          }}
+                        >
+                          {j.name}
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: "'Inter',sans-serif",
+                            fontSize: '12px',
+                            color: '#A89880',
+                          }}
+                        >
+                          {j.done}/{j.total} sites
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          height: 5,
+                          background: '#EDE6D6',
+                          borderRadius: 99,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: '100%',
+                            width: `${j.progress}%`,
+                            background: `linear-gradient(90deg,${j.color},${j.color}99)`,
+                            borderRadius: 99,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "'Cormorant Garamond',serif",
+                        fontSize: '22px',
+                        fontWeight: 600,
+                        color: j.color,
+                        minWidth: 48,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {j.progress}%
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div
             style={{
@@ -463,13 +751,13 @@ export default function HomePage() {
                 marginBottom: 10,
               }}
             >
-              "Visit the Sphinx after 3pm — afternoon light hits the face directly, and crowds thin
-              by 40%."
+              "Visit historic monuments during early morning hours to enjoy Direct sun alignment and minimal crowd density."
             </div>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880' }}>
-              Based on 340 recent traveler patterns
+              Based on traveler patterns for your region
             </div>
           </div>
+
           <div
             style={{
               background: C.limestone,
@@ -512,6 +800,12 @@ export default function HomePage() {
               ].map(({ icon, label, color }) => (
                 <button
                   key={label}
+                  onClick={() => {
+                    if (label === 'Map') router.push('/app/explore');
+                    if (label === 'Identify') router.push('/app/explore');
+                    if (label === 'Emergency') router.push('/app/safety');
+                    if (label === 'Currency') router.push('/app/wallet');
+                  }}
                   style={{
                     background: '#FAF7F0',
                     border: '1px solid rgba(27,26,23,0.07)',
@@ -522,7 +816,10 @@ export default function HomePage() {
                     alignItems: 'center',
                     gap: 6,
                     cursor: 'pointer',
+                    transition: 'background 0.2s',
                   }}
+                  onMouseOver={(e) => (e.currentTarget.style.background = '#F0EBE1')}
+                  onMouseOut={(e) => (e.currentTarget.style.background = '#FAF7F0')}
                 >
                   <div style={{ color }}>{icon}</div>
                   <span
@@ -539,6 +836,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+
           <div
             style={{
               background: `linear-gradient(135deg,${C.nile},${C.nileMid})`,
@@ -575,7 +873,7 @@ export default function HomePage() {
                   color: C.limestone,
                 }}
               >
-                Level 4 · Explorer
+                Level {user?.level || 1} · Explorer
               </div>
               <div
                 style={{
@@ -585,7 +883,7 @@ export default function HomePage() {
                   color: C.sand,
                 }}
               >
-                1,250 XP
+                {user?.xp || 0} XP
               </div>
             </div>
             <div
@@ -600,7 +898,7 @@ export default function HomePage() {
               <div
                 style={{
                   height: '100%',
-                  width: '63%',
+                  width: `${Math.min(100, ((user?.xp || 0) / 1000) * 100)}%`,
                   background: `linear-gradient(90deg,${C.sand},${C.faience})`,
                   borderRadius: 99,
                 }}
@@ -613,58 +911,7 @@ export default function HomePage() {
                 color: `${C.limestone}45`,
               }}
             >
-              490 XP to Level 5 · Historian
-            </div>
-          </div>
-          <div
-            style={{
-              background: `${C.alertAmber}10`,
-              border: `1px solid ${C.alertAmber}30`,
-              borderRadius: 14,
-              padding: '14px 16px',
-              display: 'flex',
-              gap: 11,
-              alignItems: 'flex-start',
-            }}
-          >
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 10,
-                background: `${C.alertAmber}20`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: 2,
-              }}
-            >
-              <AlertTriangle size={15} color={C.alertAmber} strokeWidth={2.5} />
-            </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: C.alertAmber,
-                  marginBottom: 4,
-                  letterSpacing: '0.06em',
-                }}
-              >
-                ACTIVE SCAM · Giza
-              </div>
-              <div
-                style={{
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: '12px',
-                  color: '#5C5346',
-                  lineHeight: 1.6,
-                }}
-              >
-                "Free gift" vendors near the east path — walk past confidently.
-              </div>
+              {1000 - ((user?.xp || 0) % 1000)} XP to Next Level
             </div>
           </div>
         </div>
