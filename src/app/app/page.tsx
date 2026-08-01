@@ -26,6 +26,33 @@ import { RafiqDrawer } from '@/app/components/rafiqDrawer';
 import { useLocation } from '@/providers/LocationProvider';
 import { geoService } from '@/services/geoService';
 import { envService } from '@/services/envService';
+import dynamic from 'next/dynamic';
+import { type RihlaSite } from '@/app/data/rihla-data';
+import { mapApiPoiToRihlaSite } from '@/lib/poiMapping';
+
+const InteractiveMap = dynamic(
+  () => import('@/app/components/ui/InteractiveMap').then((mod) => mod.InteractiveMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        style={{
+          height: 320,
+          background: C.limestoneDark,
+          borderRadius: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: "'Inter', sans-serif",
+          fontSize: '12px',
+          color: '#8B7E6A',
+        }}
+      >
+        Loading map component...
+      </div>
+    ),
+  }
+);
 
 export default function HomePage() {
   const router = useRouter();
@@ -33,10 +60,19 @@ export default function HomePage() {
   const { user, isInitialized } = useAuth();
   const displayName = user?.displayName || user?.email || 'Traveler';
 
-  const { lat, lon, accuracy, status, errorMessage, locationName, governorate, requestLocation } = useLocation();
+  const { 
+    lat, 
+    lon, 
+    accuracy, 
+    status, 
+    errorMessage, 
+    locationName, 
+    governorate, 
+    requestLocation 
+  } = useLocation();
 
   const [envData, setEnvData] = useState<any>(null);
-  const [nearbySites, setNearbySites] = useState<any[]>([]);
+  const [nearbySites, setNearbySites] = useState<RihlaSite[]>([]);
   const [journeys, setJourneys] = useState<any[]>([]);
   const [riskAlert, setRiskAlert] = useState<any>(null);
   const [selectedCat, setSelectedCat] = useState('All');
@@ -103,19 +139,9 @@ export default function HomePage() {
           setIsGovernorateFallback(progressiveRes.source === 'governorate_fallback');
           const parsedSites = progressiveRes.pois;
           if (parsedSites && Array.isArray(parsedSites)) {
-            setNearbySites(parsedSites.map((p: any) => ({
-              id: p.id || p._id,
-              name: p.name_en || p.name || 'Historical Site',
-              desc: p.details || (p.categories && p.categories.length > 0 ? p.categories[0] : 'Historical site'),
-              img: p.imageUrl || 'https://images.unsplash.com/photo-1539650116574-8efeb43e2b50?auto=format&fit=crop&q=80&w=600',
-              tag: progressiveRes.source === 'governorate_fallback'
-                ? `Popular in ${governorate || 'Governorate'}`
-                : ((p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction'),
-              cat: (p.categories && p.categories.length > 0) ? p.categories[0] : 'Attraction',
-              rating: p.rating || 4.5,
-              reviews: 120,
-              coords: [p.lat || lat, p.lon || lon]
-            })));
+            setNearbySites(parsedSites.map((p: any, idx: number) => 
+              mapApiPoiToRihlaSite(p, lat, lon, idx)
+            ));
           } else {
             setNearbySites([]);
           }
@@ -697,41 +723,56 @@ export default function HomePage() {
             )}
           </div>
 
-          <div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                marginBottom: 14,
-              }}
-            >
-              <h2
-                style={{
-                  fontFamily: "'Cormorant Garamond',serif",
-                  fontSize: '20px',
-                  fontWeight: 500,
-                  color: C.nile,
-                }}
-              >
-                Your Journeys
-              </h2>
-              <button
-                onClick={() => router.push('/app/history')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: C.faience,
-                  cursor: 'pointer',
-                }}
-              >
-                See all →
-              </button>
+          <div style={{ position: 'sticky', top: 24, alignSelf: 'start', display: 'flex', flexDirection: 'column', gap: 24, width: '100%' }}>
+            
+            <div style={{ height: 340 }}>
+              <InteractiveMap
+                sites={filteredSites}
+                isLoading={isLoadingPois}
+                error={null}
+                onRetry={() => {}}
+                selectedGov={governorate || 'Egypt'}
+                selectedGovCoords={{ lat: lat || 30.0444, lon: lon || 31.2357 }}
+                onSelectSite={(site) => router.push(`/app/sites/${site.id}`)}
+                activeCategory={selectedCat}
+              />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  marginBottom: 14,
+                }}
+              >
+                <h2
+                  style={{
+                    fontFamily: "'Cormorant Garamond',serif",
+                    fontSize: '20px',
+                    fontWeight: 500,
+                    color: C.nile,
+                  }}
+                >
+                  Your Journeys
+                </h2>
+                <button
+                  onClick={() => router.push('/app/history')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontFamily: "'Inter',sans-serif",
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: C.faience,
+                    cursor: 'pointer',
+                  }}
+                >
+                  See all →
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {journeys.length === 0 ? (
                 <div style={{ background: C.limestone, borderRadius: 14, padding: 16, border: '1px solid rgba(27,26,23,0.07)', fontSize: '13px', color: '#A89880' }}>
                   No active journeys found. Start exploring to record your trips!
@@ -1015,6 +1056,9 @@ export default function HomePage() {
         </div>
       </div>
       {rafiq && <RafiqDrawer onClose={() => setRafiq(false)} />}
+
+
+    </div>
     </div>
   );
 }

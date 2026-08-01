@@ -19,6 +19,7 @@ export interface LocationState {
   locationName: string | null;
   governorate: string;
   requestLocation: () => void;
+  setLocationOverride: (lat: number, lon: number, name: string, governorate: string) => void;
 }
 
 const LocationContext = createContext<LocationState | undefined>(undefined);
@@ -158,6 +159,15 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     requestLocation();
   }, [requestLocation]);
 
+  const setLocationOverride = useCallback((newLat: number, newLon: number, name: string, gov: string) => {
+    setLat(newLat);
+    setLon(newLon);
+    setLocationName(name);
+    setGovernorate(gov);
+    setStatus('success');
+    setErrorMessage(null);
+  }, []);
+
   return (
     <LocationContext.Provider
       value={{
@@ -169,6 +179,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         locationName,
         governorate,
         requestLocation,
+        setLocationOverride,
       }}
     >
       {children}

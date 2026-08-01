@@ -96,7 +96,7 @@ export const geoService = {
           pois,
           radius: null,
           source: 'governorate_fallback' as const,
-          message: `No POIs within 50 km. Showing popular attractions in ${governorateName}`,
+          message: `Popular attractions in ${governorateName}`,
         };
       }
     } catch (err) {
@@ -107,7 +107,7 @@ export const geoService = {
       pois: [],
       radius: 50,
       source: 'none' as const,
-      message: `No points of interest found within 50 km or in ${governorateName}`,
+      message: `No points of interest found in ${governorateName}`,
     };
   },
 };

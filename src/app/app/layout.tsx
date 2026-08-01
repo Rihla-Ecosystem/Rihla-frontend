@@ -2,6 +2,7 @@
 
 import { AppShell } from '@/app/components/layout/AppShell';
 import { usePathname, useRouter } from 'next/navigation';
+import { LocationTester } from '@/app/components/ui/LocationTester';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -48,6 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppShell activePage={activePage} setPage={setPage} go={go}>
       {children}
+      <LocationTester />
     </AppShell>
   );
 }
