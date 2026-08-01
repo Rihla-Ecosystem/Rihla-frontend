@@ -1,82 +1,289 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth';
 import { C } from '@/lib/constants/theme';
-import { Glyph, GlyphFull, Geom } from '@/app/components/atoms';
+import { Geom } from '@/app/components/atoms';
 import {
-  MapPin,
-  Bell,
-  Navigation,
-  Wind,
-  Thermometer,
-  Sun,
-  Shield,
-  Search,
-  Map,
-  User,
   AlertTriangle,
   Star,
-  Clock,
-  Camera,
-  ArrowRight,
-  Globe,
-  Phone,
-  CreditCard,
-  Wifi,
-  CheckCircle,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  Home,
-  Compass,
-  Settings,
-  BarChart2,
-  Wallet,
-  LogOut,
-  Zap,
+  Navigation,
+  Map,
   Filter,
   SlidersHorizontal,
   BookOpen,
-  Send,
-  Mic,
-  ChevronDown,
   RefreshCw,
+  Search,
+  Compass,
+  ShieldCheck,
+  ShieldAlert,
+  PhoneCall,
+  CheckCircle2,
+  Info,
 } from 'lucide-react';
 import { TopBar } from '@/app/components/layout/TopBar';
 import { SiteCard } from '@/app/components/siteCard';
 import { RafiqDrawer } from '@/app/components/rafiqDrawer';
+import { geoService } from '@/services/geoService';
+import { safetyService, type SafetyData } from '@/services/safetyService';
+import { useLocation } from '@/providers/LocationProvider';
+import type { RihlaSite } from '@/app/data/rihla-data';
 
-import { ALL_SITES } from '@/app/data/rihla-data';
+const InteractiveMap = dynamic(
+  () => import('@/app/components/ui/InteractiveMap').then((mod) => mod.InteractiveMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        style={{
+          height: 320,
+          background: C.limestoneDark,
+          borderRadius: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: "'Inter', sans-serif",
+          fontSize: '12px',
+          color: '#8B7E6A',
+        }}
+      >
+        Loading map component...
+      </div>
+    ),
+  }
+);
 
 const EXPLORE_CATS = ['All', 'Temples', 'Museums', 'Archaeological', 'Markets', 'Hidden gems'];
-const GOVERNORATES = ['Giza', 'Cairo', 'Luxor', 'Aswan', 'Alexandria', 'Sinai', 'Red Sea'];
 
+interface GovLocation {
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+const EGYPT_GOVERNORATES: GovLocation[] = [
+  { name: 'Giza', lat: 29.9870, lon: 31.2118 },
+  { name: 'Cairo', lat: 30.0444, lon: 31.2357 },
+  { name: 'Luxor', lat: 25.6872, lon: 32.6396 },
+  { name: 'Aswan', lat: 24.0889, lon: 32.8998 },
+  { name: 'Alexandria', lat: 31.2001, lon: 29.9187 },
+  { name: 'Sinai', lat: 28.5395, lon: 33.9750 },
+  { name: 'Red Sea', lat: 27.2579, lon: 33.8116 },
+];
+
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function formatDistance(distKm: number): string {
+  if (distKm < 1) {
+    return `${Math.round(distKm * 1000)} m`;
+  }
+  return `${distKm.toFixed(1)} km`;
+}
+
+function getCategoryFallbackImage(category: string, name: string): string {
+  const searchStr = `${name} ${category}`.toLowerCase();
+  if (searchStr.includes('sphinx')) {
+    return 'https://images.unsplash.com/photo-1539768942893-daf53e448371?w=600&h=400&fit=crop';
+  }
+  if (searchStr.includes('pyramid') || searchStr.includes('giza')) {
+    return 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?w=600&h=400&fit=crop';
+  }
+  if (searchStr.includes('museum')) {
+    return 'https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=600&h=400&fit=crop';
+  }
+  if (searchStr.includes('temple') || searchStr.includes('luxor') || searchStr.includes('karnak') || searchStr.includes('aswan')) {
+    return 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=600&h=400&fit=crop';
+  }
+  if (searchStr.includes('market') || searchStr.includes('bazaar') || searchStr.includes('khan')) {
+    return 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=600&h=400&fit=crop';
+  }
+  return 'https://images.unsplash.com/photo-1539650116574-8efeb43e2b50?w=600&h=400&fit=crop';
+}
+function mapApiPoiToRihlaSite(poi: any, userLat?: number | null, userLon?: number | null, index: number = 0): RihlaSite {
+  const pLat = typeof poi.lat === 'number' ? poi.lat : (typeof poi.latitude === 'number' ? poi.latitude : 29.9870 + (index % 5) * 0.008);
+  const pLon = typeof poi.lon === 'number' ? poi.lon : (typeof poi.longitude === 'number' ? poi.longitude : 31.2118 + Math.floor(index / 5) * 0.008);
+  
+  const distKm = (userLat !== null && userLat !== undefined && userLon !== null && userLon !== undefined)
+    ? calculateDistanceKm(userLat, userLon, pLat, pLon)
+    : 0.5 + index * 0.2;
+
+  const rawName = poi.name_en || poi.name || poi.title || 'Historical Site';
+  const categories: string[] = Array.isArray(poi.categories) && poi.categories.length > 0
+    ? poi.categories
+    : [poi.category || 'Archaeological'];
+  
+  const category = categories[0] || 'Archaeological';
+  const tag = (poi.tag || (category === 'Hidden gem' ? 'Hidden gem' : category)) || 'Attraction';
+  const isScamAlert = Boolean(poi.scam || poi.hasScamAlert || poi.scam_alert);
+
+  return {
+    id: poi.id ? (typeof poi.id === 'number' ? poi.id : parseInt(String(poi.id).replace(/\D/g, '')) || index + 1) : index + 1,
+    name: rawName,
+    nameAr: poi.name_ar || poi.nameAr || rawName,
+    cat: category,
+    dist: formatDistance(distKm),
+    lat: pLat,
+    lon: pLon,
+    rating: poi.rating || 4.7,
+    reviews: poi.reviewsCount || poi.reviews || 150 + index * 12,
+    img: poi.imageUrl || poi.image_url || poi.img || getCategoryFallbackImage(category, rawName),
+    imgs: [
+      poi.imageUrl || poi.image_url || getCategoryFallbackImage(category, rawName),
+    ],
+    tag,
+    scam: isScamAlert,
+    gov: poi.governorate || poi.city || 'Egypt',
+    built: poi.builtDate || poi.built || 'Ancient Period',
+    dynasty: poi.dynasty || 'Historical Era',
+    hours: poi.openingHours || poi.hours || '8:00 AM – 5:00 PM',
+    admission: poi.admissionFee || poi.admission || 'Standard Entrance Fee',
+    duration: poi.visitDuration || poi.duration || '1–2 hours',
+    bestTime: poi.bestTime || 'Morning / Late Afternoon',
+    accessibility: poi.accessibility || 'Standard Access',
+    story: poi.details || poi.description || poi.story || `${rawName} is a significant point of interest located in Egypt.`,
+    rafiqInsight: poi.rafiqInsight || `Explore ${rawName} with local historical guidance.`,
+    scamDetail: isScamAlert ? (poi.scamDetail || 'Exercise caution with unauthorized street vendors.') : null,
+    tips: Array.isArray(poi.tips) && poi.tips.length > 0 ? poi.tips : ['Stay hydrated', 'Follow local site regulations'],
+    nearby: Array.isArray(poi.nearbyIds) ? poi.nearbyIds : [],
+  };
+}
 
 export default function ExplorePage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const { lat: userLat, lon: userLon, locationName, status: locStatus } = useLocation();
+
   const [cat, setCat] = useState('All');
   const [gov, setGov] = useState('Giza');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [sort, setSort] = useState('distance');
   const [rafiq, setRafiq] = useState(false);
-  const [selected, setSelected] = useState<(typeof ALL_SITES)[0] | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sites, setSites] = useState<RihlaSite[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const filtered = ALL_SITES.filter(
-    (s) =>
-      cat === 'All' ||
-      s.cat === cat ||
-      (cat === 'Hidden gems' && s.tag === 'Hidden gem') ||
-      (cat === 'Markets' && s.cat === 'Market')
-  );
+  const [safetyData, setSafetyData] = useState<SafetyData | null>(null);
+  const [safetyLoading, setSafetyLoading] = useState<boolean>(true);
+  const [safetyError, setSafetyError] = useState<string | null>(null);
+
+  const activeGovObj = useMemo(() => {
+    return EGYPT_GOVERNORATES.find((g) => g.name.toLowerCase() === gov.toLowerCase()) || EGYPT_GOVERNORATES[0];
+  }, [gov]);
+
+  const fetchSafetyInfo = useCallback(async () => {
+    setSafetyLoading(true);
+    setSafetyError(null);
+    try {
+      const data = await safetyService.getSafetyInfo(
+        userLat || activeGovObj.lat,
+        userLon || activeGovObj.lon,
+        gov
+      );
+      setSafetyData(data);
+    } catch (err: any) {
+      console.error('Failed to fetch area safety data:', err);
+      setSafetyError(err?.message || 'Failed to fetch safety info');
+    } finally {
+      setSafetyLoading(false);
+    }
+  }, [userLat, userLon, activeGovObj, gov, reloadKey]);
+
+  const fetchExploreSites = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      let rawPois: any[] = [];
+      const queryCategory = cat === 'All' ? undefined : cat;
+
+      if (searchQuery.trim().length > 0) {
+        const searchRes = await geoService.searchPlaces(
+          searchQuery.trim(),
+          userLat || activeGovObj.lat,
+          userLon || activeGovObj.lon
+        );
+        rawPois = (searchRes as any)?.pois || [];
+      } else {
+        const targetLat = userLat && gov === 'Giza' ? userLat : activeGovObj.lat;
+        const targetLon = userLon && gov === 'Giza' ? userLon : activeGovObj.lon;
+
+        const poiRes = await geoService.getPois(targetLat, targetLon, 35000, queryCategory);
+        rawPois = (poiRes as any)?.pois || [];
+      }
+
+      const mapped = rawPois.map((p: any, idx: number) =>
+        mapApiPoiToRihlaSite(p, userLat, userLon, idx)
+      );
+
+      setSites(mapped);
+    } catch (err: any) {
+      console.error('Explore page data fetch failed:', err);
+      setError(err?.message || 'Failed to fetch points of interest from Core Server API.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cat, gov, searchQuery, userLat, userLon, activeGovObj, reloadKey]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (user) {
+      fetchExploreSites();
+      fetchSafetyInfo();
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [user, fetchExploreSites, fetchSafetyInfo]);
+
+  const filtered = useMemo(() => {
+    let result = [...sites];
+
+    if (cat !== 'All') {
+      result = result.filter(
+        (s) =>
+          s.cat.toLowerCase() === cat.toLowerCase() ||
+          (cat === 'Hidden gems' && s.tag === 'Hidden gem') ||
+          (cat === 'Markets' && (s.cat === 'Market' || s.cat === 'Markets'))
+      );
+    }
+
+    if (sort === 'rating') {
+      result.sort((a, b) => b.rating - a.rating);
+    } else if (sort === 'reviews') {
+      result.sort((a, b) => b.reviews - a.reviews);
+    }
+
+    return result;
+  }, [sites, cat, sort]);
+
+  const handleGovChange = (gName: string) => {
+    setGov(gName);
+    setSearchQuery('');
+  };
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar location={`${gov} Governorate`} onRafiq={() => setRafiq(true)} />
+      <TopBar
+        location={locationName ? `${locationName}` : `${gov} Governorate`}
+        onRafiq={() => setRafiq(true)}
+      />
 
-      {/* Explore header */}
       <div
         style={{
           background: `linear-gradient(135deg,${C.nile},${C.nileMid})`,
@@ -96,6 +303,8 @@ export default function ExplorePage() {
               alignItems: 'flex-end',
               justifyContent: 'space-between',
               marginBottom: 20,
+              flexWrap: 'wrap',
+              gap: 16,
             }}
           >
             <div>
@@ -125,7 +334,33 @@ export default function ExplorePage() {
                 Discover <span style={{ fontStyle: 'italic', color: C.sand }}>Egypt</span>
               </h1>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ position: 'relative', width: 220 }}>
+                <input
+                  type="text"
+                  placeholder="Search places..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: `${C.limestone}15`,
+                    border: `1px solid ${C.limestone}25`,
+                    borderRadius: 99,
+                    padding: '7px 14px 7px 34px',
+                    fontFamily: "'Inter',sans-serif",
+                    fontSize: '12px',
+                    color: C.limestone,
+                    outline: 'none',
+                  }}
+                />
+                <Search
+                  size={14}
+                  color={`${C.limestone}70`}
+                  style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
+                />
+              </div>
+
               <div
                 style={{
                   display: 'flex',
@@ -160,7 +395,6 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          {/* Governorate selector */}
           <div
             style={{
               display: 'flex',
@@ -170,25 +404,25 @@ export default function ExplorePage() {
               paddingBottom: 2,
             }}
           >
-            {GOVERNORATES.map((g) => (
+            {EGYPT_GOVERNORATES.map((g) => (
               <button
-                key={g}
-                onClick={() => setGov(g)}
+                key={g.name}
+                onClick={() => handleGovChange(g.name)}
                 style={{
-                  background: g === gov ? C.limestone : `${C.limestone}12`,
-                  border: `1px solid ${g === gov ? C.limestone : `${C.limestone}20`}`,
+                  background: g.name === gov ? C.limestone : `${C.limestone}12`,
+                  border: `1px solid ${g.name === gov ? C.limestone : `${C.limestone}20`}`,
                   borderRadius: 99,
                   padding: '6px 16px',
                   fontFamily: "'Inter',sans-serif",
                   fontSize: '12px',
-                  fontWeight: g === gov ? 700 : 400,
-                  color: g === gov ? C.nile : `${C.limestone}75`,
+                  fontWeight: g.name === gov ? 700 : 400,
+                  color: g.name === gov ? C.nile : `${C.limestone}75`,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   transition: 'all 0.18s',
                 }}
               >
-                {g}
+                {g.name}
               </button>
             ))}
           </div>
@@ -205,13 +439,14 @@ export default function ExplorePage() {
           boxSizing: 'border-box',
         }}
       >
-        {/* Filters row */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: 20,
+            flexWrap: 'wrap',
+            gap: 12,
           }}
         >
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -235,24 +470,8 @@ export default function ExplorePage() {
                 {c}
               </button>
             ))}
-            <button
-              style={{
-                background: 'transparent',
-                border: '1.5px solid rgba(27,26,23,0.13)',
-                borderRadius: 99,
-                padding: '6px 14px',
-                fontFamily: "'Inter',sans-serif",
-                fontSize: '13px',
-                color: '#6B6354',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Filter size={13} strokeWidth={2} /> More filters
-            </button>
           </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#A89880' }}>
               Sort by:
@@ -279,7 +498,6 @@ export default function ExplorePage() {
           </div>
         </div>
 
-        {/* Results count */}
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <span
             style={{
@@ -289,7 +507,7 @@ export default function ExplorePage() {
               color: C.nile,
             }}
           >
-            {filtered.length} sites
+            {isLoading ? '...' : filtered.length} sites
           </span>
           <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#A89880' }}>
             in {gov} Governorate
@@ -315,16 +533,133 @@ export default function ExplorePage() {
                   color: C.alertAmber,
                 }}
               >
-                {filtered.filter((s) => s.scam).length} with active scam alerts
+                {filtered.filter((s) => s.scam).length} with scam alerts
               </span>
             </div>
           )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
-          {/* Site grid */}
           <div>
-            {view === 'grid' ? (
+            {isLoading ? (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))',
+                  gap: 14,
+                }}
+              >
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: C.limestone,
+                      borderRadius: 16,
+                      height: 240,
+                      border: '1px solid rgba(27,26,23,0.07)',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      opacity: 0.7,
+                    }}
+                  >
+                    <div style={{ height: 140, background: '#EAE6DF' }} />
+                    <div style={{ padding: '12px 13px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ height: 16, width: '75%', background: '#EAE6DF', borderRadius: 4 }} />
+                      <div style={{ height: 12, width: '45%', background: '#EAE6DF', borderRadius: 4 }} />
+                      <div style={{ height: 14, width: '90%', background: '#EAE6DF', borderRadius: 4, marginTop: 4 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div
+                style={{
+                  background: '#FFF5F5',
+                  border: '1px solid #FECACA',
+                  borderRadius: 16,
+                  padding: '32px 24px',
+                  textAlign: 'center',
+                }}
+              >
+                <AlertTriangle size={36} color="#DC2626" style={{ marginBottom: 12 }} />
+                <h3
+                  style={{
+                    fontFamily: "'Inter',sans-serif",
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: '#991B1B',
+                    margin: '0 0 8px 0',
+                  }}
+                >
+                  Failed to Load Explore Data
+                </h3>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#7F1D1D', margin: '0 0 16px 0' }}>
+                  {error}
+                </p>
+                <button
+                  onClick={() => setReloadKey((prev) => prev + 1)}
+                  style={{
+                    background: '#DC2626',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '8px 18px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <RefreshCw size={14} /> Retry Request
+                </button>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div
+                style={{
+                  background: C.limestone,
+                  borderRadius: 16,
+                  padding: '48px 24px',
+                  textAlign: 'center',
+                  border: '1.5px dashed rgba(27,26,23,0.15)',
+                }}
+              >
+                <Compass size={40} color={C.copper} style={{ marginBottom: 12 }} />
+                <h3
+                  style={{
+                    fontFamily: "'Cormorant Garamond',serif",
+                    fontSize: '20px',
+                    color: C.nile,
+                    margin: '0 0 8px 0',
+                  }}
+                >
+                  No Sites Found
+                </h3>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#8B7E6A', margin: '0 0 16px 0' }}>
+                  Core Server returned 0 points of interest matching your filter criteria in {gov}.
+                </p>
+                <button
+                  onClick={() => {
+                    setCat('All');
+                    setSearchQuery('');
+                  }}
+                  style={{
+                    background: C.nile,
+                    color: C.limestone,
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset Filters
+                </button>
+              </div>
+            ) : view === 'grid' ? (
               <div
                 style={{
                   display: 'grid',
@@ -492,47 +827,21 @@ export default function ExplorePage() {
             )}
           </div>
 
-          {/* Right panel: selected site or map placeholder */}
           <div style={{ position: 'sticky', top: 24, alignSelf: 'start' }}>
             <div>
-              {/* Map placeholder */}
-              <div
-                style={{
-                  background: `linear-gradient(145deg,${C.limestoneDark},#E0D9C6)`,
-                  borderRadius: 16,
-                  height: 280,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1.5px dashed rgba(27,26,23,0.15)',
-                  marginBottom: 14,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                <div style={{ position: 'absolute', inset: 0, opacity: 0.06 }}>
-                  <Geom size={280} color={C.nile} op={1} />
-                </div>
-                <Map size={32} color={C.copper} strokeWidth={1.5} style={{ marginBottom: 12 }} />
-                <div
-                  style={{
-                    fontFamily: "'Cormorant Garamond',serif",
-                    fontStyle: 'italic',
-                    fontSize: '16px',
-                    color: C.copper,
-                    marginBottom: 6,
-                  }}
-                >
-                  Interactive Map
-                </div>
-                <div
-                  style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#A89880' }}
-                >
-                  Click a site to see details here
-                </div>
+              <div style={{ height: 340, marginBottom: 14 }}>
+                <InteractiveMap
+                  sites={sites}
+                  isLoading={isLoading}
+                  error={error}
+                  onRetry={() => setReloadKey((prev) => prev + 1)}
+                  selectedGov={gov}
+                  selectedGovCoords={{ lat: activeGovObj.lat, lon: activeGovObj.lon }}
+                  onSelectSite={(site) => router.push(`/app/sites/${site.id}`)}
+                  activeCategory={cat}
+                />
               </div>
-              {/* Safety summary */}
+
               <div
                 style={{
                   background: C.limestone,
@@ -543,54 +852,303 @@ export default function ExplorePage() {
               >
                 <div
                   style={{
-                    fontFamily: "'Inter',sans-serif",
-                    fontSize: '10px',
-                    fontWeight: 600,
-                    color: '#A89880',
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                     marginBottom: 12,
                   }}
                 >
-                  Area Safety · {gov}
-                </div>
-                {[
-                  { label: 'Overall Status', val: 'Secure', color: C.safeGreen },
-                  { label: 'Active Scam Alerts', val: '2 sites', color: C.alertAmber },
-                  { label: 'Restricted Zones', val: 'None nearby', color: C.safeGreen },
-                  { label: 'Last Updated', val: '4 min ago', color: '#8B7E6A' },
-                ].map(({ label, val, color }) => (
                   <div
-                    key={label}
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px 0',
-                      borderBottom: '1px solid rgba(27,26,23,0.05)',
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      color: '#A89880',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
                     }}
                   >
-                    <span
-                      style={{
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: '12px',
-                        color: '#8B7E6A',
-                      }}
-                    >
-                      {label}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        color: '#8B7E6A',
-                      }}
-                    >
-                      {val}
-                    </span>
+                    Area Safety · {gov}
                   </div>
-                ))}
+                  {safetyLoading ? (
+                    <span
+                      style={{
+                        fontFamily: "'Inter',sans-serif",
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        background: '#E5E7EB',
+                        color: '#4B5563',
+                      }}
+                    >
+                      Loading...
+                    </span>
+                  ) : safetyError ? (
+                    <span
+                      style={{
+                        fontFamily: "'Inter',sans-serif",
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        background: '#FEE2E2',
+                        color: '#DC2626',
+                      }}
+                    >
+                      Error
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: "'Inter',sans-serif",
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        background:
+                          safetyData?.status === 'safe'
+                            ? '#DCFCE7'
+                            : safetyData?.status === 'warning'
+                            ? '#FEE2E2'
+                            : '#FEF3C7',
+                        color:
+                          safetyData?.status === 'safe'
+                            ? '#166534'
+                            : safetyData?.status === 'warning'
+                            ? '#991B1B'
+                            : '#92400E',
+                      }}
+                    >
+                      {safetyData?.safetyLevel || 'Safe'}
+                    </span>
+                  )}
+                </div>
+
+                {safetyLoading ? (
+                  <div
+                    style={{
+                      padding: '16px 0',
+                      textAlign: 'center',
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: '12px',
+                      color: '#A89880',
+                    }}
+                  >
+                    <RefreshCw size={16} className="animate-spin" style={{ margin: '0 auto 6px auto' }} />
+                    Fetching safety information...
+                  </div>
+                ) : safetyError ? (
+                  <div
+                    style={{
+                      background: '#FFF5F5',
+                      border: '1px solid #FECACA',
+                      borderRadius: 8,
+                      padding: '10px 12px',
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        color: '#B91C1C',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                      }}
+                    >
+                      <AlertTriangle size={14} /> Safety Info Unavailable
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "'Inter',sans-serif",
+                        fontSize: '11px',
+                        color: '#7F1D1D',
+                        marginTop: 4,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {safetyError}
+                    </div>
+                    <button
+                      onClick={fetchSafetyInfo}
+                      style={{
+                        marginTop: 8,
+                        background: '#DC2626',
+                        color: '#FFF',
+                        border: 'none',
+                        borderRadius: 4,
+                        padding: '4px 8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : safetyData ? (
+                  <>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: '#FFF',
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        marginBottom: 12,
+                        border: '1px solid rgba(27,26,23,0.05)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <ShieldCheck size={18} color="#166534" />
+                        <div>
+                          <div
+                            style={{
+                              fontFamily: "'Inter',sans-serif",
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              color: '#1B1A17',
+                            }}
+                          >
+                            Safety Index
+                          </div>
+                          <div
+                            style={{
+                              fontFamily: "'Inter',sans-serif",
+                              fontSize: '10px',
+                              color: '#8B7E6A',
+                            }}
+                          >
+                            Score: {safetyData.safetyScore}/100
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '18px',
+                          fontWeight: 800,
+                          color:
+                            safetyData.safetyScore >= 80
+                              ? '#166534'
+                              : safetyData.safetyScore >= 60
+                              ? '#92400E'
+                              : '#991B1B',
+                        }}
+                      >
+                        {safetyData.safetyScore}%
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 0',
+                        borderBottom: '1px solid rgba(27,26,23,0.05)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '12px',
+                          color: '#8B7E6A',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <ShieldAlert size={14} color="#D97706" />
+                        Scam Risk Level
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          color:
+                            safetyData.scamRiskLevel === 'Low'
+                              ? '#166534'
+                              : safetyData.scamRiskLevel === 'Moderate'
+                              ? '#D97706'
+                              : '#DC2626',
+                        }}
+                      >
+                        {safetyData.scamRiskLevel} ({safetyData.scamAlertsCount} alerts)
+                      </span>
+                    </div>
+
+                    {safetyData.emergencyContacts && (
+                      <div
+                        style={{
+                          padding: '10px 0 4px 0',
+                          borderBottom: '1px solid rgba(27,26,23,0.05)',
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontFamily: "'Inter',sans-serif",
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: '#1B1A17',
+                            marginBottom: 6,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <PhoneCall size={12} color="#8B7E6A" /> Emergency Contacts
+                        </div>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: 6,
+                            fontFamily: "'Inter',sans-serif",
+                            fontSize: '11px',
+                            color: '#555',
+                          }}
+                        >
+                          <div>Police: <strong style={{ color: '#1B1A17' }}>{safetyData.emergencyContacts.touristPolice}</strong></div>
+                          <div>Ambulance: <strong style={{ color: '#1B1A17' }}>{safetyData.emergencyContacts.ambulance}</strong></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {safetyData.safetyTips && safetyData.safetyTips.length > 0 && (
+                      <div style={{ marginTop: 8 }}>
+                        <div
+                          style={{
+                            fontFamily: "'Inter',sans-serif",
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: '#1B1A17',
+                            marginBottom: 4,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <Info size={12} color="#8B7E6A" /> Safety Tip
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: "'Inter',sans-serif",
+                            fontSize: '11px',
+                            color: '#666',
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {safetyData.safetyTips[0]}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : null}
               </div>
             </div>
           </div>

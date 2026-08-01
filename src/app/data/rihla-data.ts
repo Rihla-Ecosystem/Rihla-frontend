@@ -23,6 +23,8 @@ export type RihlaSite = {
   scamDetail: string | null;
   tips: string[];
   nearby: number[];
+  lat?: number;
+  lon?: number;
 };
 
 export type JourneyProgress = {
