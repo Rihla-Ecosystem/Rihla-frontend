@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle, Star, MapPin, Clock, Shield, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle, Star, MapPin, Clock, Shield, Globe, Edit3, X, Loader2, AlertCircle, Award } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { Geom, Glyph } from "@/app/components/atoms";
 import { TopBar } from "@/app/components/layout/TopBar";
+import { useAuth } from "@/lib/auth";
+import { userService } from "@/services/userService";
+import { historyService, TripHistoryItem, UserBadgeItem } from "@/services/historyService";
 
 const LEVEL_MAP = [
   { level: 1, title: "Newcomer",   xpNeeded: 0,    color: "#C4B89A" },
@@ -15,7 +18,7 @@ const LEVEL_MAP = [
   { level: 6, title: "Pharaoh",    xpNeeded: 2000, color: C.terracotta},
 ];
 
-const ALL_BADGES = [
+const CATALOG_BADGES = [
   { id: "b01", name: "Giza Pioneer",       icon: "🏔", cat: "Places",      earned: true,  date: "28 Jul",   xp: 50,  desc: "First visit to the Giza Plateau" },
   { id: "b02", name: "Museum Maven",       icon: "🏺", cat: "Places",      earned: true,  date: "30 Jul",   xp: 60,  desc: "Visited 2 museums in one journey" },
   { id: "b03", name: "Cairo Chronicler",   icon: "📜", cat: "Places",      earned: true,  date: "29 Jul",   xp: 80,  desc: "Explored 3+ Cairo sites in a day" },
@@ -36,156 +39,199 @@ const ALL_BADGES = [
 
 const BADGE_CATS = ["All", "Places", "Safety", "Rafiq", "Habits", "Milestones"];
 
-const TRAVELER_STATS = [
-  { label: "Days in Egypt",       val: "3",    icon: <Star     size={16} strokeWidth={2}/>, color: C.sand       },
-  { label: "Sites visited",       val: "5",    icon: <MapPin   size={16} strokeWidth={2}/>, color: C.faience    },
-  { label: "Hours exploring",     val: "8.3",  icon: <Clock    size={16} strokeWidth={2}/>, color: C.copper     },
-  { label: "Rafiq conversations", val: "23",   icon: <Glyph   size={16}/>,                  color: C.nile       },
-  { label: "Scams avoided",       val: "2",    icon: <Shield   size={16} strokeWidth={2}/>, color: C.safeGreen  },
-  { label: "Governorates",        val: "2",    icon: <Globe    size={16} strokeWidth={2}/>, color: C.terracotta },
-];
-
 const PERSONA_STYLES = [
-  { id: "cultural",   label: "Cultural",    icon: "🏛",  active: true  },
-  { id: "adventure",  label: "Adventure",   icon: "🧗",  active: false },
-  { id: "foodie",     label: "Foodie",      icon: "🫕",  active: false },
-  { id: "history",    label: "History",     icon: "📜",  active: false },
-];
-
-const JOURNEY_IMPACT = [
-  { label: "Local guides supported", val: "4",    color: C.safeGreen  },
-  { label: "EGP spent locally",      val: "2,420",color: C.copper     },
-  { label: "Carbon offset (kg CO₂)", val: "12",   color: C.faience    },
-];
-
-const VISIT_LOG = [
-  {
-    id: "v1",
-    date: "Today",
-    dateISO: "30 Jul 2026",
-    site: "Great Sphinx of Giza",
-    siteAr: "أبو الهول",
-    gov: "Giza",
-    cat: "Archaeological",
-    img: "https://images.unsplash.com/photo-1539768942893-daf53e448371?w=600&h=400&fit=crop",
-    duration: "1h 22m",
-    xp: 120,
-    badge: null,
-    story: "You stood before the oldest monumental sculpture on Earth. Carved from a single limestone ridge during the reign of Pharaoh Khafre, the Sphinx has silently watched the Nile flood and recede for 4,500 years.",
-    rafiqNote: "You asked about the missing nose. Rafiq found 3 competing theories — none involving Napoleon.",
-    tags: ["Solo", "Morning visit", "Rafiq consulted"],
-  },
-  {
-    id: "v2",
-    date: "Today",
-    dateISO: "30 Jul 2026",
-    site: "Khufu Ship Museum",
-    siteAr: "متحف مركب خوفو",
-    gov: "Giza",
-    cat: "Museum",
-    img: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=600&h=400&fit=crop",
-    duration: "48m",
-    xp: 80,
-    badge: "Museum Maven",
-    story: "A cedar ship built 4,600 years ago — perfectly preserved, never sailed. Its purpose remains one of Egyptology's most elegant mysteries: a solar barque for the afterlife journey.",
-    rafiqNote: "Rafiq identified the ship's wood as Lebanese cedar — imported wood so rare it was used as royal currency.",
-    tags: ["Indoor", "Air-conditioned", "Photo highlights"],
-  },
-  {
-    id: "v3",
-    date: "Yesterday",
-    dateISO: "29 Jul 2026",
-    site: "Egyptian Museum",
-    siteAr: "المتحف المصري",
-    gov: "Cairo",
-    cat: "Museum",
-    img: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=600&h=400&fit=crop",
-    duration: "3h 10m",
-    xp: 200,
-    badge: "Cairo Chronicler",
-    story: "Over three hours in 136 halls, you encountered Tutankhamun's golden mask, the Royal Mummies Room, and a collection of 120,000 objects spanning 5,000 years of human achievement.",
-    rafiqNote: "You spent 22 minutes with Nefertiti's canopic jars. Rafiq explained what each organ symbolised.",
-    tags: ["Long visit", "Guided audio", "XP milestone"],
-  },
-  {
-    id: "v4",
-    date: "29 Jul 2026",
-    dateISO: "29 Jul 2026",
-    site: "Khan el-Khalili",
-    siteAr: "خان الخليلي",
-    gov: "Cairo",
-    cat: "Market",
-    img: "https://images.unsplash.com/photo-1553997456-7b44d1bb8d21?w=600&h=400&fit=crop",
-    duration: "2h 5m",
-    xp: 60,
-    badge: null,
-    story: "Established in 1382 by Emir Djaharks el-Khalili, the bazaar has traded continuously for 644 years. You navigated its spice lanes and copper workshops with Rafiq's scam radar active.",
-    rafiqNote: "Rafiq flagged the 'free gift' vendor twice. You walked past both times — perfectly.",
-    tags: ["Evening", "Scam alert active", "Haggling practice"],
-  },
-  {
-    id: "v5",
-    date: "28 Jul 2026",
-    dateISO: "28 Jul 2026",
-    site: "Khafre Valley Temple",
-    siteAr: "معبد وادي خفرع",
-    gov: "Giza",
-    cat: "Temple",
-    img: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=600&h=400&fit=crop",
-    duration: "55m",
-    xp: 90,
-    badge: null,
-    story: "Built from pink Aswan granite and Egyptian alabaster, this mortuary temple once held 23 statues of Khafre. Only fragments survive, but its geometry is flawless after 45 centuries.",
-    rafiqNote: "Rafiq noted the temple's causeway alignment with the Sphinx — an intentional solar axis.",
-    tags: ["Afternoon", "Quiet", "Architecture focus"],
-  },
+  { id: "cultural",   label: "Cultural",    icon: "🏛" },
+  { id: "adventure",  label: "Adventure",   icon: "🧗" },
+  { id: "foodie",     label: "Foodie",      icon: "🫕" },
+  { id: "history",    label: "History",     icon: "📜" },
 ];
 
 export default function PageProfile() {
+  const { user, fetchCurrentUser, isLoading: authLoading } = useAuth();
+  
+  const [profileData, setProfileData] = useState<any>(null);
+  const [userBadges, setUserBadges]   = useState<UserBadgeItem[]>([]);
+  const [trips, setTrips]             = useState<TripHistoryItem[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
+
   const [badgeCat, setBadgeCat] = useState("All");
-  const [tab,      setTab]      = useState<"badges" | "stats" | "impact">("badges");
+  const [tab, setTab]           = useState<"badges" | "stats" | "impact">("badges");
 
-  const currentXP   = 550;
-  const currentLevel = LEVEL_MAP[3];
-  const nextLevel    = LEVEL_MAP[4];
-  const xpInLevel    = currentXP - currentLevel.xpNeeded;
-  const xpNeeded     = nextLevel.xpNeeded - currentLevel.xpNeeded;
-  const pct          = Math.min((xpInLevel / xpNeeded) * 100, 100);
+  // Edit Profile Modal State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editName, setEditName]     = useState("");
+  const [editNat, setEditNat]       = useState("");
+  const [editStyle, setEditStyle]   = useState("");
+  const [editBio, setEditBio]       = useState("");
+  const [saving, setSaving]         = useState(false);
+  const [saveMsg, setSaveMsg]       = useState<string | null>(null);
 
-  const filtered = ALL_BADGES.filter(b => badgeCat === "All" || b.cat === badgeCat);
-  const earned   = ALL_BADGES.filter(b => b.earned).length;
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const profile = await userService.getProfile();
+      setProfileData(profile);
+
+      if (profile?.id || user?.id) {
+        const userId = profile?.id || user?.id;
+        const [fetchedBadges, fetchedTrips] = await Promise.allSettled([
+          userId ? historyService.getBadges(userId) : Promise.resolve([]),
+          historyService.getTrips(),
+        ]);
+
+        if (fetchedBadges.status === "fulfilled") {
+          setUserBadges(fetchedBadges.value || []);
+        }
+        if (fetchedTrips.status === "fulfilled") {
+          setTrips(fetchedTrips.value || []);
+        }
+      }
+    } catch (err: any) {
+      console.error("Error loading profile:", err);
+      setError(err?.message || "Failed to load user profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const handleOpenEdit = () => {
+    const activeUser = profileData || user;
+    setEditName(activeUser?.displayName || "");
+    setEditNat(activeUser?.nationality || "German");
+    setEditStyle(activeUser?.travelStyle || "Cultural");
+    setEditBio(activeUser?.bio || "");
+    setSaveMsg(null);
+    setIsEditOpen(true);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      setSaveMsg(null);
+      await userService.updateProfile({
+        display_name: editName,
+        nationality: editNat,
+        travel_style: editStyle,
+        bio: editBio,
+      });
+      await fetchCurrentUser();
+      await loadProfile();
+      setSaveMsg("Profile updated successfully!");
+      setTimeout(() => {
+        setIsEditOpen(false);
+      }, 800);
+    } catch (err: any) {
+      console.error("Error updating profile:", err);
+      setSaveMsg(err?.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Derive current user info
+  const activeUser = profileData || user;
+  const displayName = activeUser?.displayName || "Sara Al-Rashid";
+  const userInitials = displayName.slice(0, 1).toUpperCase();
+  const nationality = activeUser?.nationality || "German";
+  const travelStyle = activeUser?.travelStyle || "Cultural";
+  const memberSince = activeUser?.createdAt
+    ? new Date(activeUser.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : "Jul 2026";
+
+  const currentXP = activeUser?.xp ?? 550;
+  
+  // Calculate level
+  let currentLevelIdx = 0;
+  for (let i = LEVEL_MAP.length - 1; i >= 0; i--) {
+    if (currentXP >= LEVEL_MAP[i].xpNeeded) {
+      currentLevelIdx = i;
+      break;
+    }
+  }
+  const currentLevel = LEVEL_MAP[currentLevelIdx];
+  const nextLevel = LEVEL_MAP[Math.min(currentLevelIdx + 1, LEVEL_MAP.length - 1)];
+
+  const xpInLevel = Math.max(0, currentXP - currentLevel.xpNeeded);
+  const xpNeeded = Math.max(1, nextLevel.xpNeeded - currentLevel.xpNeeded);
+  const pct = nextLevel === currentLevel ? 100 : Math.min(100, Math.round((xpInLevel / xpNeeded) * 100));
+
+  // Merge badges with backend earned list
+  const earnedBadgeIds = new Set(userBadges.map((b) => b.id.toString()));
+  const mergedBadges = CATALOG_BADGES.map((b) => {
+    const isEarned = b.earned || earnedBadgeIds.has(b.id);
+    return { ...b, earned: isEarned };
+  });
+
+  const filteredBadges = mergedBadges.filter((b) => badgeCat === "All" || b.cat === badgeCat);
+  const earnedCount = mergedBadges.filter((b) => b.earned).length;
+
+  // Stats calculation
+  const travelerStats = [
+    { label: "Days in Egypt", val: trips.length > 0 ? `${trips.length * 2}` : "3", icon: <Star size={16} strokeWidth={2}/>, color: C.sand },
+    { label: "Sites visited", val: trips.length > 0 ? `${trips.length}` : "5", icon: <MapPin size={16} strokeWidth={2}/>, color: C.faience },
+    { label: "Hours exploring", val: "8.3", icon: <Clock size={16} strokeWidth={2}/>, color: C.copper },
+    { label: "Rafiq conversations", val: "23", icon: <Glyph size={16}/>, color: C.nile },
+    { label: "Scams avoided", val: "2", icon: <Shield size={16} strokeWidth={2}/>, color: C.safeGreen },
+    { label: "Governorates", val: "2", icon: <Globe size={16} strokeWidth={2}/>, color: C.terracotta },
+  ];
+
+  if (loading || authLoading) {
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <TopBar location="Your Profile · Rihla" />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
+          <div style={{ textAlign: "center" }}>
+            <Loader2 size={36} color={C.nile} className="animate-spin" style={{ margin: "0 auto 12px" }} />
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", color: "#8B7E6A" }}>Loading your profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-      <TopBar location="Your Profile · Rihla"/>
+      <TopBar location="Your Profile · Rihla" />
 
       {/* Profile hero */}
       <div style={{ background: `linear-gradient(160deg,${C.nile} 0%,#122A2B 55%,#1A3A1F 100%)`, padding: "36px 32px", flexShrink: 0, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", right: -60, top: -60 }}><Geom size={320} color={C.limestone} op={0.028}/></div>
+        <div style={{ position: "absolute", right: -60, top: -60 }}><Geom size={320} color={C.limestone} op={0.028} /></div>
         <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
           <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 28, alignItems: "center" }}>
             {/* Avatar */}
             <div style={{ position: "relative" }}>
               <div style={{ width: 88, height: 88, borderRadius: "50%", background: `linear-gradient(135deg,${C.sand}50,${C.copper}60)`, border: `3px solid ${C.limestone}25`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 0 6px ${C.limestone}08` }}>
-                <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "38px", fontWeight: 500, color: C.limestone }}>S</span>
+                {activeUser?.avatarUrl ? (
+                  <img src={activeUser.avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "38px", fontWeight: 500, color: C.limestone }}>{userInitials}</span>
+                )}
               </div>
               <div style={{ position: "absolute", bottom: 2, right: 2, width: 20, height: 20, borderRadius: "50%", background: C.safeGreen, border: `2px solid #0F3D3E`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <CheckCircle size={11} color="#fff" strokeWidth={2.5}/>
+                <CheckCircle size={11} color="#fff" strokeWidth={2.5} />
               </div>
             </div>
             {/* Name & level */}
             <div>
               <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: `${C.limestone}45`, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>Verified traveler</div>
               <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(22px,3vw,36px)", fontWeight: 400, color: C.limestone, lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: 6 }}>
-                Sara <span style={{ fontStyle: "italic", fontWeight: 300 }}>Al-Rashid</span>
+                {displayName}
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${currentLevel.color}20`, border: `1px solid ${currentLevel.color}40`, borderRadius: 99, padding: "4px 12px" }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: currentLevel.color }}/>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: currentLevel.color }} />
                   <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: currentLevel.color }}>Level {currentLevel.level} · {currentLevel.title}</span>
                 </div>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}45` }}>🇩🇪 German · Cultural explorer</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}35` }}>Member since Jul 2026</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}45` }}>{nationality} · {travelStyle} explorer</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}35` }}>Member since {memberSince}</span>
               </div>
             </div>
             {/* XP block */}
@@ -195,10 +241,11 @@ export default function PageProfile() {
                 <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "22px", fontWeight: 500, color: C.sand }}>{currentXP}</span>
               </div>
               <div style={{ height: 6, background: `${C.limestone}15`, borderRadius: 99, marginBottom: 6, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${C.sand},${C.faience})`, borderRadius: 99, transition: "width 0.6s ease" }}/>
+                <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${C.sand},${C.faience})`, borderRadius: 99, transition: "width 0.6s ease" }} />
               </div>
               <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: `${C.limestone}45` }}>
-                {xpNeeded - xpInLevel} XP to <span style={{ color: nextLevel.color, fontWeight: 600 }}>{nextLevel.title}</span>
+                {nextLevel === currentLevel ? "Max level achieved!" : `${nextLevel.xpNeeded - currentXP} XP to `}
+                {nextLevel !== currentLevel && <span style={{ color: nextLevel.color, fontWeight: 600 }}>{nextLevel.title}</span>}
               </div>
             </div>
           </div>
@@ -212,12 +259,12 @@ export default function PageProfile() {
                 <div key={lv.level} style={{ display: "flex", alignItems: "center", flex: i < LEVEL_MAP.length - 1 ? 1 : "none" }}>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
                     <div style={{ width: curr ? 36 : 24, height: curr ? 36 : 24, borderRadius: "50%", background: done || curr ? lv.color : `${C.limestone}12`, border: `2px solid ${done || curr ? lv.color : `${C.limestone}20`}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", boxShadow: curr ? `0 0 0 5px ${lv.color}25` : "none" }}>
-                      {(done || curr) && <CheckCircle size={curr ? 16 : 11} color={C.limestone} strokeWidth={2.5}/>}
+                      {(done || curr) && <CheckCircle size={curr ? 16 : 11} color={C.limestone} strokeWidth={2.5} />}
                     </div>
                     <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: curr ? 700 : 400, color: done || curr ? lv.color : `${C.limestone}30`, whiteSpace: "nowrap" }}>{lv.title}</div>
                   </div>
                   {i < LEVEL_MAP.length - 1 && (
-                    <div style={{ flex: 1, height: 2, background: done ? `linear-gradient(90deg,${lv.color},${LEVEL_MAP[i+1].color})` : `${C.limestone}15`, margin: "0 4px", marginBottom: 18 }}/>
+                    <div style={{ flex: 1, height: 2, background: done ? `linear-gradient(90deg,${lv.color},${LEVEL_MAP[i + 1].color})` : `${C.limestone}15`, margin: "0 4px", marginBottom: 18 }} />
                   )}
                 </div>
               );
@@ -232,7 +279,7 @@ export default function PageProfile() {
         <div>
           {/* Tab bar */}
           <div style={{ display: "flex", gap: 4, background: C.limestoneDark, borderRadius: 12, padding: 4, marginBottom: 20, width: "fit-content" }}>
-            {(["badges","stats","impact"] as const).map(t => (
+            {(["badges", "stats", "impact"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{ background: tab === t ? C.limestone : "transparent", border: "none", borderRadius: 9, padding: "8px 20px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: tab === t ? 700 : 400, color: tab === t ? C.nile : "#8B7E6A", cursor: "pointer", transition: "all 0.18s", textTransform: "capitalize", boxShadow: tab === t ? "0 1px 6px rgba(27,26,23,0.08)" : "none" }}>{t === "impact" ? "Journey Impact" : t.charAt(0).toUpperCase() + t.slice(1)}</button>
             ))}
           </div>
@@ -244,12 +291,12 @@ export default function PageProfile() {
                 {BADGE_CATS.map(c => (
                   <button key={c} onClick={() => setBadgeCat(c)} style={{ background: badgeCat === c ? C.nile : "transparent", border: `1.5px solid ${badgeCat === c ? C.nile : "rgba(27,26,23,0.13)"}`, borderRadius: 99, padding: "5px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: badgeCat === c ? 600 : 400, color: badgeCat === c ? C.limestone : "#6B6354", cursor: "pointer" }}>{c}</button>
                 ))}
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880", alignSelf: "center", marginLeft: 4 }}>{earned} of {ALL_BADGES.length} earned</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880", alignSelf: "center", marginLeft: 4 }}>{earnedCount} of {mergedBadges.length} earned</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12 }}>
-                {filtered.map(b => (
-                  <div key={b.id} style={{ background: b.earned ? C.limestone : "#FAF7F0", borderRadius: 14, padding: "18px 16px", border: `1.5px solid ${b.earned ? `${ALL_BADGES.find(x=>x.id===b.id) ? C.limestone : "transparent"}` : "rgba(27,26,23,0.06)"}`, opacity: b.earned ? 1 : 0.5, position: "relative", overflow: "hidden", boxShadow: b.earned ? "0 2px 12px rgba(15,61,62,0.06)" : "none" }}>
-                    {!b.earned && <div style={{ position: "absolute", inset: 0, background: "rgba(240,235,224,0.3)", backdropFilter: "blur(1px)", zIndex: 1 }}/>}
+                {filteredBadges.map(b => (
+                  <div key={b.id} style={{ background: b.earned ? C.limestone : "#FAF7F0", borderRadius: 14, padding: "18px 16px", border: `1.5px solid ${b.earned ? C.limestone : "rgba(27,26,23,0.06)"}`, opacity: b.earned ? 1 : 0.5, position: "relative", overflow: "hidden", boxShadow: b.earned ? "0 2px 12px rgba(15,61,62,0.06)" : "none" }}>
+                    {!b.earned && <div style={{ position: "absolute", inset: 0, background: "rgba(240,235,224,0.3)", backdropFilter: "blur(1px)", zIndex: 1 }} />}
                     <div style={{ position: "relative", zIndex: 2 }}>
                       <div style={{ fontSize: "30px", marginBottom: 10 }}>{b.icon}</div>
                       <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.nile, marginBottom: 4 }}>{b.name}</div>
@@ -270,7 +317,7 @@ export default function PageProfile() {
           {tab === "stats" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
-                {TRAVELER_STATS.map(s => (
+                {travelerStats.map(s => (
                   <div key={s.label} style={{ background: C.limestone, borderRadius: 14, padding: "20px 18px", border: "1px solid rgba(27,26,23,0.07)", textAlign: "center" }}>
                     <div style={{ width: 40, height: 40, borderRadius: 12, background: `${s.color}12`, border: `1px solid ${s.color}25`, display: "flex", alignItems: "center", justifyContent: "center", color: s.color, margin: "0 auto 12px" }}>{s.icon}</div>
                     <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "28px", fontWeight: 500, color: C.nile, marginBottom: 4 }}>{s.val}</div>
@@ -281,13 +328,16 @@ export default function PageProfile() {
               <div style={{ background: C.limestone, borderRadius: 14, padding: "20px", border: "1px solid rgba(27,26,23,0.07)" }}>
                 <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: "#A89880", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>Travel Style Preferences</div>
                 <div style={{ display: "flex", gap: 10 }}>
-                  {PERSONA_STYLES.map(p => (
-                    <div key={p.id} style={{ flex: 1, textAlign: "center", padding: "16px 8px", borderRadius: 12, background: p.active ? `${C.nile}08` : "#FAF7F0", border: `1.5px solid ${p.active ? C.nile : "rgba(27,26,23,0.07)"}` }}>
-                      <div style={{ fontSize: "22px", marginBottom: 6 }}>{p.icon}</div>
-                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: p.active ? 700 : 400, color: p.active ? C.nile : "#A89880" }}>{p.label}</div>
-                      {p.active && <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.faience, margin: "6px auto 0" }}/>}
-                    </div>
-                  ))}
+                  {PERSONA_STYLES.map(p => {
+                    const isSelected = travelStyle.toLowerCase().includes(p.id.toLowerCase());
+                    return (
+                      <div key={p.id} style={{ flex: 1, textAlign: "center", padding: "16px 8px", borderRadius: 12, background: isSelected ? `${C.nile}08` : "#FAF7F0", border: `1.5px solid ${isSelected ? C.nile : "rgba(27,26,23,0.07)"}` }}>
+                        <div style={{ fontSize: "22px", marginBottom: 6 }}>{p.icon}</div>
+                        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: isSelected ? 700 : 400, color: isSelected ? C.nile : "#A89880" }}>{p.label}</div>
+                        {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.faience, margin: "6px auto 0" }} />}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -299,27 +349,14 @@ export default function PageProfile() {
                 <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: C.copper, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>◈ Your Journey Impact</div>
                 <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", fontSize: "16px", color: C.nile, lineHeight: 1.7, marginBottom: 20 }}>"Tourism done thoughtfully is one of Egypt's most important economic pillars. Your journey supports local families, preserves living heritage, and funds site restoration."</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
-                  {JOURNEY_IMPACT.map(j => (
+                  {[
+                    { label: "Local guides supported", val: trips.length > 0 ? `${trips.length}` : "4", color: C.safeGreen },
+                    { label: "EGP spent locally", val: "2,420", color: C.copper },
+                    { label: "Carbon offset (kg CO₂)", val: "12", color: C.faience },
+                  ].map(j => (
                     <div key={j.label} style={{ background: C.limestone, borderRadius: 12, padding: "16px 14px", textAlign: "center" }}>
                       <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "26px", fontWeight: 500, color: j.color, marginBottom: 4 }}>{j.val}</div>
                       <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#8B7E6A", lineHeight: 1.4 }}>{j.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ background: C.limestone, borderRadius: 14, padding: "20px", border: "1px solid rgba(27,26,23,0.07)" }}>
-                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: "#A89880", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>Sites you helped preserve</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {VISIT_LOG.slice(0,3).map(v => (
-                    <div key={v.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
-                        <img src={v.img} alt={v.site} style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile }}>{v.site}</div>
-                        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880" }}>Your visit contributed to site preservation funding</div>
-                      </div>
-                      <CheckCircle size={16} color={C.safeGreen} strokeWidth={2.5}/>
                     </div>
                   ))}
                 </div>
@@ -335,33 +372,38 @@ export default function PageProfile() {
           <div style={{ background: C.limestone, borderRadius: 16, padding: "20px", border: "1px solid rgba(27,26,23,0.07)" }}>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: "#A89880", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>Profile Details</div>
             {[
-              { label: "Full name",     val: "Sara Al-Rashid" },
-              { label: "Nationality",   val: "🇩🇪 German" },
-              { label: "Travel style",  val: "Cultural" },
-              { label: "Home city",     val: "Berlin" },
-              { label: "Journeys",      val: "1 complete · 1 active" },
-              { label: "Member since",  val: "July 2026" },
+              { label: "Full name",     val: displayName },
+              { label: "Email",         val: activeUser?.email || "sara@example.com" },
+              { label: "Nationality",   val: nationality },
+              { label: "Travel style",  val: travelStyle },
+              { label: "Member since",  val: memberSince },
             ].map(({ label, val }) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid rgba(27,26,23,0.05)" }}>
                 <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880" }}>{label}</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile }}>{val}</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val}</span>
               </div>
             ))}
-            <button style={{ marginTop: 14, width: "100%", background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.1)", borderRadius: 9, padding: "10px 16px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: "#6B6354", cursor: "pointer" }}>Edit Profile</button>
+            <button
+              onClick={handleOpenEdit}
+              style={{ marginTop: 14, width: "100%", background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.1)", borderRadius: 9, padding: "10px 16px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: "#6B6354", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <Edit3 size={14} />
+              Edit Profile
+            </button>
           </div>
 
           {/* Next badge */}
           <div style={{ background: `linear-gradient(145deg,${C.nile},${C.nileMid})`, borderRadius: 16, padding: "20px" }}>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: `${C.limestone}45`, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>◈ Next Badge</div>
             {(() => {
-              const next = ALL_BADGES.find(b => !b.earned);
+              const next = mergedBadges.find((b) => !b.earned);
               return next ? (
                 <div>
                   <div style={{ fontSize: "32px", marginBottom: 8 }}>{next.icon}</div>
                   <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.limestone, marginBottom: 4 }}>{next.name}</div>
                   <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}60`, lineHeight: 1.55, marginBottom: 12 }}>{next.desc}</div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, background: `${C.sand}20`, color: C.sand, padding: "3px 9px", borderRadius: 99 }}>+\{next.xp} XP on unlock</span>
+                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, background: `${C.sand}20`, color: C.sand, padding: "3px 9px", borderRadius: 99 }}>+{next.xp} XP on unlock</span>
                     <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: C.faience, fontWeight: 600, cursor: "pointer" }}>How? →</span>
                   </div>
                 </div>
@@ -372,9 +414,9 @@ export default function PageProfile() {
           {/* Earned summary */}
           <div style={{ background: C.limestone, borderRadius: 14, padding: "16px 18px", border: "1px solid rgba(27,26,23,0.07)" }}>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: "#A89880", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Badge Progress</div>
-            {BADGE_CATS.slice(1).map(cat => {
-              const total   = ALL_BADGES.filter(b => b.cat === cat).length;
-              const earnedN = ALL_BADGES.filter(b => b.cat === cat && b.earned).length;
+            {BADGE_CATS.slice(1).map((cat) => {
+              const total = mergedBadges.filter((b) => b.cat === cat).length;
+              const earnedN = mergedBadges.filter((b) => b.cat === cat && b.earned).length;
               return (
                 <div key={cat} style={{ marginBottom: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -382,7 +424,7 @@ export default function PageProfile() {
                     <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 700, color: C.nile }}>{earnedN}/{total}</span>
                   </div>
                   <div style={{ height: 4, background: "#EDE6D6", borderRadius: 99, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${(earnedN/total)*100}%`, background: `linear-gradient(90deg,${C.copper},${C.sand})`, borderRadius: 99 }}/>
+                    <div style={{ height: "100%", width: `${(earnedN / total) * 100}%`, background: `linear-gradient(90deg,${C.copper},${C.sand})`, borderRadius: 99 }} />
                   </div>
                 </div>
               );
@@ -390,6 +432,91 @@ export default function PageProfile() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,35,36,0.6)", backdropFilter: "blur(4px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: C.limestone, borderRadius: 18, border: `1px solid ${C.sand}40`, width: "100%", maxWidth: 460, padding: 24, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "22px", fontWeight: 600, color: C.nile, margin: 0 }}>Edit Profile</h2>
+              <button onClick={() => setIsEditOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#8B7E6A" }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", marginBottom: 4 }}>Display Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(27,26,23,0.15)", fontFamily: "'Inter',sans-serif", fontSize: "14px", boxSizing: "border-box" }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", marginBottom: 4 }}>Nationality</label>
+                <input
+                  type="text"
+                  value={editNat}
+                  onChange={(e) => setEditNat(e.target.value)}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(27,26,23,0.15)", fontFamily: "'Inter',sans-serif", fontSize: "14px", boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", marginBottom: 4 }}>Travel Style</label>
+                <select
+                  value={editStyle}
+                  onChange={(e) => setEditStyle(e.target.value)}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(27,26,23,0.15)", fontFamily: "'Inter',sans-serif", fontSize: "14px", background: "#fff", boxSizing: "border-box" }}
+                >
+                  <option value="Cultural">Cultural</option>
+                  <option value="Adventure">Adventure</option>
+                  <option value="Foodie">Foodie</option>
+                  <option value="History">History</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", marginBottom: 4 }}>Bio</label>
+                <textarea
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  rows={3}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(27,26,23,0.15)", fontFamily: "'Inter',sans-serif", fontSize: "14px", boxSizing: "border-box" }}
+                />
+              </div>
+
+              {saveMsg && (
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: saveMsg.includes("success") ? C.safeGreen : C.terracotta, textAlign: "center" }}>
+                  {saveMsg}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid rgba(27,26,23,0.15)", background: "transparent", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: "#6B6354", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: C.nile, fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.limestone, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                >
+                  {saving && <Loader2 size={14} className="animate-spin" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
