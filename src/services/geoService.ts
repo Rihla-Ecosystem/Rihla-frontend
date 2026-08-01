@@ -10,4 +10,13 @@ export const geoService = {
     if (error) throw error;
     return data;
   },
+  searchPlaces: async (q: string, lat?: number, lon?: number) => {
+    const { data, error } = await apiClient.GET("/geo/search", {
+      params: {
+        query: { q, lat, lon },
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
 };
