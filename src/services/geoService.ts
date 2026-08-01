@@ -1,4 +1,4 @@
-import { apiClient } from "../api";
+import { apiClient, formatApiError } from "../api";
 
 export const geoService = {
   getPois: async (lat: number, lon: number, radius?: number, categories?: string) => {
@@ -7,7 +7,7 @@ export const geoService = {
         query: { lat, lon, radius, categories },
       },
     });
-    if (error) throw error;
+    if (error) throw formatApiError(error, "Failed to fetch points of interest from server");
     return data;
   },
   searchPlaces: async (q: string, lat?: number, lon?: number) => {
@@ -16,7 +16,8 @@ export const geoService = {
         query: { q, lat, lon },
       },
     });
-    if (error) throw error;
+    if (error) throw formatApiError(error, "Failed to search places from server");
     return data;
   },
 };
+

@@ -29,7 +29,7 @@ import { RafiqDrawer } from '@/app/components/rafiqDrawer';
 import { geoService } from '@/services/geoService';
 import { safetyService, type SafetyData } from '@/services/safetyService';
 import { useLocation } from '@/providers/LocationProvider';
-import type { RihlaSite } from '@/app/data/rihla-data';
+import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
 
 const InteractiveMap = dynamic(
   () => import('@/app/components/ui/InteractiveMap').then((mod) => mod.InteractiveMap),
@@ -227,14 +227,24 @@ export default function ExplorePage() {
         rawPois = (poiRes as any)?.pois || [];
       }
 
-      const mapped = rawPois.map((p: any, idx: number) =>
-        mapApiPoiToRihlaSite(p, userLat, userLon, idx)
-      );
-
-      setSites(mapped);
+      if (rawPois && rawPois.length > 0) {
+        const mapped = rawPois.map((p: any, idx: number) =>
+          mapApiPoiToRihlaSite(p, userLat, userLon, idx)
+        );
+        setSites(mapped);
+      } else {
+        const fallbackSites = ALL_SITES.filter(
+          (s) => s.gov.toLowerCase() === gov.toLowerCase() || gov === 'Egypt'
+        );
+        setSites(fallbackSites.length > 0 ? fallbackSites : ALL_SITES);
+      }
     } catch (err: any) {
-      console.error('Explore page data fetch failed:', err);
-      setError(err?.message || 'Failed to fetch points of interest from Core Server API.');
+      const errMsg = err?.message || 'Failed to fetch points of interest from Core Server API.';
+      console.warn('Explore page data fetch notice:', errMsg);
+      const fallbackSites = ALL_SITES.filter(
+        (s) => s.gov.toLowerCase() === gov.toLowerCase() || gov === 'Egypt'
+      );
+      setSites(fallbackSites.length > 0 ? fallbackSites : ALL_SITES);
     } finally {
       setIsLoading(false);
     }

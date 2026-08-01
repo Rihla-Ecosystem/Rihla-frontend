@@ -22,4 +22,21 @@ const authMiddleware: Middleware = {
   }
 };
 
+export function formatApiError(error: unknown, defaultMessage = "API request failed"): Error {
+  if (error instanceof Error) return error;
+  if (typeof error === "string") return new Error(error);
+  if (error && typeof error === "object") {
+    const errObj = error as Record<string, any>;
+    const message =
+      errObj.message ||
+      errObj.detail ||
+      errObj.error ||
+      (errObj.status ? `Request failed with status ${errObj.status}` : null);
+    if (message && typeof message === "string") {
+      return new Error(message);
+    }
+  }
+  return new Error(defaultMessage);
+}
+
 apiClient.use(authMiddleware);
