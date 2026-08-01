@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { BookOpen, LogOut } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { BookOpen, LogOut, Check, Loader2 } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { Geom, Glyph } from "@/app/components/atoms";
 import { TopBar } from "@/app/components/layout/TopBar";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import { userService } from "@/services/userService";
+import { historyService } from "@/services/historyService";
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
@@ -46,6 +49,7 @@ const APP_LANGUAGES = ["English", "العربية", "Deutsch", "Français", "日
 
 export default function PageSettings() {
   const router = useRouter();
+  const { user, logout } = useAuth();
   
   const [notifs, setNotifs] = useState({
     scamAlerts:   true,
@@ -75,9 +79,136 @@ export default function PageSettings() {
   const [units,        setUnits]        = useState<"metric"|"imperial">("metric");
   const [currency,     setCurrency]     = useState("USD");
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [savedStatus, setSavedStatus] = useState<string | null>(null);
 
-  const toggle = (obj: Record<string, boolean>, key: string, set: (v: any) => void) =>
-    set((prev: any) => ({ ...prev, [key]: !prev[key] }));
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("rihla_user_settings");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.notifs) setNotifs(parsed.notifs);
+        if (parsed.privacy) setPrivacy(parsed.privacy);
+        if (parsed.prefs) setPrefs(parsed.prefs);
+        if (parsed.rafiqPersona) setRafiqPersona(parsed.rafiqPersona);
+        if (parsed.language) setLanguage(parsed.language);
+        if (parsed.units) setUnits(parsed.units);
+        if (parsed.currency) setCurrency(parsed.currency);
+      } else if (user?.language && user.language.length > 0) {
+        setLanguage(user.language[0]);
+      }
+    } catch (e) {
+      console.error("Failed to parse local settings", e);
+    }
+  }, [user]);
+
+  const saveLocalSettings = useCallback((newSettings: Record<string, any>) => {
+    try {
+      const current = JSON.parse(localStorage.getItem("rihla_user_settings") || "{}");
+      const updated = { ...current, ...newSettings };
+      localStorage.setItem("rihla_user_settings", JSON.stringify(updated));
+      setSavedStatus("Preferences saved");
+      setTimeout(() => setSavedStatus(null), 2500);
+    } catch (e) {
+      console.error("Failed to save settings to localStorage", e);
+    }
+  }, []);
+
+  const toggleNotif = (key: string) => {
+    setNotifs(prev => {
+      const next = { ...prev, [key]: !(prev as any)[key] };
+      saveLocalSettings({ notifs: next });
+      return next;
+    });
+  };
+
+  const togglePrivacy = (key: string) => {
+    setPrivacy(prev => {
+      const next = { ...prev, [key]: !(prev as any)[key] };
+      saveLocalSettings({ privacy: next });
+      return next;
+    });
+  };
+
+  const togglePref = (key: string) => {
+    setPrefs(prev => {
+      const next = { ...prev, [key]: !(prev as any)[key] };
+      saveLocalSettings({ prefs: next });
+      return next;
+    });
+  };
+
+  const handleLanguageChange = async (newLang: string) => {
+    setLanguage(newLang);
+    saveLocalSettings({ language: newLang });
+    try {
+      await userService.updateProfile({ language: [newLang] });
+    } catch (e) {
+      console.error("Failed to update profile language on backend", e);
+    }
+  };
+
+  const handlePersonaChange = (personaId: string) => {
+    setRafiqPersona(personaId);
+    saveLocalSettings({ rafiqPersona: personaId });
+  };
+
+  const handleUnitsChange = (u: "metric" | "imperial") => {
+    setUnits(u);
+    saveLocalSettings({ units: u });
+  };
+
+  const handleCurrencyChange = (c: string) => {
+    setCurrency(c);
+    saveLocalSettings({ currency: c });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error("Logout error", e);
+    } finally {
+      router.push("/login");
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const profile = await userService.getProfile().catch(() => user);
+      let trips: any[] = [];
+      let badges: any[] = [];
+      if (user?.id) {
+        trips = await historyService.getTrips().catch(() => []);
+        badges = await historyService.getBadges(user.id).catch(() => []);
+      }
+      const localSettings = JSON.parse(localStorage.getItem("rihla_user_settings") || "{}");
+
+      const exportObj = {
+        exportedAt: new Date().toISOString(),
+        userProfile: profile,
+        userSettings: localSettings,
+        tripHistory: trips,
+        badges: badges,
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `rihla_data_export_${user?.displayName || "user"}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      setSavedStatus("Data exported successfully!");
+      setTimeout(() => setSavedStatus(null), 3000);
+    } catch (e) {
+      console.error("Failed to export user data", e);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -86,11 +217,18 @@ export default function PageSettings() {
       {/* Header */}
       <div style={{ background: `linear-gradient(135deg,${C.basalt} 0%,#2A1E10 60%,${C.nile} 100%)`, padding: "24px 32px", flexShrink: 0, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", right: -40, top: -40 }}><Geom size={220} color={C.limestone} op={0.025}/></div>
-        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
-          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: `${C.limestone}40`, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>Preferences</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(20px,2.5vw,30px)", fontWeight: 400, color: C.limestone, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-            Settings &amp; <span style={{ fontStyle: "italic", color: C.sand }}>Preferences</span>
-          </h1>
+        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: `${C.limestone}40`, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>Preferences</div>
+            <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(20px,2.5vw,30px)", fontWeight: 400, color: C.limestone, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+              Settings &amp; <span style={{ fontStyle: "italic", color: C.sand }}>Preferences</span>
+            </h1>
+          </div>
+          {savedStatus && (
+            <div style={{ background: `${C.faience}25`, border: `1px solid ${C.faience}`, borderRadius: 20, padding: "6px 14px", color: C.limestone, fontFamily: "'Inter',sans-serif", fontSize: "12px", display: "flex", alignItems: "center", gap: 6 }}>
+              <Check size={14} color={C.faience}/> {savedStatus}
+            </div>
+          )}
         </div>
       </div>
 
@@ -104,7 +242,7 @@ export default function PageSettings() {
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#8B7E6A", marginBottom: 16, lineHeight: 1.55 }}>Choose how Rafiq communicates with you. You can change this anytime mid-journey.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {RAFIQ_PERSONAS.map(p => (
-                <button key={p.id} onClick={() => setRafiqPersona(p.id)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 12, border: `2px solid ${rafiqPersona === p.id ? C.faience : "rgba(27,26,23,0.1)"}`, background: rafiqPersona === p.id ? `${C.faience}08` : "#FAF7F0", cursor: "pointer", textAlign: "left", transition: "all 0.18s" }}>
+                <button key={p.id} onClick={() => handlePersonaChange(p.id)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 12, border: `2px solid ${rafiqPersona === p.id ? C.faience : "rgba(27,26,23,0.1)"}`, background: rafiqPersona === p.id ? `${C.faience}08` : "#FAF7F0", cursor: "pointer", textAlign: "left", transition: "all 0.18s" }}>
                   <span style={{ fontSize: "24px", flexShrink: 0 }}>{p.icon}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: rafiqPersona === p.id ? C.faience : C.nile, marginBottom: 2 }}>{p.label}</div>
@@ -124,7 +262,7 @@ export default function PageSettings() {
               label="App Language"
               sub="Affects all UI text and Rafiq responses"
               right={
-                <select value={language} onChange={e => setLanguage(e.target.value)} style={{ background: C.limestoneDark, border: "1.5px solid rgba(27,26,23,0.1)", borderRadius: 8, padding: "6px 10px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile, cursor: "pointer", outline: "none" }}>
+                <select value={language} onChange={e => handleLanguageChange(e.target.value)} style={{ background: C.limestoneDark, border: "1.5px solid rgba(27,26,23,0.1)", borderRadius: 8, padding: "6px 10px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile, cursor: "pointer", outline: "none" }}>
                   {APP_LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
               }
@@ -135,7 +273,7 @@ export default function PageSettings() {
               right={
                 <div style={{ display: "flex", background: C.limestoneDark, borderRadius: 8, padding: 3, gap: 2 }}>
                   {(["metric","imperial"] as const).map(u => (
-                    <button key={u} onClick={() => setUnits(u)} style={{ background: units === u ? C.limestone : "transparent", border: "none", borderRadius: 6, padding: "5px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: units === u ? 700 : 400, color: units === u ? C.nile : "#8B7E6A", cursor: "pointer", boxShadow: units === u ? "0 1px 4px rgba(27,26,23,0.08)" : "none" }}>{u.charAt(0).toUpperCase() + u.slice(1)}</button>
+                    <button key={u} onClick={() => handleUnitsChange(u)} style={{ background: units === u ? C.limestone : "transparent", border: "none", borderRadius: 6, padding: "5px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: units === u ? 700 : 400, color: units === u ? C.nile : "#8B7E6A", cursor: "pointer", boxShadow: units === u ? "0 1px 4px rgba(27,26,23,0.08)" : "none" }}>{u.charAt(0).toUpperCase() + u.slice(1)}</button>
                   ))}
                 </div>
               }
@@ -145,8 +283,8 @@ export default function PageSettings() {
               sub="Used in the currency converter"
               border={false}
               right={
-                <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ background: C.limestoneDark, border: "1.5px solid rgba(27,26,23,0.1)", borderRadius: 8, padding: "6px 10px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile, cursor: "pointer", outline: "none" }}>
-                  {["USD","EUR","GBP","JPY","AUD","CAD","CHF","AED"].map(c => <option key={c} value={c}>{c}</option>)}
+                <select value={currency} onChange={e => handleCurrencyChange(e.target.value)} style={{ background: C.limestoneDark, border: "1.5px solid rgba(27,26,23,0.1)", borderRadius: 8, padding: "6px 10px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile, cursor: "pointer", outline: "none" }}>
+                  {["USD","EUR","GBP","JPY","AUD","CAD","CHF","AED","EGP"].map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               }
             />
@@ -154,10 +292,10 @@ export default function PageSettings() {
 
           {/* App preferences */}
           <SettingsSection title="App Preferences">
-            <SettingsRow label="Offline Mode" sub="Download site data for use without internet" right={<Toggle on={prefs.offlineMode} onChange={() => toggle(prefs, "offlineMode", setPrefs)}/>}/>
-            <SettingsRow label="Audio Stories" sub="Rafiq reads cultural stories aloud at sites" right={<Toggle on={prefs.audioStories} onChange={() => toggle(prefs, "audioStories", setPrefs)}/>}/>
-            <SettingsRow label="Compact View" sub="Denser layout in Home and Explore" right={<Toggle on={prefs.compactView} onChange={() => toggle(prefs, "compactView", setPrefs)}/>}/>
-            <SettingsRow label="Dark Mode" sub="Easier on the eyes at night" border={false} right={<Toggle on={prefs.darkMode} onChange={() => toggle(prefs, "darkMode", setPrefs)}/>}/>
+            <SettingsRow label="Offline Mode" sub="Download site data for use without internet" right={<Toggle on={prefs.offlineMode} onChange={() => togglePref("offlineMode")}/>}/>
+            <SettingsRow label="Audio Stories" sub="Rafiq reads cultural stories aloud at sites" right={<Toggle on={prefs.audioStories} onChange={() => togglePref("audioStories")}/>}/>
+            <SettingsRow label="Compact View" sub="Denser layout in Home and Explore" right={<Toggle on={prefs.compactView} onChange={() => togglePref("compactView")}/>}/>
+            <SettingsRow label="Dark Mode" sub="Easier on the eyes at night" border={false} right={<Toggle on={prefs.darkMode} onChange={() => togglePref("darkMode")}/>}/>
           </SettingsSection>
         </div>
 
@@ -165,20 +303,20 @@ export default function PageSettings() {
         <div>
           {/* Notifications */}
           <SettingsSection title="Notifications">
-            <SettingsRow label="Scam &amp; Safety Alerts" sub="Immediate push for active threats near you" right={<Toggle on={notifs.scamAlerts} onChange={() => toggle(notifs, "scamAlerts", setNotifs)}/>}/>
-            <SettingsRow label="Weather Warnings" sub="UV, heat, and severe weather alerts" right={<Toggle on={notifs.weatherWarn} onChange={() => toggle(notifs, "weatherWarn", setNotifs)}/>}/>
-            <SettingsRow label="Rafiq Tips" sub="Proactive local tips based on where you are" right={<Toggle on={notifs.rafiqTips} onChange={() => toggle(notifs, "rafiqTips", setNotifs)}/>}/>
-            <SettingsRow label="Journey XP &amp; Badges" sub="Celebrate milestones as you explore" right={<Toggle on={notifs.journeyXP} onChange={() => toggle(notifs, "journeyXP", setNotifs)}/>}/>
-            <SettingsRow label="Site Updates" sub="Opening hours, closures, and changes" right={<Toggle on={notifs.siteUpdates} onChange={() => toggle(notifs, "siteUpdates", setNotifs)}/>}/>
-            <SettingsRow label="Rihla News &amp; Offers" sub="Product updates and promotions" border={false} right={<Toggle on={notifs.marketing} onChange={() => toggle(notifs, "marketing", setNotifs)}/>}/>
+            <SettingsRow label="Scam &amp; Safety Alerts" sub="Immediate push for active threats near you" right={<Toggle on={notifs.scamAlerts} onChange={() => toggleNotif("scamAlerts")}/>}/>
+            <SettingsRow label="Weather Warnings" sub="UV, heat, and severe weather alerts" right={<Toggle on={notifs.weatherWarn} onChange={() => toggleNotif("weatherWarn")}/>}/>
+            <SettingsRow label="Rafiq Tips" sub="Proactive local tips based on where you are" right={<Toggle on={notifs.rafiqTips} onChange={() => toggleNotif("rafiqTips")}/>}/>
+            <SettingsRow label="Journey XP &amp; Badges" sub="Celebrate milestones as you explore" right={<Toggle on={notifs.journeyXP} onChange={() => toggleNotif("journeyXP")}/>}/>
+            <SettingsRow label="Site Updates" sub="Opening hours, closures, and changes" right={<Toggle on={notifs.siteUpdates} onChange={() => toggleNotif("siteUpdates")}/>}/>
+            <SettingsRow label="Rihla News &amp; Offers" sub="Product updates and promotions" border={false} right={<Toggle on={notifs.marketing} onChange={() => toggleNotif("marketing")}/>}/>
           </SettingsSection>
 
           {/* Privacy */}
           <SettingsSection title="Privacy &amp; Data">
-            <SettingsRow label="Live Location" sub="Required for scam alerts and nearby sites" right={<Toggle on={privacy.locationLive} onChange={() => toggle(privacy, "locationLive", setPrivacy)}/>}/>
-            <SettingsRow label="Share Visit History" sub="Anonymised data helps improve Rihla" right={<Toggle on={privacy.shareHistory} onChange={() => toggle(privacy, "shareHistory", setPrivacy)}/>}/>
-            <SettingsRow label="Usage Analytics" sub="Helps us improve the app experience" right={<Toggle on={privacy.analytics} onChange={() => toggle(privacy, "analytics", setPrivacy)}/>}/>
-            <SettingsRow label="Crash Reports" sub="Automatically send diagnostic data" border={false} right={<Toggle on={privacy.crashReports} onChange={() => toggle(privacy, "crashReports", setPrivacy)}/>}/>
+            <SettingsRow label="Live Location" sub="Required for scam alerts and nearby sites" right={<Toggle on={privacy.locationLive} onChange={() => togglePrivacy("locationLive")}/>}/>
+            <SettingsRow label="Share Visit History" sub="Anonymised data helps improve Rihla" right={<Toggle on={privacy.shareHistory} onChange={() => togglePrivacy("shareHistory")}/>}/>
+            <SettingsRow label="Usage Analytics" sub="Helps us improve the app experience" right={<Toggle on={privacy.analytics} onChange={() => togglePrivacy("analytics")}/>}/>
+            <SettingsRow label="Crash Reports" sub="Automatically send diagnostic data" border={false} right={<Toggle on={privacy.crashReports} onChange={() => togglePrivacy("crashReports")}/>}/>
           </SettingsSection>
 
           {/* Account */}
@@ -187,15 +325,15 @@ export default function PageSettings() {
               label="Export My Data"
               sub="Download your full journey archive as JSON"
               right={
-                <button style={{ background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <BookOpen size={13} strokeWidth={2}/> Export
+                <button onClick={handleExportData} disabled={isExporting} style={{ background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", cursor: isExporting ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  {isExporting ? <Loader2 size={13} className="animate-spin" /> : <BookOpen size={13} strokeWidth={2}/>} {isExporting ? "Exporting..." : "Export"}
                 </button>
               }
             />
             <SettingsRow
               label="Sign Out"
               right={
-                <button onClick={() => router.push("/")} style={{ background: "transparent", border: `1.5px solid ${C.terracotta}40`, borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.terracotta, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <button onClick={handleSignOut} style={{ background: "transparent", border: `1.5px solid ${C.terracotta}40`, borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.terracotta, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <LogOut size={13} strokeWidth={2}/> Sign out
                 </button>
               }
@@ -210,7 +348,7 @@ export default function PageSettings() {
                   : (
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => setDeleteConfirm(false)} style={{ background: C.limestoneDark, border: "none", borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", cursor: "pointer" }}>Cancel</button>
-                      <button style={{ background: C.signalRed, border: "none", borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: "#fff", cursor: "pointer" }}>Confirm</button>
+                      <button onClick={handleSignOut} style={{ background: C.signalRed, border: "none", borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: "#fff", cursor: "pointer" }}>Confirm</button>
                     </div>
                   )
               }
