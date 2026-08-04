@@ -4,17 +4,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useLocation } from '@/providers/LocationProvider';
-import { safetyService, type SafetyData } from '@/services/safetyService';
+import { safetyService, type SafetyData, FALLBACK_GOV_PROFILES } from '@/services/safetyService';
 import { envService } from '@/services/envService';
 import { TopBar } from '@/app/components/layout/TopBar';
-import { RafiqDrawer } from '@/app/components/rafiqDrawer';
 import { Geom, Glyph } from '@/app/components/atoms';
 import { C } from '@/lib/constants/theme';
+import { RiskGauge } from './components/RiskGauge';
+import { SourceHealth, type DataSourceStatus } from './components/SourceHealth';
+import { SafetyGuide } from './components/SafetyGuide';
 import { 
-  AlertTriangle, 
-  MapPin, 
-  ChevronRight, 
-  Thermometer, 
+AlertTriangle,
+  MapPin,
+  Thermometer,
   Sun, 
   Wind, 
   Globe, 
@@ -31,17 +32,31 @@ interface GovStatusItem {
   color: string;
 }
 
+const SAFETY_CITIES: { name: string; gov: string; lat: number; lon: number }[] = [
+  { name: 'Cairo', gov: 'Cairo', lat: 30.0444, lon: 31.2357 },
+  { name: 'Giza', gov: 'Giza', lat: 29.987, lon: 31.2118 },
+  { name: 'Alexandria', gov: 'Alexandria', lat: 31.2001, lon: 29.9187 },
+  { name: 'Luxor', gov: 'Luxor', lat: 25.6872, lon: 32.6396 },
+  { name: 'Aswan', gov: 'Aswan', lat: 24.0889, lon: 32.8998 },
+  { name: 'Hurghada', gov: 'Red Sea', lat: 27.2579, lon: 33.8116 },
+  { name: 'Sharm El Sheikh', gov: 'South Sinai', lat: 27.9158, lon: 34.33 },
+  { name: 'Dahab', gov: 'South Sinai', lat: 28.5025, lon: 34.5164 },
+  { name: 'Marsa Alam', gov: 'Red Sea', lat: 25.0682, lon: 34.8909 },
+  { name: 'Siwa Oasis', gov: 'Matrouh', lat: 29.2032, lon: 25.5197 },
+];
+
 export default function PageSafety() {
   const router = useRouter();
   const { user, isInitialized } = useAuth();
   const { lat, lon, locationName } = useLocation();
 
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
-  const [rafiq, setRafiq] = useState(false);
 
   const [safetyData, setSafetyData] = useState<SafetyData | null>(null);
   const [govStatuses, setGovStatuses] = useState<GovStatusItem[]>([]);
   const [envData, setEnvData] = useState<any>(null);
+  const [envSource, setEnvSource] = useState<'live' | 'offline'>('offline');
+  const [selectedCity, setSelectedCity] = useState<string>('');
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,23 +81,33 @@ export default function PageSafety() {
     return 'Giza';
   }, [locationName]);
 
+  const activeCity = React.useMemo(
+    () => SAFETY_CITIES.find((c) => c.name === selectedCity) ?? null,
+    [selectedCity]
+  );
+  const activeGov = activeCity?.gov ?? currentGov;
+  const activeCoords = activeCity
+    ? { lat: activeCity.lat, lon: activeCity.lon }
+    : { lat: lat ?? 29.9792, lon: lon ?? 31.1342 };
+
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const targetLat = lat ?? 29.9792;
-      const targetLon = lon ?? 31.1342;
+      const targetLat = activeCoords.lat;
+      const targetLon = activeCoords.lon;
 
       // 1. Fetch current location safety data
-      const currentSafety = await safetyService.getSafetyInfo(targetLat, targetLon, currentGov);
+      const currentSafety = await safetyService.getSafetyInfo(targetLat, targetLon, activeGov);
       setSafetyData(currentSafety);
 
       // 2. Fetch environmental data
-      const envRes = await envService.getEnv(targetLat, targetLon).catch((err) => {
+      const envSnap = await envService.getEnvSnapshot(targetLat, targetLon).catch((err) => {
         console.warn('Failed to fetch env data:', err);
         return null;
       });
-      setEnvData(envRes);
+      setEnvData(envSnap?.data ?? null);
+      setEnvSource(envSnap?.source ?? 'offline');
 
       // 3. Fetch governorate statuses dynamically
       const govList = ['Giza', 'Cairo', 'Luxor', 'Aswan', 'Alexandria', 'Sinai', 'Red Sea'];
@@ -99,14 +124,15 @@ export default function PageSafety() {
             name: val.governorate || name,
             status: val.safetyLevel || (isSecure ? 'Secure' : 'Caution'),
             alerts: val.activeAlertsCount || 0,
-            color: isSecure ? C.safeGreen : val.status === 'warning' ? C.signalRed : C.alertAmber,
+            color: isSecure ? C.safeGreen : C.alertAmber,
           };
         }
+        const profile = FALLBACK_GOV_PROFILES[name];
         return {
           name,
-          status: 'Secure',
-          alerts: 0,
-          color: C.safeGreen,
+          status: profile?.level || (profile?.status === 'caution' ? 'Caution' : 'Secure'),
+          alerts: profile?.alerts ?? 0,
+          color: profile?.status === 'caution' ? C.alertAmber : C.safeGreen,
         };
       });
 
@@ -117,7 +143,7 @@ export default function PageSafety() {
     } finally {
       setIsLoading(false);
     }
-  }, [lat, lon, currentGov]);
+  }, [activeCoords.lat, activeCoords.lon, activeGov]);
 
   useEffect(() => {
     if (user) {
@@ -141,22 +167,40 @@ export default function PageSafety() {
     ];
   }, [safetyData]);
 
-  // Construct dynamic safety tips/alerts items
+  // Construct dynamic safety tips/alerts items (severity color-coded like EventsList)
   const dynamicAlerts = React.useMemo(() => {
     if (!safetyData) return [];
 
-    return (safetyData.safetyTips || []).map((tip, idx) => ({
-      id: `tip-${idx}`,
-      severity: idx === 0 ? 'high' : 'medium',
-      title: idx === 0 ? `Safety Advisory for ${safetyData.governorate}` : `Local Travel Guidance`,
-      location: `${safetyData.governorate} Governorate`,
-      gov: safetyData.governorate,
-      body: tip,
-      reports: (safetyData.scamAlertsCount || 1) + idx * 2,
-      updated: 'Verified by API',
-      tag: idx === 0 ? 'Safety Notice' : 'Travel Tip',
-      color: idx === 0 ? C.signalRed : C.alertAmber,
-    }));
+    const baseStatus = safetyData.status;
+
+    const severityFor = (idx: number): { key: string; label: string; color: string; bg: string } => {
+      if (idx === 0 && baseStatus === 'warning')
+        return { key: 'critical', label: 'Critical', color: C.signalRed, bg: `${C.signalRed}12` };
+      if ((idx === 0 && baseStatus === 'caution') || (idx === 0 && (safetyData.safetyScore ?? 90) < 70))
+        return { key: 'warning', label: 'Warning', color: C.alertAmber, bg: `${C.alertAmber}12` };
+      if (idx === 0)
+        return { key: 'advisory', label: 'Advisory', color: C.solar, bg: `${C.solar}12` };
+      return { key: 'info', label: 'Info', color: C.faience, bg: `${C.faience}12` };
+    };
+
+    return (safetyData.safetyTips || []).map((tip, idx) => {
+      const meta = severityFor(idx);
+      return {
+        id: `tip-${idx}`,
+        ...meta,
+        severityKey: meta.key,
+        title:
+          idx === 0
+            ? `${meta.label} for ${safetyData.governorate}`
+            : `${meta.label} · Local Travel Guidance`,
+        location: `${safetyData.governorate} Governorate`,
+        gov: safetyData.governorate,
+        body: tip,
+        reports: (safetyData.scamAlertsCount || 1) + idx * 2,
+        updated: safetyData.source === 'offline' ? 'Built-in guidance' : 'Verified by Core Server API',
+        tag: meta.label,
+      };
+    });
   }, [safetyData]);
 
   // Extract environmental metrics dynamically
@@ -179,9 +223,33 @@ export default function PageSafety() {
     ];
   }, [envData]);
 
+  // Data source health transparency (live vs offline fallback)
+  const dataSources: DataSourceStatus[] = React.useMemo(() => {
+    const live = safetyData?.source === 'live';
+    return [
+      {
+        name: 'Core Server · Safety API',
+        status: live ? 'healthy' : 'offline',
+        detail: live
+          ? `Live for ${safetyData?.governorate || currentGov}`
+          : 'Using built-in Egypt safety estimates',
+      },
+      {
+        name: 'Environment · Weather',
+        status: envSource === 'live' ? 'healthy' : 'offline',
+        detail: envSource === 'live' ? 'Live conditions' : 'Using built-in weather estimates',
+      },
+      {
+        name: 'Emergency Services Directory',
+        status: 'healthy',
+        detail: 'Built-in · always available',
+      },
+    ];
+  }, [safetyData, envData, currentGov, envSource]);
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar onRafiq={() => setRafiq(true)} />
+      <TopBar onRafiq={() => router.push('/app/rafiq')} />
 
       {/* Safety header */}
       <div style={{ background: `linear-gradient(135deg,#1A1209 0%,${C.basalt} 60%,#2A1A0A 100%)`, padding: '28px 32px', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
@@ -193,17 +261,46 @@ export default function PageSafety() {
               Safety &amp; <span style={{ fontStyle: 'italic', color: C.alertAmber }}>Alerts</span>
             </h1>
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: `${C.limestone}50`, lineHeight: 1.6, maxWidth: 480 }}>
-              Monitoring Core Server API · Egyptian Tourist Safety Index · Updated {safetyData?.updatedAt ? new Date(safetyData.updatedAt).toLocaleTimeString() : 'Just now'}
+              {safetyData?.source === 'offline'
+                ? 'Core Server unreachable — showing built-in safety estimate from cached profile.'
+                : 'Monitoring Core Server API · Egyptian Tourist Safety Index · '}
+              {safetyData?.updatedAt && !isLoading ? `Updated ${new Date(safetyData.updatedAt).toLocaleTimeString()}` : 'Just now'}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: `${C.limestone}08`, border: `1px solid ${C.limestone}15`, borderRadius: 12, padding: '6px 8px 6px 12px' }}>
+              <MapPin size={13} color={C.sand} strokeWidth={2} style={{ flexShrink: 0 }} />
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: C.limestone,
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '4px 0',
+                }}
+              >
+                <option value="">My location ({activeGov})</option>
+                {SAFETY_CITIES.map((c) => (
+                  <option key={c.name} value={c.name} style={{ color: '#1A1209' }}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
             {[
               { 
                 label: 'Overall', 
                 val: isLoading ? '...' : (safetyData?.safetyLevel?.toUpperCase() || 'SAFE'), 
                 col: safetyData?.status === 'warning' ? C.signalRed : safetyData?.status === 'caution' ? C.alertAmber : C.safeGreen 
               },
-              { label: safetyData?.governorate || currentGov, val: `${safetyData?.safetyScore || 90}%`, col: C.safeGreen },
+              { label: safetyData?.governorate || activeGov, val: `${safetyData?.safetyScore || 90}%`, col: C.safeGreen },
               { label: 'Active alerts', val: String(safetyData?.activeAlertsCount ?? 0), col: C.signalRed }
             ].map(({ label, val, col }) => (
               <div key={label} style={{ background: `${C.limestone}08`, border: `1px solid ${col}30`, borderRadius: 12, padding: '14px 18px', textAlign: 'center', minWidth: 100 }}>
@@ -211,6 +308,7 @@ export default function PageSafety() {
                 <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '16px', fontWeight: 800, color: col, letterSpacing: '0.04em' }}>{val}</div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       </div>
@@ -236,13 +334,20 @@ export default function PageSafety() {
             </div>
           )}
 
+          {/* Risk gauge */}
+          <RiskGauge
+            status={safetyData?.status ?? 'safe'}
+            score={safetyData?.safetyScore ?? null}
+            gov={safetyData?.governorate || currentGov}
+          />
+
           {/* Active alerts */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
               <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fontWeight: 500, color: C.nile }}>Active Alerts &amp; Advisories</h2>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${C.signalRed}10`, border: `1px solid ${C.signalRed}25`, borderRadius: 99, padding: '3px 10px' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.signalRed, animation: 'pulse 2s infinite' }} />
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', fontWeight: 700, color: C.signalRed }}>LIVE API</span>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${safetyData?.source === 'offline' ? C.alertAmber : C.signalRed}10`, border: `1px solid ${safetyData?.source === 'offline' ? C.alertAmber : C.signalRed}25`, borderRadius: 99, padding: '3px 10px' }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: safetyData?.source === 'offline' ? C.alertAmber : C.signalRed, animation: 'pulse 2s infinite' }} />
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', fontWeight: 700, color: safetyData?.source === 'offline' ? C.alertAmber : C.signalRed }}>{safetyData?.source === 'offline' ? 'OFFLINE ESTIMATE' : 'LIVE API'}</span>
               </div>
             </div>
 
@@ -258,37 +363,75 @@ export default function PageSafety() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {dynamicAlerts.map(alert => (
-                  <div key={alert.id} onClick={() => setActiveAlert(activeAlert === alert.id ? null : alert.id)} style={{ background: C.limestone, borderRadius: 14, border: `1.5px solid ${activeAlert === alert.id ? alert.color : 'rgba(27,26,23,0.07)'}`, boxShadow: activeAlert === alert.id ? `0 2px 20px ${alert.color}15` : '0 1px 6px rgba(27,26,23,0.04)', cursor: 'pointer', overflow: 'hidden', transition: 'all 0.2s' }}>
-                    <div style={{ padding: '16px 18px', display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 14, alignItems: 'center' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 12, background: `${alert.color}12`, border: `1.5px solid ${alert.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <AlertTriangle size={18} color={alert.color} strokeWidth={2.2} />
-                      </div>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '14px', fontWeight: 700, color: C.nile }}>{alert.title}</span>
-                          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 700, background: `${alert.color}15`, color: alert.color, padding: '2px 8px', borderRadius: 99, letterSpacing: '0.04em' }}>{alert.tag}</span>
+                {dynamicAlerts.map(alert => {
+                  const expanded = activeAlert === alert.id;
+                  return (
+                    <div
+                      key={alert.id}
+                      onClick={() => setActiveAlert(expanded ? null : alert.id)}
+                      style={{
+                        background: '#FFFFFF',
+                        borderRadius: 12,
+                        borderLeft: `5px solid ${alert.color}`,
+                        borderTop: '1px solid rgba(27,26,23,0.08)',
+                        borderRight: '1px solid rgba(27,26,23,0.08)',
+                        borderBottom: '1px solid rgba(27,26,23,0.08)',
+                        boxShadow: expanded ? `0 2px 18px ${alert.color}18` : '0 1px 5px rgba(27,26,23,0.05)',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        transition: 'all 0.18s',
+                      }}
+                    >
+                      <div style={{ padding: '14px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                          <span
+                            style={{
+                              fontFamily: "'Inter',sans-serif",
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              letterSpacing: '0.06em',
+                              textTransform: 'uppercase',
+                              color: alert.color,
+                              background: alert.bg,
+                              padding: '3px 9px',
+                              borderRadius: 99,
+                            }}
+                          >
+                            {alert.tag}
+                          </span>
+                          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880' }}>{alert.updated}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} color="#A89880" strokeWidth={2} /><span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#8B7E6A' }}>{alert.location}</span></div>
-                          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#C4B89A' }}>·</span>
-                          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880' }}>Verified by Core Server API</span>
+                        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '14px', fontWeight: 700, color: C.nile, marginBottom: 5 }}>
+                          {alert.title}
                         </div>
-                      </div>
-                      <ChevronRight size={16} color="#C4B89A" strokeWidth={2} style={{ transform: activeAlert === alert.id ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
-                    </div>
-                    {activeAlert === alert.id && (
-                      <div style={{ padding: '0 18px 16px 72px', borderTop: `1px solid ${alert.color}12` }}>
-                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#5C5346', lineHeight: 1.75, marginBottom: 12, marginTop: 12 }}>{alert.body}</p>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={e => { e.stopPropagation(); setRafiq(true); }} style={{ background: C.nile, border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 700, color: C.limestone, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                            <Glyph size={13} /> Ask Rafiq for advice
+                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '12.5px', color: '#5C5346', lineHeight: 1.6, margin: 0 }}>
+                          {alert.body}
+                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', marginTop: 9 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} color="#A89880" strokeWidth={2} /><span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#8B7E6A' }}>{alert.location}</span></div>
+                          <button
+                            onClick={e => { e.stopPropagation(); router.push('/app/rafiq'); }}
+                            style={{
+                              marginLeft: 'auto',
+                              background: 'none',
+                              border: 'none',
+                              color: C.nile,
+                              fontFamily: "'Inter',sans-serif",
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                            }}
+                          >
+                            <Glyph size={13} /> Ask Rafiq
                           </button>
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -349,17 +492,20 @@ export default function PageSafety() {
             </div>
           </div>
 
-          {/* Rafiq safety tip */}
-          <div style={{ background: 'linear-gradient(145deg,#FAF3E4,#F0E8D0)', borderRadius: 16, padding: '18px', border: `1px solid ${C.sand}25` }}>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, color: C.copper, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>◈ Rafiq Safety Briefing</div>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '14px', color: C.nile, lineHeight: 1.7, marginBottom: 10 }}>
-              "{safetyData?.safetyTips && safetyData.safetyTips.length > 0 ? safetyData.safetyTips[0] : `${safetyData?.governorate || currentGov} is currently clear. Maintain standard travel awareness and carry official ID.`}"
-            </div>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880', marginBottom: 12 }}>Updated from Core Server for {safetyData?.governorate || currentGov}</div>
-            <button onClick={() => setRafiq(true)} style={{ width: '100%', background: C.nile, border: 'none', borderRadius: 9, padding: '10px 16px', fontFamily: "'Inter',sans-serif", fontSize: '13px', fontWeight: 700, color: C.limestone, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
-              <Glyph size={15} light /> Ask Rafiq about safety
-            </button>
-          </div>
+          {/* AI Safety Guide (streams a live briefing, falls back to tips offline) */}
+          <SafetyGuide
+            gov={activeGov}
+            riskLevel={safetyData?.safetyLevel || null}
+            score={safetyData?.safetyScore ?? null}
+            alerts={[]}
+            coords={{ lat: activeCoords.lat, lon: activeCoords.lon }}
+            nationality={user?.nationality}
+            staticFallback={
+              safetyData?.safetyTips && safetyData.safetyTips.length > 0
+                ? safetyData.safetyTips
+                : [`${activeGov} is currently clear. Maintain standard travel awareness and carry official ID.`]
+            }
+          />
 
           {/* Environment widget */}
           <div style={{ background: C.limestone, borderRadius: 16, padding: '18px', border: '1px solid rgba(27,26,23,0.07)' }}>
@@ -375,9 +521,12 @@ export default function PageSafety() {
               ))}
             </div>
           </div>
+
+          {/* Data source health */}
+          <SourceHealth sources={dataSources} />
         </div>
       </div>
-      {rafiq && <RafiqDrawer onClose={() => setRafiq(false)} />}
+
     </div>
   );
 }

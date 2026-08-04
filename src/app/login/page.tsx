@@ -41,7 +41,7 @@ export default function LoginPage() {
       <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <WebField label="Email Address" placeholder="sara@example.com" type="email" value={email} onChange={e => { clearError(); setEmail(e.target.value); }}/>
         <WebField label="Password" placeholder="Your password" type="password" value={pw} onChange={e => { clearError(); setPw(e.target.value); }}/>
-        <div style={{ textAlign: "right", marginTop: -6 }}><button type="button" style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.faience, cursor: "pointer" }}>Forgot password?</button></div>
+        <div style={{ textAlign: "right", marginTop: -6 }}><button type="button" onClick={() => router.push("/forgot-password")} style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.faience, cursor: "pointer" }}>Forgot password?</button></div>
         <button type="submit" disabled={isLoading} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: isLoading ? "wait" : "pointer", opacity: isLoading ? 0.7 : 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>
           {isLoading ? "Signing in..." : "Sign in to Rihla"} {!isLoading && <ArrowRight size={16} strokeWidth={2.5}/>}
         </button>

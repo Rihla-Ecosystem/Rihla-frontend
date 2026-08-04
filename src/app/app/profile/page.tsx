@@ -8,6 +8,8 @@ import { TopBar } from "@/app/components/layout/TopBar";
 import { useAuth } from "@/lib/auth";
 import { userService } from "@/services/userService";
 import { historyService, TripHistoryItem, UserBadgeItem } from "@/services/historyService";
+import { journeysApi, type Journey } from "@/lib/api/journeys";
+import { useRouter } from "next/navigation";
 
 const LEVEL_MAP = [
   { level: 1, title: "Newcomer",   xpNeeded: 0,    color: "#C4B89A" },
@@ -18,26 +20,12 @@ const LEVEL_MAP = [
   { level: 6, title: "Pharaoh",    xpNeeded: 2000, color: C.terracotta},
 ];
 
-const CATALOG_BADGES = [
-  { id: "b01", name: "Giza Pioneer",       icon: "🏔", cat: "Places",      earned: true,  date: "28 Jul",   xp: 50,  desc: "First visit to the Giza Plateau" },
-  { id: "b02", name: "Museum Maven",       icon: "🏺", cat: "Places",      earned: true,  date: "30 Jul",   xp: 60,  desc: "Visited 2 museums in one journey" },
-  { id: "b03", name: "Cairo Chronicler",   icon: "📜", cat: "Places",      earned: true,  date: "29 Jul",   xp: 80,  desc: "Explored 3+ Cairo sites in a day" },
-  { id: "b04", name: "Bazaar Navigator",   icon: "🧭", cat: "Places",      earned: false, date: null,        xp: 40,  desc: "Complete a market visit with zero scams" },
-  { id: "b05", name: "Temple Scholar",     icon: "🌿", cat: "Places",      earned: false, date: null,        xp: 70,  desc: "Visit 5 temples across Egypt" },
-  { id: "b06", name: "Nile Wanderer",      icon: "🌊", cat: "Places",      earned: false, date: null,        xp: 90,  desc: "Visit a site on the Nile Corniche" },
-  { id: "b07", name: "Scam Survivor",      icon: "🛡", cat: "Safety",      earned: true,  date: "29 Jul",   xp: 30,  desc: "Rafiq flagged a scam and you avoided it" },
-  { id: "b08", name: "Safety Ace",         icon: "✅", cat: "Safety",      earned: false, date: null,        xp: 50,  desc: "7-day journey with zero safety incidents" },
-  { id: "b09", name: "Rafiq Devotee",      icon: "🤖", cat: "Rafiq",       earned: true,  date: "30 Jul",   xp: 20,  desc: "Asked Rafiq 10+ questions in a single day" },
-  { id: "b10", name: "Deep Diver",         icon: "📖", cat: "Rafiq",       earned: false, date: null,        xp: 40,  desc: "Read 5 full cultural stories from Rafiq" },
-  { id: "b11", name: "Early Riser",        icon: "🌅", cat: "Habits",      earned: false, date: null,        xp: 25,  desc: "Start a site visit before 8am" },
-  { id: "b12", name: "Golden Hour",        icon: "🌇", cat: "Habits",      earned: false, date: null,        xp: 25,  desc: "Visit a site at sunset" },
-  { id: "b13", name: "Solo Adventurer",    icon: "🎒", cat: "Habits",      earned: true,  date: "28 Jul",   xp: 35,  desc: "Complete a full day exploring alone" },
-  { id: "b14", name: "Week in Egypt",      icon: "🗓", cat: "Milestones",  earned: false, date: null,        xp: 100, desc: "7 consecutive days in Egypt" },
-  { id: "b15", name: "Century Club",       icon: "💯", cat: "Milestones",  earned: false, date: null,        xp: 150, desc: "Earn 1000 XP in a single journey" },
-  { id: "b16", name: "Governorate Hopper", icon: "🗺", cat: "Milestones",  earned: false, date: null,        xp: 120, desc: "Visit 5 different governorates" },
-];
+const CATALOG_BADGES: { id: string; icon: string; color: string }[] = [];
 
-const BADGE_CATS = ["All", "Places", "Safety", "Rafiq", "Habits", "Milestones"];
+const BADGE_CATS = ["All"];
+
+const BADGE_ICONS = ['🏔', '🏺', '📜', '🧭', '🌿', '🌊', '✅', '🤖', '🎒', '🏛', '📖', '🗺'];
+const BADGE_COLORS = [C.sand, C.faience, C.copper, '#A89880', '#A89880', '#A89880', C.safeGreen, C.faience, C.terracotta, C.nile, C.copper, C.signalRed];
 
 const PERSONA_STYLES = [
   { id: "cultural",   label: "Cultural",    icon: "🏛" },
@@ -48,15 +36,17 @@ const PERSONA_STYLES = [
 
 export default function PageProfile() {
   const { user, fetchCurrentUser, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   
   const [profileData, setProfileData] = useState<any>(null);
   const [userBadges, setUserBadges]   = useState<UserBadgeItem[]>([]);
   const [trips, setTrips]             = useState<TripHistoryItem[]>([]);
+  const [journeys, setJourneys]       = useState<Journey[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
 
   const [badgeCat, setBadgeCat] = useState("All");
-  const [tab, setTab]           = useState<"badges" | "stats" | "impact">("badges");
+  const [tab, setTab]           = useState<"badges" | "stats" | "impact" | "journeys">("badges");
 
   // Edit Profile Modal State
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -77,9 +67,10 @@ export default function PageProfile() {
 
       if (profile?.id || user?.id) {
         const userId = profile?.id || user?.id;
-        const [fetchedBadges, fetchedTrips] = await Promise.allSettled([
+        const [fetchedBadges, fetchedTrips, fetchedJourneys] = await Promise.allSettled([
           userId ? historyService.getBadges(userId) : Promise.resolve([]),
           historyService.getTrips(),
+          journeysApi.list(),
         ]);
 
         if (fetchedBadges.status === "fulfilled") {
@@ -87,6 +78,9 @@ export default function PageProfile() {
         }
         if (fetchedTrips.status === "fulfilled") {
           setTrips(fetchedTrips.value || []);
+        }
+        if (fetchedJourneys.status === "fulfilled") {
+          setJourneys(fetchedJourneys.value || []);
         }
       }
     } catch (err: any) {
@@ -138,15 +132,15 @@ export default function PageProfile() {
 
   // Derive current user info
   const activeUser = profileData || user;
-  const displayName = activeUser?.displayName || "Sara Al-Rashid";
+  const displayName = activeUser?.displayName || "Traveler";
   const userInitials = displayName.slice(0, 1).toUpperCase();
-  const nationality = activeUser?.nationality || "German";
-  const travelStyle = activeUser?.travelStyle || "Cultural";
+  const nationality = activeUser?.nationality || "—";
+  const travelStyle = activeUser?.travelStyle || "Explorer";
   const memberSince = activeUser?.createdAt
     ? new Date(activeUser.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
-    : "Jul 2026";
+    : "—";
 
-  const currentXP = activeUser?.xp ?? 550;
+  const currentXP = activeUser?.xp ?? 0;
   
   // Calculate level
   let currentLevelIdx = 0;
@@ -163,24 +157,18 @@ export default function PageProfile() {
   const xpNeeded = Math.max(1, nextLevel.xpNeeded - currentLevel.xpNeeded);
   const pct = nextLevel === currentLevel ? 100 : Math.min(100, Math.round((xpInLevel / xpNeeded) * 100));
 
-  // Merge badges with backend earned list
-  const earnedBadgeIds = new Set(userBadges.map((b) => b.id.toString()));
-  const mergedBadges = CATALOG_BADGES.map((b) => {
-    const isEarned = b.earned || earnedBadgeIds.has(b.id);
-    return { ...b, earned: isEarned };
-  });
+  // Merge badges with backend earned list — show only real backend badges
+  const earnedCount = userBadges.length;
 
-  const filteredBadges = mergedBadges.filter((b) => badgeCat === "All" || b.cat === badgeCat);
-  const earnedCount = mergedBadges.filter((b) => b.earned).length;
-
-  // Stats calculation
+  // Stats calculation based on real data
+  const uniqueGovs = new Set(trips.map((t) => t.destination).filter(Boolean));
   const travelerStats = [
-    { label: "Days in Egypt", val: trips.length > 0 ? `${trips.length * 2}` : "3", icon: <Star size={16} strokeWidth={2}/>, color: C.sand },
-    { label: "Sites visited", val: trips.length > 0 ? `${trips.length}` : "5", icon: <MapPin size={16} strokeWidth={2}/>, color: C.faience },
-    { label: "Hours exploring", val: "8.3", icon: <Clock size={16} strokeWidth={2}/>, color: C.copper },
-    { label: "Rafiq conversations", val: "23", icon: <Glyph size={16}/>, color: C.nile },
-    { label: "Scams avoided", val: "2", icon: <Shield size={16} strokeWidth={2}/>, color: C.safeGreen },
-    { label: "Governorates", val: "2", icon: <Globe size={16} strokeWidth={2}/>, color: C.terracotta },
+    { label: "Sites visited", val: trips.length > 0 ? `${trips.length}` : "--", icon: <MapPin size={16} strokeWidth={2}/>, color: C.faience },
+    { label: "Journey XP", val: `${currentXP}`, icon: <Star size={16} strokeWidth={2}/>, color: C.sand },
+    { label: "Level", val: `Lvl ${currentLevel.level} · ${currentLevel.title}`, icon: <Award size={16} strokeWidth={2}/>, color: C.copper },
+    { label: "Badges earned", val: `${earnedCount}`, icon: <Glyph size={16}/>, color: C.nile },
+    { label: "Governorates", val: `${uniqueGovs.size}`, icon: <Globe size={16} strokeWidth={2}/>, color: C.terracotta },
+    { label: "Member since", val: memberSince, icon: <Clock size={16} strokeWidth={2}/>, color: C.safeGreen },
   ];
 
   if (loading || authLoading) {
@@ -279,38 +267,50 @@ export default function PageProfile() {
         <div>
           {/* Tab bar */}
           <div style={{ display: "flex", gap: 4, background: C.limestoneDark, borderRadius: 12, padding: 4, marginBottom: 20, width: "fit-content" }}>
-            {(["badges", "stats", "impact"] as const).map(t => (
+            {(["badges", "stats", "journeys", "impact"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{ background: tab === t ? C.limestone : "transparent", border: "none", borderRadius: 9, padding: "8px 20px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: tab === t ? 700 : 400, color: tab === t ? C.nile : "#8B7E6A", cursor: "pointer", transition: "all 0.18s", textTransform: "capitalize", boxShadow: tab === t ? "0 1px 6px rgba(27,26,23,0.08)" : "none" }}>{t === "impact" ? "Journey Impact" : t.charAt(0).toUpperCase() + t.slice(1)}</button>
             ))}
           </div>
 
           {tab === "badges" && (
             <div>
-              {/* Category filter */}
               <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-                {BADGE_CATS.map(c => (
-                  <button key={c} onClick={() => setBadgeCat(c)} style={{ background: badgeCat === c ? C.nile : "transparent", border: `1.5px solid ${badgeCat === c ? C.nile : "rgba(27,26,23,0.13)"}`, borderRadius: 99, padding: "5px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: badgeCat === c ? 600 : 400, color: badgeCat === c ? C.limestone : "#6B6354", cursor: "pointer" }}>{c}</button>
-                ))}
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880", alignSelf: "center", marginLeft: 4 }}>{earnedCount} of {mergedBadges.length} earned</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880", alignSelf: "center", marginLeft: 4 }}>{earnedCount} badges earned</span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12 }}>
-                {filteredBadges.map(b => (
-                  <div key={b.id} style={{ background: b.earned ? C.limestone : "#FAF7F0", borderRadius: 14, padding: "18px 16px", border: `1.5px solid ${b.earned ? C.limestone : "rgba(27,26,23,0.06)"}`, opacity: b.earned ? 1 : 0.5, position: "relative", overflow: "hidden", boxShadow: b.earned ? "0 2px 12px rgba(15,61,62,0.06)" : "none" }}>
-                    {!b.earned && <div style={{ position: "absolute", inset: 0, background: "rgba(240,235,224,0.3)", backdropFilter: "blur(1px)", zIndex: 1 }} />}
-                    <div style={{ position: "relative", zIndex: 2 }}>
-                      <div style={{ fontSize: "30px", marginBottom: 10 }}>{b.icon}</div>
-                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.nile, marginBottom: 4 }}>{b.name}</div>
-                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#8B7E6A", lineHeight: 1.5, marginBottom: 10 }}>{b.desc}</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, background: `${C.sand}20`, color: C.copper, padding: "2px 8px", borderRadius: 99 }}>+{b.xp} XP</span>
-                        {b.earned && b.date
-                          ? <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: "#A89880" }}>{b.date}</span>
-                          : <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: "#C4B89A" }}>Locked</span>}
+
+              {userBadges.length === 0 ? (
+                <div style={{ padding: "40px 24px", textAlign: "center", background: C.limestone, borderRadius: 16, border: "1px solid rgba(27,26,23,0.07)" }}>
+                  <Award size={40} color={C.copper} style={{ marginBottom: 12 }} />
+                  <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "20px", color: C.nile, marginBottom: 6 }}>
+                    No Badges Yet
+                  </h3>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A", maxWidth: 380, margin: "0 auto" }}>
+                    Explore sites and interact with Rafiq to earn your first badges.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12 }}>
+                  {userBadges.map((b, idx) => (
+                    <div key={b.id} style={{ background: C.limestone, borderRadius: 14, padding: "18px 16px", border: "1.5px solid rgba(27,26,23,0.07)", position: "relative", overflow: "hidden", boxShadow: "0 2px 12px rgba(15,61,62,0.06)" }}>
+                      <div style={{ position: "relative", zIndex: 2 }}>
+                        <div style={{ fontSize: "30px", marginBottom: 10 }}>{BADGE_ICONS[idx % BADGE_ICONS.length]}</div>
+                        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.nile, marginBottom: 4 }}>{b.name}</div>
+                        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#8B7E6A", lineHeight: 1.5, marginBottom: 10 }}>
+                          {b.description || "Awarded for your journey achievements."}
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, background: `${C.sand}20`, color: C.copper, padding: "2px 8px", borderRadius: 99 }}>Earned</span>
+                          {b.awardedAt ? (
+                            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: "#A89880" }}>
+                              {new Date(b.awardedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -343,6 +343,62 @@ export default function PageProfile() {
             </div>
           )}
 
+          {tab === "journeys" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: "#A89880", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  Your Quests
+                </div>
+                <button
+                  onClick={() => router.push("/app/quests")}
+                  style={{ background: "none", border: "none", color: C.nile, fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  Browse all quests →
+                </button>
+              </div>
+              {journeys.length === 0 ? (
+                <div style={{ padding: "40px 24px", textAlign: "center", background: C.limestone, borderRadius: 16, border: "1px solid rgba(27,26,23,0.07)" }}>
+                  <div style={{ fontSize: "40px", marginBottom: 12 }}>🗺</div>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "20px", color: C.nile, marginBottom: 6 }}>No Quests Started</h3>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A", maxWidth: 380, margin: "0 auto", lineHeight: 1.55 }}>
+                    Begin a guided journey — like the Scam Shield or Antiquity Explorer — to earn XP and badges.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 12 }}>
+                  {journeys.map((q) => {
+                    const pct = q.totalSteps > 0 ? (q.completedSteps / q.totalSteps) * 100 : 0;
+                    return (
+                      <button
+                        key={q.id}
+                        onClick={() => router.push(`/app/quests/${q.slug}`)}
+                        style={{
+                          background: q.isCompleted ? "#F1F8F3" : C.limestone,
+                          border: q.isCompleted ? `1.5px solid ${C.safeGreen}40` : "1.5px solid rgba(27,26,23,0.07)",
+                          borderRadius: 14,
+                          padding: "16px",
+                          textAlign: "left",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "16px", color: C.nile, lineHeight: 1.2 }}>{q.title}</span>
+                          {q.isCompleted && <CheckCircle size={17} color={C.safeGreen} strokeWidth={2.2} />}
+                        </div>
+                        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#8B7E6A", marginTop: 4 }}>
+                          {q.completedSteps}/{q.totalSteps} steps · +{q.xpReward} XP
+                        </div>
+                        <div style={{ height: 5, background: "#EDE6D6", borderRadius: 99, overflow: "hidden", marginTop: 10 }}>
+                          <div style={{ width: `${pct}%`, height: "100%", background: q.isCompleted ? C.safeGreen : C.solar, borderRadius: 99 }} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {tab === "impact" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ background: "linear-gradient(145deg,#FAF3E4,#F0E8D0)", borderRadius: 16, padding: "24px", border: `1px solid ${C.sand}25` }}>
@@ -350,9 +406,9 @@ export default function PageProfile() {
                 <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", fontSize: "16px", color: C.nile, lineHeight: 1.7, marginBottom: 20 }}>"Tourism done thoughtfully is one of Egypt's most important economic pillars. Your journey supports local families, preserves living heritage, and funds site restoration."</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
                   {[
-                    { label: "Local guides supported", val: trips.length > 0 ? `${trips.length}` : "4", color: C.safeGreen },
-                    { label: "EGP spent locally", val: "2,420", color: C.copper },
-                    { label: "Carbon offset (kg CO₂)", val: "12", color: C.faience },
+                    { label: "Journeys planned", val: trips.length > 0 ? `${trips.length}` : "0", color: C.safeGreen },
+                    { label: "Journey XP", val: `${currentXP}`, color: C.copper },
+                    { label: "Badges earned", val: `${earnedCount}`, color: C.faience },
                   ].map(j => (
                     <div key={j.label} style={{ background: C.limestone, borderRadius: 12, padding: "16px 14px", textAlign: "center" }}>
                       <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "26px", fontWeight: 500, color: j.color, marginBottom: 4 }}>{j.val}</div>
@@ -360,6 +416,40 @@ export default function PageProfile() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div style={{ background: C.limestone, borderRadius: 16, padding: "20px", border: "1px solid rgba(27,26,23,0.07)" }}>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: "#A89880", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>Travel History</div>
+                {trips.length === 0 ? (
+                  <div style={{ padding: "20px 8px", textAlign: "center" }}>
+                    <div style={{ fontSize: "30px", marginBottom: 10 }}>🧭</div>
+                    <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "18px", color: C.nile, marginBottom: 6 }}>No journeys yet</div>
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A", maxWidth: 340, margin: "0 auto", lineHeight: 1.55 }}>
+                      Your planned trips and itineraries will appear here once the memory service records them.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {trips.map((t) => (
+                      <div key={t.id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 14px", background: "#FAF7F0", borderRadius: 12, border: "1px solid rgba(27,26,23,0.06)" }}>
+                        <div style={{ width: 38, height: 38, borderRadius: 10, background: `${C.nile}10`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <MapPin size={17} color={C.nile} strokeWidth={2} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.nile, marginBottom: 3 }}>{t.title || t.destination}</div>
+                          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#6B6354", marginBottom: 5 }}>
+                            {t.destination}
+                            {t.startDate ? ` · ${new Date(t.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                            {t.endDate ? ` – ${new Date(t.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                          </div>
+                          {t.notes ? (
+                            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880", fontStyle: "italic", lineHeight: 1.5 }}>{t.notes}</div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -373,7 +463,7 @@ export default function PageProfile() {
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: "#A89880", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>Profile Details</div>
             {[
               { label: "Full name",     val: displayName },
-              { label: "Email",         val: activeUser?.email || "sara@example.com" },
+              { label: "Email",         val: activeUser?.email || "—" },
               { label: "Nationality",   val: nationality },
               { label: "Travel style",  val: travelStyle },
               { label: "Member since",  val: memberSince },
@@ -392,43 +482,47 @@ export default function PageProfile() {
             </button>
           </div>
 
-          {/* Next badge */}
+          {/* Progress Overview */}
           <div style={{ background: `linear-gradient(145deg,${C.nile},${C.nileMid})`, borderRadius: 16, padding: "20px" }}>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: `${C.limestone}45`, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>◈ Next Badge</div>
-            {(() => {
-              const next = mergedBadges.find((b) => !b.earned);
-              return next ? (
-                <div>
-                  <div style={{ fontSize: "32px", marginBottom: 8 }}>{next.icon}</div>
-                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.limestone, marginBottom: 4 }}>{next.name}</div>
-                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}60`, lineHeight: 1.55, marginBottom: 12 }}>{next.desc}</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, background: `${C.sand}20`, color: C.sand, padding: "3px 9px", borderRadius: 99 }}>+{next.xp} XP on unlock</span>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: C.faience, fontWeight: 600, cursor: "pointer" }}>How? →</span>
-                  </div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: `${C.limestone}45`, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>◈ Journey Overview</div>
+            {userBadges.length === 0 ? (
+              <div>
+                <div style={{ fontSize: "32px", marginBottom: 8 }}>🛡</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.limestone, marginBottom: 4 }}>Start exploring</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: C.limestone + "60", lineHeight: 1.55, marginBottom: 12 }}>
+                  Visit sites and chat with Rafiq to earn your first badges and XP.
                 </div>
-              ) : null;
-            })()}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, background: C.sand + "20", color: C.sand, padding: "3px 9px", borderRadius: 99 }}>+{currentXP} XP earned</span>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "18px", fontWeight: 500, color: C.limestone, marginBottom: 8 }}>
+                  {earnedCount} badge{earnedCount !== 1 ? 's' : ''} earned
+                </div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: C.limestone + "60", lineHeight: 1.55, marginBottom: 12 }}>
+                  Keep exploring Egypt to unlock more achievements.
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, background: C.sand + "20", color: C.sand, padding: "3px 9px", borderRadius: 99 }}>{currentLevel.title} · Level {currentLevel.level}</span>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Earned summary */}
+          {/* Level Progress */}
           <div style={{ background: C.limestone, borderRadius: 14, padding: "16px 18px", border: "1px solid rgba(27,26,23,0.07)" }}>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: "#A89880", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Badge Progress</div>
-            {BADGE_CATS.slice(1).map((cat) => {
-              const total = mergedBadges.filter((b) => b.cat === cat).length;
-              const earnedN = mergedBadges.filter((b) => b.cat === cat && b.earned).length;
-              return (
-                <div key={cat} style={{ marginBottom: 10 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#6B6354" }}>{cat}</span>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 700, color: C.nile }}>{earnedN}/{total}</span>
-                  </div>
-                  <div style={{ height: 4, background: "#EDE6D6", borderRadius: 99, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${(earnedN / total) * 100}%`, background: `linear-gradient(90deg,${C.copper},${C.sand})`, borderRadius: 99 }} />
-                  </div>
-                </div>
-              );
-            })}
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, color: "#A89880", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>XP Progress</div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#6B6354" }}>Level {currentLevel.level} ({currentLevel.title})</span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: C.nile }}>
+                {nextLevel === currentLevel ? "Max" : `${nextLevel.xpNeeded - currentXP} XP to Lvl ${currentLevel.level + 1}`}
+              </span>
+            </div>
+            <div style={{ height: 6, background: "#EDE6D6", borderRadius: 99, overflow: "hidden", marginBottom: 6 }}>
+              <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg,${C.copper},${C.sand})`, borderRadius: 99, transition: "width 0.6s ease" }} />
+            </div>
           </div>
         </div>
       </div>

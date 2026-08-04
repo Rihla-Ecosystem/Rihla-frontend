@@ -10,6 +10,7 @@ interface AuthContextType extends AuthState {
   register: (payload: RegisterPayload) => Promise<User>;
   logout: () => Promise<void>;
   fetchCurrentUser: () => Promise<User | null>;
+  updateProfile: (payload: Partial<RegisterPayload> & Record<string, unknown>) => Promise<User>;
   clearError: () => void;
 }
 
@@ -21,7 +22,7 @@ export interface AuthProviderProps {
 
 const extractAuthError = (err: unknown, fallback: string): string => {
   let data: any = (err as any)?.response?.data;
-  
+
   // Support openapi-fetch errors where err is the response body
   if (!data && err && typeof err === 'object') {
     data = err;
@@ -106,14 +107,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null);
 
       const authData = await authService.login(payload);
-      
+
       // Store the token so middleware can use it
       if (authData.accessToken) {
         tokenManager.setAccessToken(authData.accessToken);
       }
-      
-      setUser(authData.user as User);
-      return authData.user as User;
+
+      const signedInUser = authData.user ?? (await authService.getCurrentUser());
+      setUser(signedInUser as User);
+      return signedInUser as User;
     } catch (err: unknown) {
       const errorMessage = extractAuthError(err, 'Failed to login. Please check your credentials.');
       setError(errorMessage);
@@ -148,6 +150,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateProfile = useCallback(
+    async (payload: Partial<RegisterPayload> & Record<string, unknown>): Promise<User> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const updated = await authService.updateProfile(payload);
+        setUser(updated);
+        return updated;
+      } catch (err: unknown) {
+        const errorMessage = extractAuthError(err, 'Failed to update profile.');
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [handleLogoutState]
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -160,6 +181,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         register,
         logout,
         fetchCurrentUser,
+        updateProfile,
         clearError,
       }}
     >

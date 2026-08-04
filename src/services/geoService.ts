@@ -1,27 +1,27 @@
-import { apiClient, formatApiError } from "../api";
+import { apiClient, formatApiError } from '../api';
 
 export const geoService = {
   getPois: async (lat: number, lon: number, radius?: number, categories?: string) => {
-    const { data, error } = await apiClient.GET("/geo/pois", {
+    const { data, error } = await apiClient.GET('/geo/pois', {
       params: {
         query: { lat, lon, radius, categories },
       },
     });
-    if (error) throw formatApiError(error, "Failed to fetch points of interest from server");
+    if (error) throw formatApiError(error, 'Failed to fetch points of interest from server');
     return data;
   },
   searchPlaces: async (q: string, lat?: number, lon?: number) => {
-    const { data, error } = await apiClient.GET("/geo/search", {
+    const { data, error } = await apiClient.GET('/geo/search', {
       params: {
         query: { q, lat, lon },
       },
     });
-    if (error) throw formatApiError(error, "Failed to search places from server");
+    if (error) throw formatApiError(error, 'Failed to search places from server');
     return data;
   },
   getSitesByGovernorate: async (governorateName: string, category?: string) => {
     try {
-      const { data, error } = await apiClient.GET("/geo/sites-by-governorate" as any, {
+      const { data, error } = await apiClient.GET('/geo/sites-by-governorate' as any, {
         params: {
           query: { governorate_name: governorateName, category },
         },
@@ -37,7 +37,12 @@ export const geoService = {
     lon: number,
     governorateName: string = 'Egypt',
     categories?: string,
-    onProgress?: (progress: { radius: number; attempt: number; message: string; isGovernorateFallback: boolean }) => void
+    onProgress?: (progress: {
+      radius: number;
+      attempt: number;
+      message: string;
+      isGovernorateFallback: boolean;
+    }) => void
   ) => {
     const radii = [5, 10, 25, 50]; // Radii in km
 
@@ -99,6 +104,25 @@ export const geoService = {
           message: `Popular attractions in ${governorateName}`,
         };
       }
+
+      const fallbackQueries = [governorateName, `${governorateName} Egypt`, 'Egypt'];
+
+      for (const query of fallbackQueries) {
+        const searchRes = await geoService.searchPlaces(query, lat, lon).catch((err) => {
+          console.warn(`Search fallback failed for ${query}:`, err);
+          return null;
+        });
+        const searchPois = (searchRes as any)?.pois || (Array.isArray(searchRes) ? searchRes : []);
+
+        if (Array.isArray(searchPois) && searchPois.length > 0) {
+          return {
+            pois: searchPois,
+            radius: null,
+            source: 'governorate_fallback' as const,
+            message: `Popular attractions near ${query}`,
+          };
+        }
+      }
     } catch (err) {
       console.warn('Governorate fallback search failed:', err);
     }
@@ -111,5 +135,3 @@ export const geoService = {
     };
   },
 };
-
-

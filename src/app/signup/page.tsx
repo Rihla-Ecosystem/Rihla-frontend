@@ -67,7 +67,7 @@ export default function SignUpPage() {
       // Attempt login immediately after successful registration
       try {
         await login({ email: form.email.trim(), password: form.password });
-        router.push("/arrival");
+        router.push("/onboarding");
       } catch {
         router.push("/login");
       }

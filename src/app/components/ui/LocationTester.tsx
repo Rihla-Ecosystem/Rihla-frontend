@@ -18,6 +18,7 @@ const TEST_LOCATIONS = [
 export function LocationTester() {
   const { setLocationOverride, requestLocation } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleSelect = (loc: typeof TEST_LOCATIONS[0]) => {
     if (loc.reset) {
@@ -29,28 +30,85 @@ export function LocationTester() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999]">
+    <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9999 }}>
       {isOpen && (
-        <div className="mb-4 bg-white/95 backdrop-blur-md border border-[#E5E0D8] rounded-2xl p-4 shadow-xl shadow-black/5 flex flex-col gap-2 min-w-[200px]">
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[#E5E0D8]">
+        <div
+          style={{
+            marginBottom: 16,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid #E5E0D8',
+            borderRadius: 16,
+            padding: 16,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            minWidth: 200,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 8,
+              paddingBottom: 8,
+              borderBottom: '1px solid #E5E0D8',
+            }}
+          >
             <MapPin size={16} color={C.limestone} />
-            <span className="font-semibold text-sm text-[#2C3E50]">Test Locations</span>
+            <span style={{ fontWeight: 600, fontSize: 14, color: '#2C3E50', fontFamily: "'Inter', sans-serif" }}>
+              Test Locations
+            </span>
           </div>
           {TEST_LOCATIONS.map((loc) => (
             <button
               key={loc.name}
               onClick={() => handleSelect(loc)}
-              className="text-left text-sm py-2 px-3 hover:bg-[#F8F9FA] rounded-lg transition-colors text-[#2C3E50]"
+              style={{
+                textAlign: 'left',
+                fontSize: 14,
+                padding: '8px 12px',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                color: '#2C3E50',
+                fontFamily: "'Inter', sans-serif",
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#F8F9FA')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               {loc.name}
-              {loc.gov && <span className="block text-xs text-[#7F8C8D] mt-0.5">{loc.gov}</span>}
+              {loc.gov && (
+                <span style={{ display: 'block', fontSize: 12, color: '#7F8C8D', marginTop: 2 }}>
+                  {loc.gov}
+                </span>
+              )}
             </button>
           ))}
         </div>
       )}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg border border-[#E5E0D8] hover:scale-105 transition-transform"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 48,
+          height: 48,
+          background: '#FFFFFF',
+          borderRadius: 24,
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E0D8',
+          cursor: 'pointer',
+          transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+          transition: 'transform 0.2s',
+        }}
         title="Test Location Override"
       >
         <Settings2 size={24} color={C.limestone} />

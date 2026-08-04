@@ -19,6 +19,12 @@ export interface User {
   accommodationType?: string;
   createdAt?: string;
   updatedAt?: string;
+  xp?: number;
+  level?: number;
+  roleId?: number;
+  isBanned?: boolean;
+  isEmailVerified?: boolean;
+  role?: { name?: string } | null;
 }
 
 export interface RegisterPayload {

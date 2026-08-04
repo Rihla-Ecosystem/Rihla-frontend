@@ -14,9 +14,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (path.startsWith('/app/rafiq')) return 'rafiq';
     if (path.startsWith('/app/safety')) return 'safety';
     if (path.startsWith('/app/history')) return 'history';
+    if (path.startsWith('/app/tickets')) return 'tickets';
+    if (path.startsWith('/app/currency')) return 'currency';
+    if (path.startsWith('/app/quests')) return 'quests';
     if (path.startsWith('/app/wallet')) return 'wallet';
     if (path.startsWith('/app/profile')) return 'profile';
     if (path.startsWith('/app/settings')) return 'settings';
+    if (path.startsWith('/app/admin')) return 'admin';
     return 'home';
   };
 
@@ -37,9 +41,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         break;
       case 'login':
         router.push('/login');
-        break;
-      case 'arrival':
-        router.push('/arrival');
         break;
       default:
         router.push('/');

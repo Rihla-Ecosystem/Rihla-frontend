@@ -1,6 +1,13 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from 'react';
 
 export type LocationStatus =
   | 'idle'
@@ -24,24 +31,37 @@ export interface LocationState {
 
 const LocationContext = createContext<LocationState | undefined>(undefined);
 
-// Default fallback location for Egypt (Giza Governorate) when browser GPS is unavailable/pending
-const DEFAULT_LAT = 29.9792;
-const DEFAULT_LON = 31.1342;
-const DEFAULT_GOVERNORATE = 'Giza';
-const DEFAULT_LOCATION_NAME = 'Giza Governorate, Egypt';
-
 function extractGovernorateFromAddress(address: any, latitude: number, longitude: number): string {
-  const rawState = address.state || address.governorate || address.county || address.city || address.town || '';
-  const lower = (rawState + ' ' + (address.city || '') + ' ' + (address.suburb || '')).toLowerCase();
+  const rawState =
+    address.state || address.governorate || address.county || address.city || address.town || '';
+  const lower = (
+    rawState +
+    ' ' +
+    (address.city || '') +
+    ' ' +
+    (address.suburb || '')
+  ).toLowerCase();
 
   if (lower.includes('cairo') || lower.includes('القاهرة')) return 'Cairo';
   if (lower.includes('giza') || lower.includes('الجيزة')) return 'Giza';
+  if (
+    lower.includes('daqahliya') ||
+    lower.includes('daqahlia') ||
+    lower.includes('ad daqahliyya') ||
+    lower.includes('dakahlia') ||
+    lower.includes('الدقهلية') ||
+    lower.includes('المنصورة')
+  )
+    return 'Dakahlia';
   if (lower.includes('luxor') || lower.includes('الأقصر')) return 'Luxor';
   if (lower.includes('aswan') || lower.includes('أسوان')) return 'Aswan';
   if (lower.includes('alexandria') || lower.includes('الإسكندرية')) return 'Alexandria';
-  if (lower.includes('red sea') || lower.includes('hurghada') || lower.includes('البحر الأحمر')) return 'Red Sea';
-  if (lower.includes('sinai') || lower.includes('sharm') || lower.includes('سيناء')) return 'South Sinai';
-  if (lower.includes('faiyum') || lower.includes('fayoum') || lower.includes('الفيوم')) return 'Faiyum';
+  if (lower.includes('red sea') || lower.includes('hurghada') || lower.includes('البحر الأحمر'))
+    return 'Red Sea';
+  if (lower.includes('sinai') || lower.includes('sharm') || lower.includes('سيناء'))
+    return 'South Sinai';
+  if (lower.includes('faiyum') || lower.includes('fayoum') || lower.includes('الفيوم'))
+    return 'Faiyum';
   if (lower.includes('qena') || lower.includes('قنا')) return 'Qena';
   if (lower.includes('matrouh') || lower.includes('مطروح')) return 'Matrouh';
 
@@ -56,17 +76,17 @@ function extractGovernorateFromAddress(address: any, latitude: number, longitude
     if (cleaned) return cleaned;
   }
 
-  return DEFAULT_GOVERNORATE;
+  return '';
 }
 
 export function LocationProvider({ children }: { children: ReactNode }) {
-  const [lat, setLat] = useState<number | null>(DEFAULT_LAT);
-  const [lon, setLon] = useState<number | null>(DEFAULT_LON);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lon, setLon] = useState<number | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [status, setStatus] = useState<LocationStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [locationName, setLocationName] = useState<string | null>(DEFAULT_LOCATION_NAME);
-  const [governorate, setGovernorate] = useState<string>(DEFAULT_GOVERNORATE);
+  const [locationName, setLocationName] = useState<string | null>(null);
+  const [governorate, setGovernorate] = useState<string>('');
 
   const reverseGeocode = async (latitude: number, longitude: number) => {
     try {
@@ -84,8 +104,10 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         const gov = extractGovernorateFromAddress(address, latitude, longitude);
         setGovernorate(gov);
 
-        const area = address.suburb || address.neighbourhood || address.quarter || address.residential;
-        const city = address.city || address.town || address.village || address.county || address.state;
+        const area =
+          address.suburb || address.neighbourhood || address.quarter || address.residential;
+        const city =
+          address.city || address.town || address.village || address.county || address.state;
         const country = address.country || 'Egypt';
 
         let nameParts: string[] = [];
@@ -99,17 +121,17 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (e) {
-      console.warn("Reverse geocode lookup failed:", e);
+      console.warn('Reverse geocode lookup failed:', e);
     }
     const fallbackGov = extractGovernorateFromAddress({}, latitude, longitude);
-    setGovernorate(fallbackGov);
-    setLocationName(`${fallbackGov} Governorate (${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°)`);
+    setGovernorate(fallbackGov || '');
+    setLocationName(`${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`);
   };
 
   const requestLocation = useCallback(() => {
     if (typeof window === 'undefined' || !('geolocation' in navigator)) {
       setStatus('location_unavailable');
-      setErrorMessage('Geolocation is not supported by your browser. Displaying default governorate (Giza).');
+      setErrorMessage('Geolocation is not supported by your browser.');
       return;
     }
 
@@ -135,13 +157,13 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         clearTimeout(timeoutId);
         if (error.code === error.PERMISSION_DENIED) {
           setStatus('permission_denied');
-          setErrorMessage('Location permission was denied. Displaying default location (Giza Governorate).');
+          setErrorMessage('Location permission was denied.');
         } else if (error.code === error.POSITION_UNAVAILABLE) {
           setStatus('location_unavailable');
-          setErrorMessage('Location information unavailable. Displaying default location (Giza Governorate).');
+          setErrorMessage('Location information unavailable.');
         } else if (error.code === error.TIMEOUT) {
           setStatus('location_unavailable');
-          setErrorMessage('Location request timed out. Displaying default location (Giza Governorate).');
+          setErrorMessage('Location request timed out.');
         } else {
           setStatus('location_unavailable');
           setErrorMessage(error.message || 'An unknown error occurred while retrieving location.');
@@ -159,14 +181,17 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     requestLocation();
   }, [requestLocation]);
 
-  const setLocationOverride = useCallback((newLat: number, newLon: number, name: string, gov: string) => {
-    setLat(newLat);
-    setLon(newLon);
-    setLocationName(name);
-    setGovernorate(gov);
-    setStatus('success');
-    setErrorMessage(null);
-  }, []);
+  const setLocationOverride = useCallback(
+    (newLat: number, newLon: number, name: string, gov: string) => {
+      setLat(newLat);
+      setLon(newLon);
+      setLocationName(name);
+      setGovernorate(gov);
+      setStatus('success');
+      setErrorMessage(null);
+    },
+    []
+  );
 
   return (
     <LocationContext.Provider

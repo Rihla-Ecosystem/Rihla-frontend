@@ -4,10 +4,13 @@ import { MapPin, Bell, Search, RefreshCw } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { useRouter } from 'next/navigation';
 import { useLocation } from "@/providers/LocationProvider";
+import { useAuth } from "@/lib/auth";
 
 export function TopBar({ location: locationProp, onRafiq }: { location?: string; onRafiq?: () => void }) {
   const router = useRouter();
   const { locationName, governorate, status, requestLocation } = useLocation();
+  const { user } = useAuth();
+  const initial = (user?.displayName || "Traveler").charAt(0).toUpperCase();
 
   let displayLocation = locationProp;
   if (!displayLocation) {
@@ -73,7 +76,7 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
           onClick={() => router.push('/app/profile')}
           style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${C.sand}50,${C.copper}50)`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
         >
-          <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "14px", fontWeight: 500, color: C.nile }}>S</span>
+          <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "14px", fontWeight: 500, color: C.nile }}>{initial}</span>
         </div>
       </div>
     </div>

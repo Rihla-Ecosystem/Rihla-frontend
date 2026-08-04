@@ -7,7 +7,7 @@ import { Glyph, GlyphFull, Geom } from "@/app/components/atoms";
 import {
   MapPin, Bell, Navigation, Wind, Thermometer, Sun, Shield, Search, Map, User, AlertTriangle, Star, Clock, Camera,
   ArrowRight, Globe, Phone, CreditCard, Wifi, CheckCircle, X, ChevronLeft, ChevronRight, Menu,
-  Home, Compass, Settings, BarChart2, Wallet, LogOut, Zap, Filter, SlidersHorizontal, BookOpen, Send, Mic, ChevronDown, RefreshCw
+  Home, Compass, Settings, BarChart2, Wallet, LogOut, Zap, Filter, SlidersHorizontal, BookOpen, Send, Mic, ChevronDown, RefreshCw, Ticket, Banknote, Landmark
 } from "lucide-react";
 
 export const NAV_ITEMS = [
@@ -16,15 +16,20 @@ export const NAV_ITEMS = [
   { id: "rafiq",   label: "Rafiq",   icon: (a: boolean) => <Glyph    size={18}/>,                              special: true },
   { id: "safety",  label: "Safety",  icon: (a: boolean) => <Shield   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "history", label: "History", icon: (a: boolean) => <Clock    size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "tickets", label: "Tickets", icon: (a: boolean) => <Ticket   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "currency", label: "Currency", icon: (a: boolean) => <Banknote size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "quests",  label: "Quests",  icon: (a: boolean) => <Landmark size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "wallet",  label: "Wallet",  icon: (a: boolean) => <Wallet   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "profile", label: "Profile", icon: (a: boolean) => <User     size={18} strokeWidth={a ? 2.2 : 1.7}/> },
-  { id: "settings",label: "Settings",icon: (a: boolean) => <Settings size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+{ id: "settings",label: "Settings",icon: (a: boolean) => <Settings size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "admin",   label: "Admin",   icon: (a: boolean) => <BarChart2 size={18} strokeWidth={a ? 2.2 : 1.7}/>, adminOnly: true },
 ];
 
 export function AppShell({ activePage, setPage, go, children }: { activePage: string; setPage: (s: string) => void; go: (s: string) => void; children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout } = useAuth();
 
+  const isAdmin = user?.role?.name?.toLowerCase() === "admin" || user?.roleId === 2;
   const handleLogout = async () => {
     try {
       await logout();
@@ -32,8 +37,10 @@ export function AppShell({ activePage, setPage, go, children }: { activePage: st
     go("landing");
   };
 
-  const displayName = user?.displayName || "Sara Al-Rashid";
+  const displayName = user?.displayName || "Traveler";
   const initial = displayName.charAt(0).toUpperCase();
+  const userLevel = user?.level ?? 1;
+  const userXp = user?.xp ?? 0;
 
   return (
     <div style={{ display: "flex", height: "100vh", background: C.bg, overflow: "hidden" }}>
@@ -43,7 +50,8 @@ export function AppShell({ activePage, setPage, go, children }: { activePage: st
           {!collapsed && <div><div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "16px", fontWeight: 500, color: C.limestone, lineHeight: 1 }}>رحلة Rihla</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "9px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: `${C.sand}80`, marginTop: 2 }}>AI Companion</div></div>}
         </div>
         <nav style={{ flex: 1, padding: "12px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {NAV_ITEMS.map(({ id, label, icon }) => {
+          {NAV_ITEMS.map(({ id, label, icon, adminOnly }) => {
+            if (adminOnly && !isAdmin) return null;
             const a = activePage === id;
             return (
               <button key={id} onClick={() => setPage(id)} style={{ display: "flex", alignItems: "center", gap: collapsed ? 0 : 10, padding: collapsed ? "11px 0" : "10px 13px", borderRadius: 10, border: "none", background: (id as any).special || id === "rafiq" ? (a ? `${C.faience}25` : `${C.faience}10`) : a ? `${C.limestone}12` : "transparent", color: id === "rafiq" ? (a ? C.faience : `${C.faience}70`) : a ? C.limestone : `${C.limestone}45`, cursor: "pointer", transition: "all 0.15s", width: "100%", justifyContent: collapsed ? "center" : "flex-start", whiteSpace: "nowrap" }}>
@@ -59,7 +67,7 @@ export function AppShell({ activePage, setPage, go, children }: { activePage: st
           {!collapsed && (
             <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px" }}>
               <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg,${C.sand}40,${C.copper}40)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "13px", fontWeight: 500, color: C.limestone }}>{initial}</span></div>
-              <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.limestone, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: `${C.limestone}45` }}>Explorer · Level 4</div></div>
+              <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.limestone, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: `${C.limestone}45` }}>Level {userLevel} · {userXp} XP</div></div>
             </div>
           )}
           <button onClick={() => setCollapsed(c => !c)} style={{ background: "none", border: "none", color: `${C.limestone}40`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 6, padding: "8px 10px", borderRadius: 8 }}>

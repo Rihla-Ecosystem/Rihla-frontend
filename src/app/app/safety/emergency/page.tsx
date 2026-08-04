@@ -18,7 +18,6 @@ export default function EmergencyPage() {
   const [scenario, setScenario] = useState<string | null>(null);
   const [locShared, setLocShared] = useState(false);
   const [step, setStep] = useState(0);
-  const [rafiq, setRafiq] = useState(false);
 
   const goBack = () => {
     router.push('/app/safety');
@@ -67,7 +66,7 @@ export default function EmergencyPage() {
           <EmergencyRightColumn
             locShared={locShared}
             setLocShared={setLocShared}
-            setRafiq={setRafiq}
+            setRafiq={() => router.push('/app/rafiq')}
           />
         </div>
       </div>

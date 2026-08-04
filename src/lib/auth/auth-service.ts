@@ -48,4 +48,26 @@ export const authService = {
     const response = await apiClient.get<User>('/users/me');
     return response.data;
   },
+
+  /**
+   * Updates the current user's profile (used by onboarding and settings).
+   */
+  async updateProfile(payload: Partial<RegisterPayload> & Record<string, unknown>): Promise<User> {
+    const response = await apiClient.patch<User>('/users/me', payload);
+    return response.data;
+  },
+
+  /**
+   * Requests a password reset email for the given address.
+   */
+  async forgotPassword(email: string): Promise<void> {
+    await apiClient.post('/auth/forgot-password', { email });
+  },
+
+  /**
+   * Resets the user's password using a reset token.
+   */
+  async resetPassword(token: string, password: string): Promise<void> {
+    await apiClient.post('/auth/reset-password', { token, password });
+  },
 };

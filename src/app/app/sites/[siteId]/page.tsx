@@ -47,20 +47,47 @@ import {
 } from 'lucide-react';
 import { TopBar } from '@/app/components/layout/TopBar';
 import { SiteCard } from '@/app/components/siteCard';
-import { RafiqDrawer } from '@/app/components/rafiqDrawer';
-import { ALL_SITES } from '@/app/data/rihla-data';
+import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
 import SiteHero from '@/app/components/site/SiteHero';
 import SiteBodyLeft from '@/app/components/site/SiteBodyLeft';
 import SiteRightSidebar from '@/app/components/site/SiteRightSidebar';
+import {
+  monumentsService,
+  buildMonumentLookup,
+  applyMonumentToSite,
+  type Monument,
+} from '@/services/monumentsService';
 
 export default function SiteDetailPage() {
   const router = useRouter();
   const params = useParams();
   const siteIdParam = params?.siteId as string;
   const numericSiteId = siteIdParam ? parseInt(siteIdParam, 10) : NaN;
-  const site = ALL_SITES.find((s) => s.id === numericSiteId);
-  const [rafiq, setRafiq] = useState(false);
+  const [site, setSite] = useState<RihlaSite | null>(
+    ALL_SITES.find((s) => s.id === numericSiteId) ?? null
+  );
   const [saved, setSaved] = useState(false);
+  const [monument, setMonument] = useState<Monument | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    monumentsService
+      .getMonuments()
+      .then((monuments) => {
+        if (!active || !site) return;
+        const lookup = buildMonumentLookup(monuments);
+        const monument = lookup.get(site.name.toLowerCase()) ?? lookup.get(site.nameAr.toLowerCase());
+        if (monument) {
+          setSite((current) => (current ? applyMonumentToSite(current, monument) : current));
+          setMonument(monument);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!site) {
@@ -136,7 +163,7 @@ export default function SiteDetailPage() {
             {saved ? 'Saved' : 'Save site'}
           </button>
           <button
-            onClick={() => setRafiq(true)}
+            onClick={() => router.push('/app/rafiq')}
             style={{
               background: C.nile,
               border: 'none',
@@ -171,12 +198,10 @@ export default function SiteDetailPage() {
             gap: 36,
           }}
         >
-          <SiteBodyLeft site={site} nearby={nearby} />
-          <SiteRightSidebar site={site} saved={saved} setSaved={setSaved} setRafiq={setRafiq} />
+          <SiteBodyLeft site={site} nearby={nearby} monument={monument} />
+          <SiteRightSidebar site={site} saved={saved} setSaved={setSaved} setRafiq={() => router.push('/app/rafiq')} />
         </div>
       </div>
-
-      {rafiq && <RafiqDrawer onClose={() => setRafiq(false)} />}
     </div>
   );
 }

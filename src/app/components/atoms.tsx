@@ -7,81 +7,25 @@ import Image from "next/image";
 
 // Primary Rihla icon logo
 export function Glyph({ size = 28, light = false }: { size?: number; light?: boolean }) {
-  // light=true → cream pyramid on dark bg  |  light=false → bronze pyramid on light bg
-  const faceL  = light ? C.limestone : "#2C1E08";   // shadow (left) face
-  const faceR  = light ? "#B8883A"   : "#7A5020";   // lit (right) face
-  const hole   = light ? C.basalt    : C.solarGlow; // keyhole void
-  const w = size;
-  const h = Math.round(size * (30 / 36));
+  // Scale width by 1.25 so the height matches the old vertical SVG height (23px)
+  const w = Math.round(size * 1.25);
+  const h = Math.round(w * (1024 / 1536));
   return (
-    <svg width={w} height={h} viewBox="0 0 36 30" fill="none">
-      {/* Left (shadow) face: apex (18,2) → base left (1,28) */}
-      <path d="M18 2L1 28H18V2Z" fill={faceL}/>
-      {/* Right (lit) face: apex → base right (35,28) */}
-      <path d="M18 2L35 28H18V2Z" fill={faceR}/>
-      {/* Keyhole — centered, at ~62% of pyramid height */}
-      <circle cx="18" cy="17" r="4.8" fill={hole}/>
-      <rect x="15.5" y="17" width="5" height="7" rx="0.9" fill={hole}/>
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: size, height: size }}>
+      <Image src="/logo.png" alt="Rihla Logo" width={w} height={h} style={{ objectFit: 'contain', display: 'block', maxWidth: 'none' }} priority />
+    </div>
   );
 }
 
 // Full Rihla logo mark
 export function GlyphFull({ size = 80, light = false }: { size?: number; light?: boolean }) {
-  const faceL  = light ? C.limestone          : "#2C1E08";
-  const faceR  = light ? "#C09848"            : "#7A5020";
-  const rayCol = light ? C.solarBright        : C.solar;
-  const shaft  = light ? C.limestone          : "#3A2A0C";
-  const hole   = light ? C.basalt             : C.solarGlow;
-
-  // 11 sun rays from apex (30,20), spanning −155° to −25°
-  // They originate at the apex; the pyramid (painted later) covers the inner portions
-  // Only the portions above & outside the pyramid are visible — exactly like the logo
-  const rays = Array.from({ length: 11 }, (_, i) => {
-    const t   = i / 10;
-    const deg = -155 + t * 130;               // −155° … −25°
-    const rad = deg * Math.PI / 180;
-    const lng = i % 3 !== 1;                  // 8 long, 3 short
-    const r   = lng ? 30 : 21;
-    return { x2: 30 + r * Math.cos(rad), y2: 20 + r * Math.sin(rad), lng };
-  });
-
+  // Scale width by 2.4 so the horizontal logo has a similar height/weight to the old vertical SVG (which was 1.6x height)
+  const w = Math.round(size * 2.4);
+  const h = Math.round(w * (1024 / 1536));
   return (
-    <svg width={size} height={Math.round(size * 1.6)} viewBox="0 0 60 96" fill="none">
-      {/* ── Layer 1: sun rays from apex (painted first; pyramid covers inner ends) */}
-      {rays.map((r, i) => (
-        <line key={i} x1={30} y1={20} x2={r.x2} y2={r.y2}
-          stroke={rayCol}
-          strokeWidth={r.lng ? "1.8" : "1.1"}
-          strokeLinecap="round"
-          opacity="0.92"/>
-      ))}
-
-      {/* ── Layer 2: crescent arc — full circle stroke behind pyramid
-            cx=30, cy=36, r=24  →  wings are visible on each side of the pyramid:
-            at y=28 left pyramid edge ≈ x=20, circle left ≈ x=7  →  13px wing ✓  */}
-      <circle cx="30" cy="36" r="24"
-        stroke={rayCol} strokeWidth="2.8" fill="none" opacity="0.60"/>
-
-      {/* ── Layer 3: pyramid (covers center of rays and arc, leaving only the tips) */}
-      {/* Left shadow face */}
-      <path d="M30 20L4 50H30V20Z" fill={faceL}/>
-      {/* Right lit face */}
-      <path d="M30 20L56 50H30V20Z" fill={faceR}/>
-
-      {/* ── Layer 4: keyhole — centered at 57% of pyramid height */}
-      {/* Circle (tombstone top) */}
-      <circle cx="30" cy="37" r="6.5" fill={hole}/>
-      {/* Rectangular slot below */}
-      <rect x="26.4" y="37" width="7.2" height="10" rx="1.3" fill={hole}/>
-
-      {/* ── Layer 5: key shaft */}
-      <rect x="27" y="50" width="6" height="28" rx="3" fill={shaft}/>
-
-      {/* ── Layer 6: key bit teeth (right side) */}
-      <rect x="33" y="63"   width="11"  height="3.4" rx="1.7" fill={shaft}/>
-      <rect x="33" y="68.5" width="7"   height="2.8" rx="1.4" fill={shaft}/>
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Image src="/logo.png" alt="Rihla Full Logo" width={w} height={h} style={{ objectFit: 'contain', display: 'block', maxWidth: 'none' }} priority />
+    </div>
   );
 }
 

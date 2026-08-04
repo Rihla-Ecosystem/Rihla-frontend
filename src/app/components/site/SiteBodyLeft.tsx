@@ -2,14 +2,33 @@
 
 import React from 'react';
 import { C } from '@/lib/constants/theme';
-import { CheckCircle, AlertTriangle, Clock, CreditCard, Navigation, Star } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Clock, CreditCard, Navigation, Star, Ticket, CalendarClock } from 'lucide-react';
 import { Glyph } from '@/app/components/atoms';
 import { useRouter } from 'next/navigation';
 import SiteCard from '@/app/components/siteCard';
+import type { Monument } from '@/services/monumentsService';
 
-export default function SiteBodyLeft({ site, nearby }: { site: any; nearby: any[] }) {
+export default function SiteBodyLeft({
+  site,
+  nearby,
+  monument,
+}: {
+  site: any;
+  nearby: any[];
+  monument: Monument | null;
+}) {
   const router = useRouter();
   const storyParagraphs = site.story.split('\n\n');
+
+  const ticketRows = [
+    { label: 'Egyptian · Adult', price: monument?.prices?.egyptian?.adult },
+    { label: 'Egyptian · Student', price: monument?.prices?.egyptian?.student },
+    { label: 'Foreign · Adult', price: monument?.prices?.foreigner?.adult },
+    { label: 'Foreign · Student', price: monument?.prices?.foreigner?.student },
+  ];
+  const hasPrices = ticketRows.some((r) => r.price != null);
+  const hours = monument?.opening_hours;
+  const hasHours = Boolean(hours?.summer || hours?.winter || hours?.ramadan);
 
   return (
     <div>
@@ -70,6 +89,164 @@ export default function SiteBodyLeft({ site, nearby }: { site: any; nearby: any[
           </div>
         ))}
       </div>
+
+      {(hasPrices || hasHours) && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2,1fr)',
+            gap: 12,
+            marginBottom: 28,
+          }}
+        >
+          {hasPrices && (
+            <div
+              style={{
+                background: C.limestone,
+                borderRadius: 14,
+                padding: '18px 20px',
+                border: '1px solid rgba(27,26,23,0.07)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <Ticket size={15} color={C.copper} strokeWidth={2.2} />
+                <span
+                  style={{
+                    fontFamily: "'Inter',sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: C.copper,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Tickets & Admission
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {ticketRows.map((row) =>
+                  row.price != null ? (
+                    <div
+                      key={row.label}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '7px 0',
+                        borderBottom: '1px dashed rgba(27,26,23,0.08)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '12px',
+                          color: '#5C5346',
+                        }}
+                      >
+                        {row.label}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: C.nile,
+                        }}
+                      >
+                        LE {row.price}
+                      </span>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            </div>
+          )}
+
+          {hasHours && (
+            <div
+              style={{
+                background: C.limestone,
+                borderRadius: 14,
+                padding: '18px 20px',
+                border: '1px solid rgba(27,26,23,0.07)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <CalendarClock size={15} color={C.copper} strokeWidth={2.2} />
+                <span
+                  style={{
+                    fontFamily: "'Inter',sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: C.copper,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Opening Hours
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {(
+                  [
+                    ['Summer', hours?.summer],
+                    ['Winter', hours?.winter],
+                    ['Ramadan', hours?.ramadan],
+                  ] as [string, string | null | undefined][]
+                )
+                  .filter(([, v]) => v)
+                  .map(([label, value]) => (
+                    <div
+                      key={label}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '7px 0',
+                        borderBottom: '1px dashed rgba(27,26,23,0.08)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '12px',
+                          color: '#5C5346',
+                        }}
+                      >
+                        {label}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          color: C.nile,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {value}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
