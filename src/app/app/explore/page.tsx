@@ -1,35 +1,39 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth';
 import { C } from '@/lib/constants/theme';
-import { Geom } from '@/app/components/atoms';
+import { useAppSettings } from '@/lib/settingsStore';
 import {
   AlertTriangle,
-  Star,
   Navigation,
-  Map,
-  Filter,
-  SlidersHorizontal,
-  BookOpen,
-  RefreshCw,
-  Search,
+  MapPin,
   Compass,
-  ShieldCheck,
-  ShieldAlert,
-  PhoneCall,
-  CheckCircle2,
-  Info,
+  Ticket,
+  Route,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { TopBar } from '@/app/components/layout/TopBar';
-import { SiteCard } from '@/app/components/siteCard';
-import { RafiqDrawer } from '@/app/components/rafiqDrawer';
 import { geoService } from '@/services/geoService';
+import { geoApi, HERITAGE_CATEGORIES } from '@/lib/api/geo';
+import type { GeoJsonGeometry, Site as GeoSite } from '@/lib/api/geo-types';
 import { useLocation } from '@/providers/LocationProvider';
 import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
-import { mapApiPoiToRihlaSite } from '@/lib/poiMapping';
+import { mapApiPoiToRihlaSite, calculateDistanceKm } from '@/lib/poiMapping';
+import {
+  monumentsService,
+  buildMonumentLookup,
+  applyMonumentToSite,
+  normalizeName,
+  type Monument,
+} from '@/services/monumentsService';
+import { ExploreSearchBar, type ExploreGovernorateOption } from '@/app/app/explore/components/ExploreSearchBar';
+import { ExploreSiteCard, formatDistanceKm } from '@/app/app/explore/components/ExploreSiteCard';
+import { MonumentCard } from '@/app/app/explore/components/MonumentCard';
+import type { MapTripStop, MapTicketMarker } from '@/app/components/ui/InteractiveMap';
 
 const InteractiveMap = dynamic(
   () => import('@/app/components/ui/InteractiveMap').then((mod) => mod.InteractiveMap),
@@ -38,9 +42,9 @@ const InteractiveMap = dynamic(
     loading: () => (
       <div
         style={{
-          height: 320,
+          height: '100%',
+          minHeight: 340,
           background: C.limestoneDark,
-          borderRadius: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -49,701 +53,1008 @@ const InteractiveMap = dynamic(
           color: '#8B7E6A',
         }}
       >
-        Loading map component...
+        Loading map...
       </div>
     ),
   }
 );
 
-const EXPLORE_CATS = ['All', 'Temples', 'Museums', 'Archaeological', 'Markets', 'Hidden gems'];
+const RADIUS_OPTIONS = [1000, 2000, 5000, 10000, 25000] as const;
+const DEFAULT_LOCATION = { lat: 30.0444, lon: 31.2357 };
+const MAX_TRIP_STOPS = 12;
 
-interface GovLocation {
-  name: string;
-  lat: number;
-  lon: number;
-}
+// Approximate centroid per governorate — used to make the static fallback
+// location-aware (distances, radius filtering, map markers) when the backend
+// returns no POIs or is unreachable.
+const GOV_COORDS: Record<string, { lat: number; lon: number }> = {
+  'Giza': { lat: 29.9870, lon: 31.2118 },
+  'Cairo': { lat: 30.0444, lon: 31.2357 },
+  'Luxor': { lat: 25.6872, lon: 32.6396 },
+  'Aswan': { lat: 24.0889, lon: 32.8998 },
+  'Alexandria': { lat: 31.2001, lon: 29.9187 },
+  'South Sinai': { lat: 28.5395, lon: 33.9750 },
+  'Red Sea': { lat: 27.2579, lon: 33.8116 },
+};
 
-const EGYPT_GOVERNORATES: GovLocation[] = [
-  { name: 'Giza', lat: 29.9870, lon: 31.2118 },
-  { name: 'Cairo', lat: 30.0444, lon: 31.2357 },
-  { name: 'Luxor', lat: 25.6872, lon: 32.6396 },
-  { name: 'Aswan', lat: 24.0889, lon: 32.8998 },
-  { name: 'Alexandria', lat: 31.2001, lon: 29.9187 },
-  { name: 'Sinai', lat: 28.5395, lon: 33.9750 },
-  { name: 'Red Sea', lat: 27.2579, lon: 33.8116 },
+// Full local catalog so the governorate dropdown always has options even when
+// the backend `/geo/governorates` endpoint is missing or unreachable.
+const EGYPT_GOVERNORATES: string[] = [
+  'Alexandria', 'Aswan', 'Asyut', 'Beheira', 'Beni Suef', 'Cairo',
+  'Damietta', 'Faiyum', 'Gharbia', 'Giza', 'Ismailia', 'Kafr El-Sheikh',
+  'Luxor', 'Matruh', 'Minya', 'Monufia', 'New Valley', 'North Sinai',
+  'Port Said', 'Qalyubia', 'Qena', 'Red Sea', 'Sharqia', 'Sohag',
+  'South Sinai', 'Suez',
 ];
 
+// Build a RihlaSite from a local monument record (which always carries real
+// coordinates, so the map can render markers for offline data).
+function monumentToSite(m: Monument, index: number, origin: { lat: number; lon: number }): RihlaSite {
+  const km = calculateDistanceKm(origin.lat, origin.lon, m.latitude, m.longitude);
+  return {
+    id: index + 1,
+    name: m.title,
+    nameAr: '',
+    cat: m.category || 'archaeological',
+    dist: formatDistanceKm(km),
+    rating: 4.5,
+    reviews: 0,
+    img: m.images?.[0] || '',
+    imgs: m.images || [],
+    tag: m.category || 'archaeological',
+    scam: false,
+    gov: m.governorate || '',
+    built: '',
+    dynasty: '',
+    hours: '',
+    admission: '',
+    duration: '',
+    bestTime: 'year-round',
+    accessibility: '',
+    story: m.description || '',
+    rafiqInsight: '',
+    scamDetail: null,
+    tips: [],
+    nearby: [],
+    lat: m.latitude,
+    lon: m.longitude,
+  };
+}
 
+// Client-side filtering of the rich local monument catalog so Explore responds
+// to governorate / category / radius / location even when the backend POIs are
+// unreachable, returns 401, or is empty. Picks the ~6 curated ALL_SITES entries
+// (by governorate) to enrich matching monuments with narrative/insight fields.
+function localizeFallback(
+  monuments: Monument[],
+  origin: { lat: number; lon: number },
+  governorate: string,
+  category: string,
+  radius: number,
+  hasExplicitOrigin: boolean
+): RihlaSite[] {
+  const enriched = new Map(ALL_SITES.map((s) => [(s.gov || '').toLowerCase(), s]));
+  const scoped = monuments
+    .map((m, i) => {
+      const base = monumentToSite(m, i, origin);
+      const ext = enriched.get((m.governorate || '').toLowerCase());
+      if (!ext) return base;
+      return {
+        ...base,
+        name: base.name || ext.name,
+        nameAr: ext.nameAr,
+        rating: ext.rating,
+        reviews: ext.reviews,
+        img: base.img || ext.img,
+        imgs: base.imgs.length ? base.imgs : ext.imgs,
+        tag: ext.tag || base.tag,
+        scam: ext.scam,
+        built: ext.built,
+        dynasty: ext.dynasty,
+        duration: ext.duration,
+        bestTime: ext.bestTime,
+        accessibility: ext.accessibility,
+        story: ext.story || base.story,
+        rafiqInsight: ext.rafiqInsight,
+        scamDetail: ext.scamDetail,
+        tips: ext.tips,
+        nearby: ext.nearby,
+        hours: ext.hours,
+        admission: ext.admission,
+      };
+    })
+    .filter((s) => !governorate || s.gov.toLowerCase() === governorate.toLowerCase())
+    .filter((s) => !category || s.cat.toLowerCase() === category.toLowerCase());
+
+  // Radius only applies once the user is located / drops a pin; if nothing is
+  // within range, relax the radius so the map never renders blank.
+  if (governorate || !hasExplicitOrigin) return scoped;
+  const near = scoped.filter((s) => calculateDistanceKm(origin.lat, origin.lon, s.lat!, s.lon!) <= radius / 1000);
+  return near.length > 0 ? near : scoped;
+}
+
+const CITY_TO_GOVERNORATE: Record<string, string> = {
+  cairo: 'Cairo',
+  giza: 'Giza',
+  luxor: 'Luxor',
+  aswan: 'Aswan',
+  alexandria: 'Alexandria',
+  'red sea': 'Red Sea',
+  sinai: 'South Sinai',
+  hurghada: 'Red Sea',
+  'sharm el-sheikh': 'South Sinai',
+};
+
+interface GovernorateOption extends ExploreGovernorateOption {
+  geometry: GeoJsonGeometry | null;
+}
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isDesktop;
+}
+
+function formatDuration(seconds: number): string {
+  const m = Math.round(seconds / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
+}
 
 export default function ExplorePage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { lat: userLat, lon: userLon, locationName, governorate: userGov, status: locStatus } = useLocation();
+  const appSettings = useAppSettings();
+  const {
+    lat: userLat,
+    lon: userLon,
+    status: locStatus,
+    requestLocation,
+  } = useLocation();
+  const isDesktop = useIsDesktop();
 
-  const [cat, setCat] = useState('All');
-  const [gov, setGov] = useState(userGov || 'Giza');
-  const [view, setView] = useState<'grid' | 'list'>('grid');
-  const [sort, setSort] = useState('distance');
-  const [rafiq, setRafiq] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Filters
+  const [search, setSearch] = useState('');
+  const [radius, setRadius] = useState<number>(5000);
+  const [governorate, setGovernorate] = useState('');
+  const [category, setCategory] = useState('');
+  const [pin, setPin] = useState<{ lat: number; lon: number } | null>(null);
+
+  // Data
   const [sites, setSites] = useState<RihlaSite[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [governorates, setGovernorates] = useState<GovernorateOption[]>([]);
+  const [countryOutline, setCountryOutline] = useState<GeoJsonGeometry | null>(null);
+  const [monuments, setMonuments] = useState<Monument[]>([]);
+  const [ticketsEnabled, setTicketsEnabled] = useState(false);
+  const [selectedMonument, setSelectedMonument] = useState<Monument | null>(null);
 
+  // Selection / routing
+  const [selectedSite, setSelectedSite] = useState<RihlaSite | null>(null);
+  const [route, setRoute] = useState<{ coordinates: [number, number][]; distanceMeters: number; durationSeconds: number } | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [tripSelection, setTripSelection] = useState<Set<string>>(new Set());
+  const [tripPlan, setTripPlan] = useState<{ coordinates: [number, number][]; distanceMeters: number; durationSeconds: number; orderedStops: GeoSite[] } | null>(null);
+  const [tripLoading, setTripLoading] = useState(false);
+  const [focus, setFocus] = useState<{ lat: number; lon: number; zoom?: number; key: number } | null>(null);
+  const [govFitKey, setGovFitKey] = useState(0);
 
-  const activeGovObj = useMemo(() => {
-    return EGYPT_GOVERNORATES.find((g) => g.name.toLowerCase() === gov.toLowerCase()) || EGYPT_GOVERNORATES[0];
-  }, [gov]);
+  const searchActive = search.trim().length > 0;
 
-  const fetchExploreSites = useCallback(async () => {
-    setIsLoading(true);
+  // Origin: pin overrides live location; fall back to Cairo
+  const searchOrigin = useMemo(() => {
+    if (pin) return pin;
+    if (userLat !== null && userLon !== null) return { lat: userLat, lon: userLon };
+    return DEFAULT_LOCATION;
+  }, [pin, userLat, userLon]);
+
+  // True once the user is located or drops a pin — only then should the offline
+  // fallback respect the radius pill. Otherwise show all monuments initially.
+  const hasExplicitOrigin = useMemo(
+    () => pin !== null || (userLat !== null && userLon !== null),
+    [pin, userLat, userLon]
+  );
+
+  const monumentLookup = useMemo(() => buildMonumentLookup(monuments), [monuments]);
+
+  // Load metadata once — always seed the governorate dropdown from the local
+  // catalog so it works even when `/geo/governorates` is missing/unreachable.
+  useEffect(() => {
+    let active = true;
+    const staticGovernorates = EGYPT_GOVERNORATES.map((name) => ({ name, geometry: null }));
+    setGovernorates(staticGovernorates);
+    geoApi.getGovernorates().then((gs) => {
+      if (!active || gs.length === 0) return;
+      const byName = new Map(staticGovernorates.map((sg) => [sg.name.toLowerCase(), sg]));
+      const merged = gs.map((g) => ({
+        ...g,
+        geometry: g.geometry ?? byName.get(g.name.toLowerCase())?.geometry ?? null,
+      }));
+      setGovernorates(merged);
+    }).catch(() => {});
+    geoApi.getCountryBoundary().then((b) => {
+      if (active) setCountryOutline(b ?? null);
+    }).catch(() => {});
+    monumentsService.getMonuments().then((ms) => {
+      if (active) setMonuments(ms);
+    }).catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Deep link: ?city=
+  useEffect(() => {
+    const city = new URLSearchParams(window.location.search).get('city');
+    if (city) {
+      const gov = CITY_TO_GOVERNORATE[city.toLowerCase()];
+      if (gov) {
+        setGovernorate(gov);
+        setGovFitKey((k) => k + 1);
+      }
+    }
+  }, []);
+
+  const activeGovObj = useMemo(
+    () => governorates.find((g) => g.name.toLowerCase() === governorate.toLowerCase()),
+    [governorates, governorate]
+  );
+  const governorateGeometry = activeGovObj?.geometry ?? null;
+
+  // Whenever the effective search origin moves (location resolves, pin set, or
+  // default fallback), ask the map to center on it so the map matches the data.
+  const originKeyRef = useRef(0);
+  useEffect(() => {
+    originKeyRef.current += 1;
+  }, [searchOrigin.lat, searchOrigin.lon]);
+  const originCenter = {
+    lat: searchOrigin.lat,
+    lon: searchOrigin.lon,
+    key: originKeyRef.current,
+  };
+
+  const enrichSites = useCallback(
+    (list: RihlaSite[]): RihlaSite[] => {
+      if (monumentLookup.size === 0 || list.length === 0) return list;
+      return list.map((s) => {
+        const monument =
+          monumentLookup.get(normalizeName(s.name)) ?? monumentLookup.get(normalizeName(s.nameAr));
+        return monument ? applyMonumentToSite(s, monument) : s;
+      });
+    },
+    [monumentLookup]
+  );
+
+  const reload = useCallback(async () => {
+    if (searchActive) {
+      setSearching(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
       let rawPois: any[] = [];
-      const queryCategory = cat === 'All' ? undefined : cat;
+      const queryCategory = category || undefined;
 
-      if (searchQuery.trim().length > 0) {
-        const searchRes = await geoService.searchPlaces(
-          searchQuery.trim(),
-          userLat || activeGovObj.lat,
-          userLon || activeGovObj.lon
-        );
-        rawPois = (searchRes as any)?.pois || [];
+      if (searchActive) {
+        const res: any = await geoService.searchPlaces(search.trim(), searchOrigin.lat, searchOrigin.lon);
+        rawPois = res?.pois || (Array.isArray(res) ? res : []);
+      } else if (governorate) {
+        const res: any = await geoService.getSitesByGovernorate(governorate, queryCategory);
+        rawPois = res?.pois || (Array.isArray(res) ? res : []);
       } else {
-        const poiRes = await geoService.getSitesByGovernorate(gov, queryCategory);
-        rawPois = (poiRes as any)?.pois || (Array.isArray(poiRes) ? poiRes : []);
+        const res: any = await geoService.getPois(
+          searchOrigin.lat,
+          searchOrigin.lon,
+          radius,
+          category ? category : HERITAGE_CATEGORIES.join(',')
+        );
+        rawPois = res?.pois || (Array.isArray(res) ? res : []);
       }
 
       if (rawPois && rawPois.length > 0) {
         const mapped = rawPois.map((p: any, idx: number) =>
-          mapApiPoiToRihlaSite(p, userLat, userLon, idx)
+          mapApiPoiToRihlaSite(p, searchOrigin.lat, searchOrigin.lon, idx)
         );
-        setSites(mapped);
+        setSites(enrichSites(mapped));
+      } else if (searchActive) {
+        setSites([]);
       } else {
-        const fallbackSites = ALL_SITES.filter(
-          (s) => s.gov.toLowerCase() === gov.toLowerCase() || gov === 'Egypt'
-        );
-        setSites(fallbackSites.length > 0 ? fallbackSites : ALL_SITES);
+        const fallback = localizeFallback(monuments, searchOrigin, governorate, category, radius, hasExplicitOrigin);
+        setSites(enrichSites(fallback));
       }
     } catch (err: any) {
-      const errMsg = err?.message || 'Failed to fetch points of interest from Core Server API.';
-      console.warn('Explore page data fetch notice:', errMsg);
-      const fallbackSites = ALL_SITES.filter(
-        (s) => s.gov.toLowerCase() === gov.toLowerCase() || gov === 'Egypt'
-      );
-      setSites(fallbackSites.length > 0 ? fallbackSites : ALL_SITES);
+      console.warn('Explore page data fetch notice:', err?.message || err);
+      if (searchActive) {
+        setSites([]);
+      } else {
+        const fallback = localizeFallback(monuments, searchOrigin, governorate, category, radius, hasExplicitOrigin);
+        setSites(enrichSites(fallback));
+      }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+      setSearching(false);
     }
-  }, [cat, gov, searchQuery, userLat, userLon, activeGovObj, reloadKey]);
+  }, [searchActive, search, searchOrigin.lat, searchOrigin.lon, governorate, category, radius, enrichSites, monuments, hasExplicitOrigin]);
+
+  // Debounced search
+  useEffect(() => {
+    if (!searchActive) return;
+    const t = setTimeout(() => reload(), 300);
+    return () => clearTimeout(t);
+  }, [searchActive, search, category, reload]);
+
+  // Immediate reload for filters / origin
+  useEffect(() => {
+    if (searchActive) return;
+    reload();
+  }, [searchActive, category, governorate, radius, searchOrigin.lat, searchOrigin.lon, reloadKey, reload]);
 
   useEffect(() => {
-    let isMounted = true;
-    if (user) {
-      fetchExploreSites();
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [user, fetchExploreSites]);
+    setSelectedSite(null);
+    setRoute(null);
+  }, [governorate, pin]);
 
-  const filtered = useMemo(() => {
-    let result = [...sites];
+  // Distances from origin
+  const distances = useMemo(() => {
+    const map: Record<number, number> = {};
+    sites.forEach((s) => {
+      if (s.lat != null && s.lon != null) {
+        map[s.id] = calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, s.lat, s.lon);
+      }
+    });
+    return map;
+  }, [sites, searchOrigin.lat, searchOrigin.lon]);
 
-    if (cat !== 'All') {
-      result = result.filter(
-        (s) =>
-          s.cat.toLowerCase() === cat.toLowerCase() ||
-          (cat === 'Hidden gems' && s.tag === 'Hidden gem') ||
-          (cat === 'Markets' && (s.cat === 'Market' || s.cat === 'Markets'))
+  // Match sites to monuments for ticket blocks
+  const monumentForSite = useMemo(() => {
+    const map: Record<number, Monument> = {};
+    if (monumentLookup.size === 0) return map;
+    sites.forEach((s) => {
+      const m =
+        monumentLookup.get(normalizeName(s.name)) ?? monumentLookup.get(normalizeName(s.nameAr));
+      if (m) map[s.id] = m;
+    });
+    return map;
+  }, [sites, monumentLookup]);
+
+  // Client-side filtered monument catalog for the portal section
+  const filteredMonuments = useMemo(() => {
+    if (monuments.length === 0) return [];
+    return monuments.filter((m) => {
+      if (searchActive) {
+        const q = search.trim().toLowerCase();
+        if (!q) return true;
+        return (
+          m.title.toLowerCase().includes(q) ||
+          (m.city || '').toLowerCase().includes(q) ||
+          (m.governorate || '').toLowerCase().includes(q)
+        );
+      }
+      if (category) {
+        const cat = category.toLowerCase();
+        if (!(m.category || '').toLowerCase().includes(cat)) return false;
+      }
+      if (governorate) {
+        const mGov = (m.governorate || '').toLowerCase();
+        const selGov = governorate.toLowerCase();
+        if (mGov && mGov !== selGov) return false;
+      } else {
+        const km = calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, m.latitude, m.longitude);
+        if (km > radius / 1000) return false;
+      }
+      return true;
+    });
+  }, [monuments, searchActive, search, category, governorate, radius, searchOrigin.lat, searchOrigin.lon]);
+
+  const handleMapClick = useCallback(
+    (lat: number, lon: number) => {
+      setSearch('');
+      setGovernorate('');
+      setPin({ lat, lon });
+      setRoute(null);
+    },
+    []
+  );
+
+  const computeRoute = useCallback(
+    async (site: RihlaSite) => {
+      const toLat = site.lat ?? searchOrigin.lat;
+      const toLon = site.lon ?? searchOrigin.lon;
+      setRouteLoading(true);
+      setRoute(null);
+      try {
+        const res = await geoApi.getRoute(
+          { latitude: searchOrigin.lat, longitude: searchOrigin.lon },
+          { latitude: toLat, longitude: toLon }
+        );
+        if (res) setRoute(res);
+      } catch {
+        // silent
+      } finally {
+        setRouteLoading(false);
+      }
+    },
+    [searchOrigin.lat, searchOrigin.lon]
+  );
+
+  const selectSite = useCallback(
+    (site: RihlaSite) => {
+      setSelectedSite(site);
+      const sLat = site.lat ?? searchOrigin.lat;
+      const sLon = site.lon ?? searchOrigin.lon;
+      setFocus((prev) => ({ lat: sLat, lon: sLon, zoom: 13, key: (prev?.key ?? 0) + 1 }));
+      computeRoute(site);
+    },
+    [searchOrigin.lat, searchOrigin.lon, computeRoute]
+  );
+
+  const toggleTripSelect = useCallback((site: RihlaSite) => {
+    setTripSelection((prev) => {
+      const next = new Set(prev);
+      const key = String(site.id);
+      if (next.has(key)) next.delete(key);
+      else if (next.size < MAX_TRIP_STOPS) next.add(key);
+      return next;
+    });
+    setTripPlan(null);
+  }, []);
+
+  const selectedTripSites = useMemo(
+    () => sites.filter((s) => tripSelection.has(String(s.id))),
+    [sites, tripSelection]
+  );
+
+  const planTrip = useCallback(async () => {
+    if (selectedTripSites.length < 2) return;
+    setTripLoading(true);
+    try {
+      const geoSites: GeoSite[] = selectedTripSites.map((s) => ({
+        id: String(s.id),
+        name: s.name,
+        nameAr: s.nameAr,
+        latitude: s.lat ?? searchOrigin.lat,
+        longitude: s.lon ?? searchOrigin.lon,
+        category: s.cat,
+        governorate: s.gov,
+        description: s.story,
+        images: s.imgs,
+        rating: s.rating,
+        visitDuration: 120,
+        bestTime: s.bestTime,
+        tips: s.tips,
+      }));
+      const plan = await geoApi.getTrip(
+        { latitude: searchOrigin.lat, longitude: searchOrigin.lon },
+        geoSites
       );
+      if (plan) setTripPlan(plan);
+    } catch {
+      // silent
+    } finally {
+      setTripLoading(false);
     }
+  }, [selectedTripSites, searchOrigin.lat, searchOrigin.lon]);
 
-    if (sort === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
-    } else if (sort === 'reviews') {
-      result.sort((a, b) => b.reviews - a.reviews);
-    }
+  const clearTrip = useCallback(() => {
+    setTripSelection(new Set());
+    setTripPlan(null);
+  }, []);
 
-    return result;
-  }, [sites, cat, sort]);
+  const clearPin = useCallback(() => setPin(null), []);
 
-  const handleGovChange = (gName: string) => {
-    setGov(gName);
-    setSearchQuery('');
-  };
+  const selectMonument = useCallback((m: Monument) => {
+    setTicketsEnabled(true);
+    setSelectedMonument(m);
+    setFocus((prev) => ({ lat: m.latitude, lon: m.longitude, zoom: 12, key: (prev?.key ?? 0) + 1 }));
+  }, []);
 
-  return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar
-        location={gov ? `${gov} Governorate` : 'Explore Egypt'}
-        onRafiq={() => setRafiq(true)}
-      />
+  const tripStops: MapTripStop[] = useMemo(
+    () =>
+      (tripPlan?.orderedStops || []).map((s, i) => ({
+        index: i + 1,
+        name: s.name,
+        latitude: s.latitude,
+        longitude: s.longitude,
+      })),
+    [tripPlan]
+  );
 
-      <div
-        style={{
-          background: `linear-gradient(135deg,${C.nile},${C.nileMid})`,
-          padding: '28px 32px',
-          position: 'relative',
-          overflow: 'hidden',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ position: 'absolute', right: -40, top: -40 }}>
-          <Geom size={240} color={C.limestone} op={0.032} />
-        </div>
-        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
-          <div
+  const ticketMarkers: MapTicketMarker[] = useMemo(
+    () =>
+      filteredMonuments.map((m) => ({
+        latitude: m.latitude,
+        longitude: m.longitude,
+        title: m.title,
+        category: m.category,
+        egyptianAdult: m.prices.egyptian?.adult ?? null,
+        egyptianStudent: m.prices.egyptian?.student ?? null,
+        foreignerAdult: m.prices.foreigner?.adult ?? null,
+        foreignerStudent: m.prices.foreigner?.student ?? null,
+        url: m.url,
+        selected: selectedMonument?.id === m.id,
+      })),
+    [filteredMonuments, selectedMonument]
+  );
+
+  const canPlan = tripSelection.size >= 2;
+  const locating = locStatus === 'loading' || locStatus === 'requesting';
+  const hasLiveLocation = userLat !== null && userLon !== null;
+  const loadingNote = routeLoading ? 'Calculating route…' : tripLoading ? 'Optimizing trip…' : null;
+
+  const radiusPills = (() => {
+    if (governorate) return null;
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 600, color: '#A89880' }}>
+          Radius
+        </span>
+        {RADIUS_OPTIONS.map((r) => {
+          const active = radius === r;
+          return (
+            <button
+              key={r}
+              onClick={() => setRadius(r)}
+              style={{
+                background: active ? C.solar : 'transparent',
+                border: `1px solid ${active ? C.solar : 'rgba(27,26,23,0.13)'}`,
+                borderRadius: 99,
+                padding: '4px 13px',
+                fontFamily: "'Inter',sans-serif",
+                fontSize: '11px',
+                fontWeight: active ? 700 : 500,
+                color: active ? '#FFFFFF' : '#6B6354',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {r / 1000} km
+            </button>
+          );
+        })}
+      </div>
+    );
+  })();
+
+  const originHint = (() => {
+    if (searchActive || governorate) return null;
+    const coords = pin ?? (hasLiveLocation ? { lat: userLat, lon: userLon } : DEFAULT_LOCATION);
+    const isPin = !!pin;
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: isPin ? '#B23A2E' : '#2563EB',
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#6B6354' }}>
+          {isPin
+            ? `Searching from pin ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`
+            : `You are here ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`}
+        </span>
+        {isPin && (
+          <button
+            onClick={clearPin}
             style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-              marginBottom: 20,
-              flexWrap: 'wrap',
-              gap: 16,
+              background: C.limestoneDark,
+              border: 'none',
+              borderRadius: 99,
+              padding: '3px 10px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              cursor: 'pointer',
+              fontFamily: "'Inter',sans-serif",
+              fontSize: '11px',
+              color: '#6B6354',
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  color: `${C.limestone}50`,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  marginBottom: 6,
-                }}
-              >
-                Exploring
-              </div>
-              <h1
-                style={{
-                  fontFamily: "'Cormorant Garamond',serif",
-                  fontSize: 'clamp(24px,3vw,36px)',
-                  fontWeight: 400,
-                  color: C.limestone,
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Discover <span style={{ fontStyle: 'italic', color: C.sand }}>Egypt</span>
-              </h1>
-            </div>
+            <X size={11} /> Clear pin
+          </button>
+        )}
+        {!isPin && !hasLiveLocation && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              fontFamily: "'Inter',sans-serif",
+              fontSize: '11px',
+              color: '#B45309',
+              background: '#FEF3C7',
+              borderRadius: 99,
+              padding: '2px 9px',
+            }}
+          >
+            <AlertTriangle size={10} /> Location unavailable — showing Cairo area
+          </span>
+        )}
+      </div>
+    );
+  })();
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ position: 'relative', width: 220 }}>
-                <input
-                  type="text"
-                  placeholder="Search places..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: `${C.limestone}15`,
-                    border: `1px solid ${C.limestone}25`,
-                    borderRadius: 99,
-                    padding: '7px 14px 7px 34px',
-                    fontFamily: "'Inter',sans-serif",
-                    fontSize: '12px',
-                    color: C.limestone,
-                    outline: 'none',
-                  }}
-                />
-                <Search
-                  size={14}
-                  color={`${C.limestone}70`}
-                  style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
-                />
-              </div>
+  const headerPanel = (
+    <div style={{ padding: '16px 18px', borderBottom: '1px solid rgba(27,26,23,0.08)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontFamily: "'Cormorant Garamond',serif", fontSize: '22px', fontWeight: 600, color: C.nile }}>
+          <MapPin size={18} color={C.solar} strokeWidth={2} />
+          Explore Egypt
+        </h1>
+        <button
+          onClick={requestLocation}
+          style={{
+            background: locStatus === 'permission_denied' ? '#FEF3C7' : '#EFF6FF',
+            color: locStatus === 'permission_denied' ? '#92400E' : '#1D4ED8',
+            border: 'none',
+            borderRadius: 10,
+            padding: '7px 12px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: 'pointer',
+            fontFamily: "'Inter',sans-serif",
+            fontSize: '12px',
+            fontWeight: 600,
+          }}
+        >
+          {locating ? <Loader2 size={13} className="spin" /> : <Navigation size={13} />}
+          Use my location
+        </button>
+      </div>
 
-              <div
-                style={{
-                  display: 'flex',
-                  background: `${C.limestone}12`,
-                  border: `1px solid ${C.limestone}20`,
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                }}
-              >
-                {(['grid', 'list'] as const).map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => setView(v)}
-                    style={{
-                      background: view === v ? `${C.limestone}20` : 'transparent',
-                      border: 'none',
-                      padding: '7px 12px',
-                      cursor: 'pointer',
-                      color: view === v ? C.limestone : `${C.limestone}45`,
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {v === 'grid' ? (
-                      <SlidersHorizontal size={15} strokeWidth={2} />
-                    ) : (
-                      <BookOpen size={15} strokeWidth={2} />
-                    )}
-                  </button>
+      {originHint}
+
+      {radiusPills}
+    </div>
+  );
+
+  const filterPanel = (
+    <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(27,26,23,0.08)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <ExploreSearchBar
+        search={search}
+        onSearchChange={setSearch}
+        governorates={governorates}
+        governorate={governorate}
+        onGovernorateChange={(v) => {
+          setGovernorate(v);
+          setSearch('');
+          setGovFitKey((k) => k + 1);
+        }}
+        category={category}
+        onCategoryChange={setCategory}
+      />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <button
+          onClick={() => {
+            setTicketsEnabled(!ticketsEnabled);
+            setSelectedMonument(null);
+          }}
+          style={{
+            background: ticketsEnabled ? C.solar : 'transparent',
+            border: `1px solid ${ticketsEnabled ? C.solar : 'rgba(27,26,23,0.13)'}`,
+            borderRadius: 99,
+            padding: '6px 13px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: 'pointer',
+            fontFamily: "'Inter',sans-serif",
+            fontSize: '12px',
+            fontWeight: ticketsEnabled ? 700 : 500,
+            color: ticketsEnabled ? '#FFFFFF' : '#6B6354',
+          }}
+        >
+          <Ticket size={13} /> Official tickets
+        </button>
+
+        <button
+          onClick={planTrip}
+          disabled={!canPlan || tripLoading}
+          style={{
+            background: C.solar,
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: 99,
+            padding: '7px 16px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: canPlan && !tripLoading ? 'pointer' : 'not-allowed',
+            opacity: canPlan && !tripLoading ? 1 : 0.5,
+            fontFamily: "'Inter',sans-serif",
+            fontSize: '12px',
+            fontWeight: 700,
+          }}
+        >
+          {tripLoading ? <Loader2 size={13} className="spin" /> : <Route size={13} />}
+          Plan route ({tripSelection.size})
+        </button>
+
+        {tripSelection.size > 0 && (
+          <button
+            onClick={clearTrip}
+            style={{
+              background: 'transparent',
+              border: `1px solid rgba(27,26,23,0.13)`,
+              borderRadius: 99,
+              padding: '6px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              cursor: 'pointer',
+              fontFamily: "'Inter',sans-serif",
+              fontSize: '11px',
+              color: '#6B6354',
+            }}
+          >
+            <X size={12} /> Clear selection
+          </button>
+        )}
+
+        {!canPlan && tripSelection.size === 0 && (
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880' }}>
+            Select 2+ sites to plan an efficient route
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  const routeBanner = route && (
+    <div
+      style={{
+        margin: '12px 18px 0',
+        background: '#EFF6FF',
+        border: '1px solid #BFDBFE',
+        borderRadius: 12,
+        padding: '10px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Navigation size={15} color="#1D4ED8" />
+        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 600, color: '#1E3A8A' }}>
+          Directions · {(route.distanceMeters / 1000).toFixed(1)} km · {formatDuration(route.durationSeconds)}
+        </span>
+      </div>
+      <button
+        onClick={() => setRoute(null)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1D4ED8' }}
+      >
+        <X size={14} />
+      </button>
+    </div>
+  );
+
+  const tripBanner = tripPlan && (
+    <div
+      style={{
+        margin: '12px 18px 0',
+        background: '#FFFBEB',
+        border: '1px solid #FDE68A',
+        borderRadius: 12,
+        padding: '10px 14px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Route size={15} color="#B45309" />
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 600, color: '#92400E' }}>
+            Optimized route · {(tripPlan.distanceMeters / 1000).toFixed(1)} km · {formatDuration(tripPlan.durationSeconds)} · {tripPlan.orderedStops.length} stops
+          </span>
+        </div>
+        <button
+          onClick={clearTrip}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400E' }}
+        >
+          <X size={14} />
+        </button>
+      </div>
+      <ol style={{ margin: '8px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {tripPlan.orderedStops.map((stop, i) => (
+          <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                background: C.solar,
+                color: '#FFF',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: "'Inter',sans-serif",
+                fontSize: '10px',
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {i + 1}
+            </span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#6B6354' }}>{stop.name}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+
+  const results = (
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {loading || searching ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+          <Loader2 size={22} color={C.solar} className="spin" />
+        </div>
+      ) : error ? (
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: C.signalRed, textAlign: 'center', padding: 16 }}>
+          {error}
+        </p>
+      ) : sites.length === 0 ? (
+        <div
+          style={{
+            background: C.limestone,
+            borderRadius: 16,
+            padding: '48px 24px',
+            textAlign: 'center',
+            border: '1.5px dashed rgba(27,26,23,0.15)',
+          }}
+        >
+          <Compass size={40} color={C.copper} style={{ marginBottom: 12 }} />
+          <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', color: C.nile, margin: '0 0 8px 0' }}>
+            No Sites Found
+          </h3>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#8B7E6A', margin: '0 0 16px 0' }}>
+            Try a different search, radius, or governorate — or click the map to drop a pin.
+          </p>
+          <button
+            onClick={() => {
+              setSearch('');
+              setGovernorate('');
+              setCategory('');
+            }}
+            style={{
+              background: C.nile,
+              color: C.limestone,
+              border: 'none',
+              borderRadius: 8,
+              padding: '8px 16px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        <>
+          {sites.map((s) => (
+            <ExploreSiteCard
+              key={s.id}
+              site={s}
+              distanceKm={distances[s.id] ?? null}
+              units={appSettings.units}
+              selected={selectedSite?.id === s.id}
+              selectable
+              selectedForTrip={tripSelection.has(String(s.id))}
+              onToggleSelect={() => toggleTripSelect(s)}
+              onSelect={() => selectSite(s)}
+              onDirections={() => computeRoute(s)}
+              ticket={monumentForSite[s.id] ?? null}
+            />
+          ))}
+
+          {ticketsEnabled && filteredMonuments.length > 0 && (
+            <div style={{ paddingTop: 16, marginTop: 8, borderTop: '1px solid rgba(27,26,23,0.08)' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Cormorant Garamond',serif", fontSize: '17px', fontWeight: 600, color: C.nile, margin: '0 0 12px 0' }}>
+                <Ticket size={15} color={C.solar} />
+                Official ticketing portal ({filteredMonuments.length})
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {filteredMonuments.map((m) => (
+                  <MonumentCard key={m.id} m={m} onSelect={() => selectMonument(m)} />
                 ))}
               </div>
             </div>
-          </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              paddingBottom: 2,
-            }}
-          >
-            {EGYPT_GOVERNORATES.map((g) => (
-              <button
-                key={g.name}
-                onClick={() => handleGovChange(g.name)}
-                style={{
-                  background: g.name === gov ? C.limestone : `${C.limestone}12`,
-                  border: `1px solid ${g.name === gov ? C.limestone : `${C.limestone}20`}`,
-                  borderRadius: 99,
-                  padding: '6px 16px',
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: '12px',
-                  fontWeight: g.name === gov ? 700 : 400,
-                  color: g.name === gov ? C.nile : `${C.limestone}75`,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.18s',
-                }}
-              >
-                {g.name}
-              </button>
-            ))}
-          </div>
-        </div>
+  const rightColumn = (
+    <div
+      style={{
+        flexGrow: isDesktop ? 1 : 0,
+        flexShrink: 0,
+        flexBasis: '0%',
+        minWidth: 0,
+        minHeight: 0,
+        height: isDesktop ? '100%' : 340,
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+      }}
+    >
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <InteractiveMap
+          sites={sites}
+          isLoading={loading}
+          error={error}
+          onRetry={() => setReloadKey((k) => k + 1)}
+          selectedGov={governorate || 'Egypt'}
+          selectedGovCoords={{ lat: searchOrigin.lat, lon: searchOrigin.lon }}
+          onSelectSite={selectSite}
+          activeCategory={category || 'All'}
+          routePolyline={route?.coordinates ?? null}
+          tripPolyline={tripPlan?.coordinates ?? null}
+          tripStops={tripStops}
+          ticketMarkers={ticketsEnabled ? ticketMarkers : []}
+          pin={pin}
+          searchRadius={governorate ? null : radius}
+          countryOutline={countryOutline}
+          governorateGeometry={governorateGeometry}
+          onMapClick={handleMapClick}
+          focus={focus}
+          originCenter={originCenter}
+          govFitKey={govFitKey}
+          loadingNote={loadingNote}
+        />
       </div>
+    </div>
+  );
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <TopBar location={governorate ? `${governorate} Governorate` : 'Explore Egypt'} onRafiq={() => router.push('/app/rafiq')} />
 
       <div
         style={{
           flex: 1,
-          padding: '24px 32px',
-          maxWidth: 1100,
-          margin: '0 auto',
-          width: '100%',
-          boxSizing: 'border-box',
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: isDesktop ? 'row' : 'column',
+          background: '#FAF7F0',
         }}
       >
         <div
           style={{
+            flex: isDesktop ? '0 0 58%' : '1',
+            minWidth: 0,
+            minHeight: 0,
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 20,
-            flexWrap: 'wrap',
-            gap: 12,
+            flexDirection: 'column',
+            overflow: isDesktop ? 'hidden' : 'visible',
+            borderRight: isDesktop ? '1px solid rgba(27,26,23,0.08)' : 'none',
+            borderBottom: isDesktop ? 'none' : '1px solid rgba(27,26,23,0.08)',
           }}
         >
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {EXPLORE_CATS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCat(c)}
-                style={{
-                  background: c === cat ? C.nile : 'transparent',
-                  border: `1.5px solid ${c === cat ? C.nile : 'rgba(27,26,23,0.13)'}`,
-                  borderRadius: 99,
-                  padding: '6px 16px',
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: '13px',
-                  fontWeight: c === cat ? 600 : 400,
-                  color: c === cat ? C.limestone : '#6B6354',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#A89880' }}>
-              Sort by:
-            </span>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              style={{
-                background: '#FAF7F0',
-                border: '1.5px solid rgba(27,26,23,0.1)',
-                borderRadius: 8,
-                padding: '6px 12px',
-                fontFamily: "'Inter',sans-serif",
-                fontSize: '13px',
-                color: C.nile,
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-            >
-              <option value="distance">Nearest first</option>
-              <option value="rating">Highest rated</option>
-              <option value="reviews">Most reviewed</option>
-            </select>
-          </div>
+          {headerPanel}
+          {filterPanel}
+          {routeBanner}
+          {tripBanner}
+          {results}
         </div>
-
-        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span
-            style={{
-              fontFamily: "'Inter',sans-serif",
-              fontSize: '13px',
-              fontWeight: 600,
-              color: C.nile,
-            }}
-          >
-            {isLoading ? '...' : filtered.length} sites
-          </span>
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#A89880' }}>
-            in {gov} Governorate
-          </span>
-          {filtered.some((s) => s.scam) && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                background: `${C.alertAmber}12`,
-                border: `1px solid ${C.alertAmber}25`,
-                borderRadius: 99,
-                padding: '3px 10px',
-              }}
-            >
-              <AlertTriangle size={11} color={C.alertAmber} strokeWidth={2.5} />
-              <span
-                style={{
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: C.alertAmber,
-                }}
-              >
-                {filtered.filter((s) => s.scam).length} with scam alerts
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
-          <div>
-            {isLoading ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))',
-                  gap: 14,
-                }}
-              >
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div
-                    key={i}
-                    style={{
-                      background: C.limestone,
-                      borderRadius: 16,
-                      height: 240,
-                      border: '1px solid rgba(27,26,23,0.07)',
-                      overflow: 'hidden',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      opacity: 0.7,
-                    }}
-                  >
-                    <div style={{ height: 140, background: '#EAE6DF' }} />
-                    <div style={{ padding: '12px 13px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div style={{ height: 16, width: '75%', background: '#EAE6DF', borderRadius: 4 }} />
-                      <div style={{ height: 12, width: '45%', background: '#EAE6DF', borderRadius: 4 }} />
-                      <div style={{ height: 14, width: '90%', background: '#EAE6DF', borderRadius: 4, marginTop: 4 }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : error ? (
-              <div
-                style={{
-                  background: '#FFF5F5',
-                  border: '1px solid #FECACA',
-                  borderRadius: 16,
-                  padding: '32px 24px',
-                  textAlign: 'center',
-                }}
-              >
-                <AlertTriangle size={36} color="#DC2626" style={{ marginBottom: 12 }} />
-                <h3
-                  style={{
-                    fontFamily: "'Inter',sans-serif",
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    color: '#991B1B',
-                    margin: '0 0 8px 0',
-                  }}
-                >
-                  Failed to Load Explore Data
-                </h3>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#7F1D1D', margin: '0 0 16px 0' }}>
-                  {error}
-                </p>
-                <button
-                  onClick={() => setReloadKey((prev) => prev + 1)}
-                  style={{
-                    background: '#DC2626',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: 8,
-                    padding: '8px 18px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                  }}
-                >
-                  <RefreshCw size={14} /> Retry Request
-                </button>
-              </div>
-            ) : filtered.length === 0 ? (
-              <div
-                style={{
-                  background: C.limestone,
-                  borderRadius: 16,
-                  padding: '48px 24px',
-                  textAlign: 'center',
-                  border: '1.5px dashed rgba(27,26,23,0.15)',
-                }}
-              >
-                <Compass size={40} color={C.copper} style={{ marginBottom: 12 }} />
-                <h3
-                  style={{
-                    fontFamily: "'Cormorant Garamond',serif",
-                    fontSize: '20px',
-                    color: C.nile,
-                    margin: '0 0 8px 0',
-                  }}
-                >
-                  No Sites Found
-                </h3>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: '#8B7E6A', margin: '0 0 16px 0' }}>
-                  Core Server returned 0 points of interest matching your filter criteria in {gov}.
-                </p>
-                <button
-                  onClick={() => {
-                    setCat('All');
-                    setSearchQuery('');
-                  }}
-                  style={{
-                    background: C.nile,
-                    color: C.limestone,
-                    border: 'none',
-                    borderRadius: 8,
-                    padding: '8px 16px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Reset Filters
-                </button>
-              </div>
-            ) : view === 'grid' ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))',
-                  gap: 14,
-                }}
-              >
-                {filtered.map((s) => (
-                  <SiteCard key={s.id} s={s} goSite={(id) => router.push(`/app/sites/${id}`)} />
-                ))}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {filtered.map((s) => (
-                  <div
-                    key={s.id}
-                    onClick={() => {
-                      router.push(`/app/sites/${s.id}`);
-                    }}
-                    style={{
-                      background: C.limestone,
-                      borderRadius: 14,
-                      border: '1px solid rgba(27,26,23,0.07)',
-                      display: 'grid',
-                      gridTemplateColumns: '100px 1fr auto',
-                      gap: 16,
-                      alignItems: 'center',
-                      padding: '14px 18px',
-                      cursor: 'pointer',
-                      boxShadow: '0 1px 6px rgba(27,26,23,0.04)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 100,
-                        height: 70,
-                        borderRadius: 10,
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <img
-                        src={s.img}
-                        alt={s.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-                    <div>
-                      <div
-                        style={{
-                          fontFamily: "'Inter',sans-serif",
-                          fontSize: '14px',
-                          fontWeight: 700,
-                          color: C.nile,
-                          marginBottom: 2,
-                        }}
-                      >
-                        {s.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "'Cormorant Garamond',serif",
-                          fontStyle: 'italic',
-                          fontSize: '11px',
-                          color: '#A89880',
-                          marginBottom: 8,
-                        }}
-                      >
-                        {s.nameAr}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                          <Star size={11} color={C.sand} fill={C.sand} strokeWidth={0} />
-                          <span
-                            style={{
-                              fontFamily: "'Inter',sans-serif",
-                              fontSize: '12px',
-                              fontWeight: 700,
-                              color: C.basalt,
-                            }}
-                          >
-                            {s.rating}
-                          </span>
-                        </div>
-                        <span
-                          style={{
-                            fontFamily: "'Inter',sans-serif",
-                            fontSize: '11px',
-                            color: '#A89880',
-                            background: C.limestoneDark,
-                            padding: '2px 8px',
-                            borderRadius: 99,
-                          }}
-                        >
-                          {s.cat}
-                        </span>
-                        {s.scam && (
-                          <div
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 4,
-                              background: `${C.alertAmber}12`,
-                              borderRadius: 99,
-                              padding: '2px 8px',
-                            }}
-                          >
-                            <AlertTriangle size={10} color={C.alertAmber} strokeWidth={2.5} />
-                            <span
-                              style={{
-                                fontFamily: "'Inter',sans-serif",
-                                fontSize: '10px',
-                                fontWeight: 600,
-                                color: C.alertAmber,
-                              }}
-                            >
-                              Scam alert
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 8,
-                      }}
-                    >
-                      <div
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#8B7E6A' }}
-                      >
-                        <Navigation size={12} strokeWidth={2} />
-                        <span
-                          style={{
-                            fontFamily: "'Inter',sans-serif",
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            color: '#8B7E6A',
-                          }}
-                        >
-                          {s.dist}
-                        </span>
-                      </div>
-                      <button
-                        style={{
-                          background: C.nile,
-                          border: 'none',
-                          borderRadius: 8,
-                          padding: '7px 14px',
-                          fontFamily: "'Inter',sans-serif",
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: C.limestone,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        View
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ position: 'sticky', top: 24, alignSelf: 'start' }}>
-            <div>
-              <div style={{ height: 340, marginBottom: 14 }}>
-                <InteractiveMap
-                  sites={sites}
-                  isLoading={isLoading}
-                  error={error}
-                  onRetry={() => setReloadKey((prev) => prev + 1)}
-                  selectedGov={gov}
-                  selectedGovCoords={{ lat: activeGovObj.lat, lon: activeGovObj.lon }}
-                  onSelectSite={(site) => router.push(`/app/sites/${site.id}`)}
-                  activeCategory={cat}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        {rightColumn}
       </div>
-      {rafiq && <RafiqDrawer onClose={() => setRafiq(false)} />}
     </div>
   );
 }

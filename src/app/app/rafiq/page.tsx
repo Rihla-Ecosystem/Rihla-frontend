@@ -1,11 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import React, { useState, useRef } from 'react';
-import { useAuth } from '@/lib/auth';
+import { useLocation } from '@/providers/LocationProvider';
 import { C } from '@/lib/constants/theme';
 import { Glyph } from '@/app/components/atoms';
-import { MapPin, RefreshCw, Send, Mic, X, AlertTriangle } from 'lucide-react';
+import { MapPin, RefreshCw, Send, Mic, Image as ImageIcon, Square, AlertTriangle } from 'lucide-react';
+import { chatService, PERSONAS, type Persona } from '@/services/chatService';
+import { useAppSettings } from '@/lib/settingsStore';
 
 type RafiqMsg = {
   id: string;
@@ -17,59 +18,12 @@ type RafiqMsg = {
   ts: string;
 };
 
-const INITIAL_MSGS: RafiqMsg[] = [
-  {
-    id: "m0",
-    role: "rafiq",
-    text: "مرحباً! I'm Rafiq — your Egyptian journey companion. I have live safety data, verified historical records, and local knowledge for your current location on the Giza Plateau. What would you like to know?",
-    sources: ["Egyptian Tourist Authority", "Ministry of Antiquities", "Live safety network"],
-    follow: ["Is it safe to visit the Sphinx today?", "What's the best time to beat the crowds?", "Tell me the story of the Great Pyramid", "Nearest authentic restaurant?"],
-    ts: "Now",
-  },
-];
-
-const CANNED_RESPONSES: Record<string, RafiqMsg> = {
-  sphinx: {
-    id: "r1", role: "rafiq", ts: "Just now",
-    text: "The Sphinx is fully accessible and currently rated **Secure** by Tourist Police. However, I'm flagging an active scam on the east path — vendors offering 'free' scarab figurines who then demand payment. Walk past with eye contact and a firm 'la shukran' (no thank you).\n\nThe Sphinx was carved directly from a single limestone ridge — not assembled from blocks — during the reign of Pharaoh Khafre around 2500 BCE. The face almost certainly depicts Khafre himself. Its missing nose was documented by the Danish explorer Frederic Louis Norden in 1737, long before Napoleon's campaign.",
-    sources: ["Tourist Police Live Feed", "Ministry of Antiquities", "12 community reports"],
-    alert: { level: "warn", text: "Active scam — east path vendors · 14 reports in 2 hours" },
-    follow: ["What scam should I watch for?", "Best angle for photos?", "How long should I spend here?"],
-  },
-  crowd: {
-    id: "r2", role: "rafiq", ts: "Just now",
-    text: "Based on 340 recent visitor patterns, the Giza Plateau is quietest between **6:00–8:30am** and again **3:30–5:00pm**. Mid-morning (10am–1pm) is the busiest window — tour groups arrive in convoy.\n\nThis afternoon at 4:30pm, you have a 38-minute window before the light shifts — the sun will hit the Sphinx's face at approximately 15° elevation. It's the most photographed light condition of the day.",
-    sources: ["Visitor pattern data · 340 recent sessions", "Google Popular Times", "Weather API"],
-    follow: ["What about weekends?", "Is there a back entrance?", "How much does entry cost?"],
-  },
-  pyramid: {
-    id: "r3", role: "rafiq", ts: "Just now",
-    text: "The Great Pyramid of Khufu is the only surviving wonder of the ancient world — and it held the record as the tallest human-built structure for **3,800 years**, until Lincoln Cathedral was completed in 1311 CE.\n\nHere's what most guides won't tell you: the pyramid's four sides are not flat. Each face has a slight inward concavity — barely perceptible to the eye but detectable from the air. The purpose remains unknown. Some scholars believe it was intentional to prevent the casing stones from sliding; others think it's a precise solar marker.\n\nThe interior temperature is a constant 20°C regardless of the outside heat.",
-    sources: ["Ministry of Antiquities", "AERA (Ancient Egypt Research Associates)", "Egyptology peer review"],
-    follow: ["Can I go inside?", "How were the blocks moved?", "Tell me about the other pyramids"],
-  },
-  food: {
-    id: "r4", role: "rafiq", ts: "Just now",
-    text: "Within 800m of your current location, I'd recommend:\n\n**Koshary El Tahrir** (3.2km) — Egypt's national dish, layered rice, lentils, macaroni, crispy onion and tomato sauce. Unmissable. EGP 20–35.\n\n**Andrea's** (2.1km, Marioutiya Canal) — Grilled chicken and mezze in a riverside garden. Beloved by locals for 50 years. EGP 120–180 per person.\n\nAvoid any restaurant near the plateau entrance that solicits tourists at the door — pricing is typically 3× the local rate.",
-    sources: ["Google Reviews · verified", "TripAdvisor · local-weighted", "Rafiq community reports"],
-    alert: { level: "info", text: "Tip: Always agree on prices before sitting down at tourist-area restaurants" },
-    follow: ["What's koshary exactly?", "Any vegetarian options?", "Best place for Egyptian coffee?"],
-  },
+const WELCOME_MSG: RafiqMsg = {
+  id: "m0",
+  role: "rafiq",
+  text: "مرحباً! I'm Rafiq — your Egyptian journey companion. I have live safety data, verified historical records, and local knowledge. What would you like to know?",
+  ts: "Now",
 };
-
-function resolveResponse(input: string): RafiqMsg {
-  const l = input.toLowerCase();
-  if (l.includes("safe") || l.includes("sphinx") || l.includes("scam")) return { ...CANNED_RESPONSES.sphinx, id: `r_${Date.now()}` };
-  if (l.includes("crowd") || l.includes("time") || l.includes("beat") || l.includes("quiet") || l.includes("best time")) return { ...CANNED_RESPONSES.crowd, id: `r_${Date.now()}` };
-  if (l.includes("pyramid") || l.includes("story") || l.includes("histor") || l.includes("khufu")) return { ...CANNED_RESPONSES.pyramid, id: `r_${Date.now()}` };
-  if (l.includes("food") || l.includes("eat") || l.includes("restaurant") || l.includes("lunch") || l.includes("koshary")) return { ...CANNED_RESPONSES.food, id: `r_${Date.now()}` };
-  return {
-    id: `r_${Date.now()}`, role: "rafiq", ts: "Just now",
-    text: "That's a great question about Egypt. Based on my current context — the Giza Plateau, 38°C, light crowds this afternoon — I'd say the best approach is to move purposefully, stay on the official paths, and let the scale of the site land slowly. Most people rush. The ones who linger, discover.\n\nIs there something specific about this site, the local area, or Egyptian culture I can dig into for you?",
-    sources: ["Rafiq contextual synthesis"],
-    follow: ["Tell me about the Sphinx", "Any safety alerts nearby?", "What should I see next?"],
-  };
-}
 
 const TOPIC_PILLS = [
   { label: "Safety now",      query: "Is it safe to visit the Sphinx today?"         },
@@ -144,28 +98,124 @@ function RafiqBubble({ msg }: { msg: RafiqMsg }) {
 }
 
 export default function RafiqPage() {
-  const [msgs,    setMsgs]    = useState<RafiqMsg[]>(INITIAL_MSGS);
+  const appSettings = useAppSettings();
+  const { lat, lon, locationName, governorate } = useLocation();
+  const [msgs,    setMsgs]    = useState<RafiqMsg[]>([WELCOME_MSG]);
   const [input,   setInput]   = useState("");
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [persona, setPersona] = useState<Persona>(() => {
+    const p = appSettings.rafiqPersona;
+    if (p === "guide") return "tour_guide";
+    if (p === "local") return "local_expert";
+    return "auto";
+  });
+  const [listening, setListening] = useState(false);
+  const [identifying, setIdentifying] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const send = (text: string) => {
+  const send = async (text: string) => {
     if (!text.trim() || loading) return;
     const userMsg: RafiqMsg = { id: `u_${Date.now()}`, role: "user", text: text.trim(), ts: "Just now" };
     setMsgs(m => [...m, userMsg]);
     setInput("");
     setLoading(true);
-    setTimeout(() => {
-      setMsgs(m => [...m, resolveResponse(text)]);
+    setError(null);
+    const rafiqMsgId = `r_${Date.now()}`;
+    setMsgs(m => [...m, { id: rafiqMsgId, role: "rafiq", text: "", ts: "Just now" }]);
+    try {
+      const response = await chatService.streamMessage(
+        text.trim(),
+        persona,
+        (token) => {
+          setMsgs(m => m.map(msg => msg.id === rafiqMsgId ? { ...msg, text: msg.text + token } : msg));
+        },
+        { lat: lat ?? undefined, lon: lon ?? undefined, conversationId }
+      );
+      if (response.conversationId) {
+        setConversationId(response.conversationId);
+      }
+      setMsgs(m => m.map(msg => msg.id === rafiqMsgId ? { ...msg, text: response.text } : msg));
+    } catch (err: any) {
+      const errMsg: RafiqMsg = {
+        id: `r_${Date.now()}`,
+        role: "rafiq",
+        text: "I'm having trouble connecting to the AI service. Please try again in a moment.",
+        alert: { level: "warn", text: "Connection issue — please try again" },
+        ts: "Just now",
+      };
+      setMsgs(m => [...m.filter(msg => msg.id !== rafiqMsgId), errMsg]);
+      setError(err?.message || "Failed to send message");
+    } finally {
       setLoading(false);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
-    }, 900 + Math.random() * 600);
+    }
+  };
+
+  const handleVoice = async () => {
+    if (listening) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setListening(false);
+        const audio = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        if (audio.size === 0) return;
+        setLoading(true);
+        setError(null);
+        try {
+          const result = await chatService.voice(audio, recorder.mimeType || "audio/webm", {
+            lat: lat ?? undefined,
+            lon: lon ?? undefined,
+            conversationId,
+          });
+          setInput(result.text_response || "");
+        } catch (err: any) {
+          setError(err?.message || "Voice transcription failed. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      recorder.start();
+      setListening(true);
+    } catch (err: any) {
+      setError("Microphone access denied.");
+    }
+  };
+
+  const handleImage = async (file: File) => {
+    if (!file) return;
+    setIdentifying(true);
+    setError(null);
+    try {
+      const result = await chatService.identify(file, { lat: lat ?? undefined, lon: lon ?? undefined });
+      setInput(result.name);
+    } catch (err: any) {
+      setError(err?.message || "Image identification failed. Please try again.");
+    } finally {
+      setIdentifying(false);
+    }
   };
 
   const handleFollow = (e: React.MouseEvent) => {
     const q = (e.target as HTMLElement).getAttribute("data-follow");
     if (q) send(q);
   };
+
+  const locationLabel = locationName || governorate || "Current area";
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -177,17 +227,17 @@ export default function RafiqPage() {
             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "18px", fontWeight: 500, color: C.limestone, lineHeight: 1 }}>Rafiq</div>
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.safeGreen, boxShadow: `0 0 0 2px ${C.safeGreen}35` }}/>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 500, color: `${C.limestone}65` }}>Active · Giza Plateau context · 15 sources</span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 500, color: `${C.limestone}65` }}>Active · {locationLabel} · Core AI</span>
             </div>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => setMsgs(INITIAL_MSGS)} style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: `${C.limestone}70`, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <button onClick={() => { setMsgs([WELCOME_MSG]); setConversationId(undefined); setError(null); }} style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: `${C.limestone}70`, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
             <RefreshCw size={13} strokeWidth={2}/> New chat
           </button>
           <div style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 6 }}>
             <MapPin size={12} color={`${C.limestone}70`} strokeWidth={2}/>
-            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}65` }}>Giza Plateau, Cairo</span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: `${C.limestone}65` }}>{locationLabel}</span>
           </div>
         </div>
       </div>
@@ -195,17 +245,23 @@ export default function RafiqPage() {
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Left: topic pills */}
         <div style={{ width: 220, flexShrink: 0, background: "#FAF7F0", borderRight: "1px solid rgba(27,26,23,0.07)", padding: "20px 14px", display: "flex", flexDirection: "column", gap: 6, overflowY: "auto" }}>
-          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, color: C.copper, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Quick Topics</div>
-          {TOPIC_PILLS.map(({ label, query }) => (
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, color: C.copper, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Rafiq Persona</div>
+          {PERSONAS.map(p => (
+            <button key={p.value} onClick={() => setPersona(p.value)} title={p.blurb} style={{ background: persona === p.value ? C.nile : C.limestone, border: `1.5px solid ${persona === p.value ? C.nile : "rgba(27,26,23,0.08)"}`, borderRadius: 10, padding: "9px 13px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: persona === p.value ? C.limestone : C.nile, cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}>{p.label}</button>
+          ))}
+          <div style={{ marginTop: 6, borderTop: "1px solid rgba(27,26,23,0.07)", paddingTop: 12 }}>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, color: C.copper, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Quick Topics</div>
+            {TOPIC_PILLS.map(({ label, query }) => (
             <button key={label} onClick={() => send(query)} style={{ background: C.limestone, border: "1.5px solid rgba(27,26,23,0.08)", borderRadius: 10, padding: "10px 13px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: C.nile, cursor: "pointer", textAlign: "left", transition: "all 0.15s", lineHeight: 1.4 }}>{label}</button>
           ))}
+          </div>
           <div style={{ marginTop: 16, borderTop: "1px solid rgba(27,26,23,0.07)", paddingTop: 16 }}>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, color: "#A89880", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10, paddingLeft: 4 }}>Context Active</div>
             {[
-              { label: "Location", val: "Giza Plateau", ok: true },
-              { label: "Safety",   val: "Secure",       ok: true },
-              { label: "Weather",  val: "38°C · UV 9",  ok: false },
-              { label: "Scams",    val: "2 active",     ok: false },
+              { label: "Location", val: locationLabel, ok: true },
+              { label: "Safety",   val: "Live feed", ok: true },
+              { label: "Weather",  val: "Live env layer", ok: true },
+              { label: "Scams",    val: "Monitored", ok: true },
             ].map(({ label, val, ok }) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 4px", borderBottom: "1px solid rgba(27,26,23,0.05)" }}>
                 <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880" }}>{label}</span>
@@ -230,6 +286,11 @@ export default function RafiqPage() {
                 </div>
               </div>
             )}
+            {error && !loading && (
+              <div style={{ padding: "8px 28px", fontFamily: "'Inter',sans-serif", fontSize: "12px", color: C.alertAmber, textAlign: "center", background: `${C.alertAmber}08`, borderRadius: 8, margin: "0 16px 8px" }}>
+                {error}
+              </div>
+            )}
             <div ref={bottomRef}/>
           </div>
 
@@ -245,7 +306,11 @@ export default function RafiqPage() {
                 style={{ background: "transparent", border: "none", outline: "none", flex: 1, fontFamily: "'Inter',sans-serif", fontSize: "14px", color: C.basalt, resize: "none", lineHeight: 1.6, maxHeight: 120, overflowY: "auto" }}
               />
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                <button style={{ background: "none", border: "none", cursor: "pointer", color: "#C4B89A", display: "flex", padding: 4 }}><Mic size={18} strokeWidth={2}/></button>
+                <button onClick={() => fileInputRef.current?.click()} disabled={loading || listening || identifying} style={{ background: "none", border: "none", cursor: loading ? "default" : "pointer", color: C.faience, display: "flex", padding: 4 }}><ImageIcon size={18} strokeWidth={2}/></button>
+                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImage(f); e.target.value = ""; }} />
+                <button onClick={handleVoice} disabled={loading || identifying} style={{ background: "none", border: "none", cursor: loading ? "default" : "pointer", color: listening ? C.alertAmber : C.faience, display: "flex", padding: 4 }}>
+                  {listening ? <Square size={18} strokeWidth={2.5} fill={C.alertAmber}/> : <Mic size={18} strokeWidth={2}/>}
+                </button>
                 <button onClick={() => send(input)} disabled={!input.trim() || loading} style={{ background: input.trim() && !loading ? C.nile : C.limestoneDark, border: "none", borderRadius: 9, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: input.trim() ? "pointer" : "default", transition: "background 0.2s", flexShrink: 0 }}>
                   <Send size={15} color={input.trim() && !loading ? C.limestone : "#A89880"} strokeWidth={2.5}/>
                 </button>
