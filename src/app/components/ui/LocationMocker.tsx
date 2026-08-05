@@ -24,13 +24,13 @@ export function LocationMocker() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999 }}>
+    <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 9999 }}>
       {isOpen && (
         <div
           style={{
             position: 'absolute',
             bottom: '100%',
-            right: 0,
+            left: 0,
             marginBottom: 12,
             background: '#FAF7F0',
             border: '1px solid rgba(27,26,23,0.1)',
