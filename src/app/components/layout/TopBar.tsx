@@ -12,38 +12,44 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
   const { user } = useAuth();
   const initial = (user?.displayName || "Traveler").charAt(0).toUpperCase();
 
-  let displayLocation = locationProp;
-  if (!displayLocation) {
-    if (status === 'requesting') displayLocation = "Requesting location...";
-    else if (status === 'loading') displayLocation = "Locating user...";
-    else {
-      const govName = governorate || "Giza";
-      const govFormatted = govName.includes("Governorate") || govName.includes("محافظة")
-        ? govName
-        : `${govName} Governorate`;
+  const liveLocation = (() => {
+    if (status === 'requesting') return "Requesting location...";
+    if (status === 'loading') return "Locating user...";
+    const govName = governorate || "Giza";
+    const govFormatted = govName.includes("Governorate") || govName.includes("محافظة")
+      ? govName
+      : `${govName} Governorate`;
 
-      if (locationName) {
-        if (locationName.toLowerCase().includes(govName.toLowerCase())) {
-          displayLocation = locationName;
-        } else {
-          displayLocation = `${govFormatted} · ${locationName}`;
-        }
-      } else {
-        displayLocation = `${govFormatted}, Egypt`;
-      }
+    if (locationName) {
+      if (locationName.toLowerCase().includes(govName.toLowerCase())) return locationName;
+      return `${govFormatted} · ${locationName}`;
     }
-  }
+    return `${govFormatted}, Egypt`;
+  })();
 
   return (
     <div style={{ background: "rgba(240,235,224,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(27,26,23,0.08)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60, flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <MapPin size={14} color={status === 'success' ? C.safeGreen : C.copper} strokeWidth={2.5}/>
-        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile }}>{displayLocation}</span>
-        {status === 'success' ? (
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: C.safeGreen, fontWeight: 500 }}>· Live</span>
-        ) : (
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880" }}>· Default</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+        {locationProp && (
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile, whiteSpace: "nowrap" }}>{locationProp}</span>
         )}
+        <span
+          title={liveLocation}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "#FAF7F0",
+            border: "1px solid rgba(27,26,23,0.1)",
+            borderRadius: 99,
+            padding: "4px 12px",
+            minWidth: 0,
+          }}
+        >
+          <MapPin size={13} color={status === 'success' ? C.safeGreen : C.copper} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12.5px", fontWeight: 600, color: C.nile, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{liveLocation}</span>
+          {status === 'success' && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: C.safeGreen, fontWeight: 600 }}>Live</span>}
+        </span>
         {(status === 'permission_denied' || status === 'location_unavailable') && (
           <button
             onClick={requestLocation}

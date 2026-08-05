@@ -48,7 +48,7 @@ const SAFETY_CITIES: { name: string; gov: string; lat: number; lon: number }[] =
 export default function PageSafety() {
   const router = useRouter();
   const { user, isInitialized } = useAuth();
-  const { lat, lon, locationName } = useLocation();
+  const { lat, lon, locationName, governorate: providerGov } = useLocation();
 
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
 
@@ -68,8 +68,10 @@ export default function PageSafety() {
     }
   }, [isInitialized, user, router]);
 
-  // Determine active governorate from locationName or fallback to Giza
+  // Determine active governorate: provider's resolved governorate first, then
+  // fall back to a keyword scan of the location name, then Giza.
   const currentGov = React.useMemo(() => {
+    if (providerGov) return providerGov;
     if (!locationName) return 'Giza';
     const lower = locationName.toLowerCase();
     if (lower.includes('cairo')) return 'Cairo';
@@ -78,8 +80,13 @@ export default function PageSafety() {
     if (lower.includes('alexandria')) return 'Alexandria';
     if (lower.includes('sinai')) return 'Sinai';
     if (lower.includes('red sea') || lower.includes('hurghada')) return 'Red Sea';
+    if (lower.includes('giza') || lower.includes('pyramid')) return 'Giza';
+    if (lower.includes('mansoura') || lower.includes('dakahlia')) return 'Dakahlia';
+    if (lower.includes('fayoum') || lower.includes('faiyum')) return 'Faiyum';
+    if (lower.includes('qena')) return 'Qena';
+    if (lower.includes('matrouh') || lower.includes('siwa')) return 'Matrouh';
     return 'Giza';
-  }, [locationName]);
+  }, [providerGov, locationName]);
 
   const activeCity = React.useMemo(
     () => SAFETY_CITIES.find((c) => c.name === selectedCity) ?? null,
