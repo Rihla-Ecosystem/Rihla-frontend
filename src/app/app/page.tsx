@@ -5,6 +5,7 @@ import React from 'react';
 import { useAuth } from '@/lib/auth';
 import { C } from '@/lib/constants/theme';
 import { Glyph, GlyphFull, Geom } from '@/app/components/atoms';
+import { WeatherWidget } from '@/app/components/weather/WeatherWidget';
 import {
   ArrowRight,
   MapPin,
@@ -174,6 +175,11 @@ export default function HomePage() {
             >
               Explore sites
             </button>
+          </div>
+
+          {/* Live weather */}
+          <div style={{ marginTop: 28, maxWidth: 640 }}>
+            <WeatherWidget />
           </div>
         </div>
       </div>
