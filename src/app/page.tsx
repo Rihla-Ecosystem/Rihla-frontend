@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { MapPin, ArrowRight, Shield, Globe, Zap, Star } from 'lucide-react';
 import { C } from '@/lib/constants/theme';
-import { Glyph, GlyphFull, Geom } from '@/app/components/atoms';
+import { Glyph, GlyphFull, PyramidSkyline } from '@/app/components/atoms';
 
 export default function Page() {
   const router = useRouter();
@@ -108,11 +108,8 @@ export default function Page() {
           overflow: 'hidden',
         }}
       >
-        <div style={{ position: 'absolute', top: -80, right: -80, pointerEvents: 'none' }}>
-          <Geom size={520} color={C.limestone} op={0.028} />
-        </div>
-        <div style={{ position: 'absolute', bottom: -120, left: -60, pointerEvents: 'none' }}>
-          <Geom size={400} color={C.solar} op={0.018} />
+        <div style={{ position: 'absolute', bottom: -8, left: 0, right: 0, pointerEvents: 'none' }}>
+          <PyramidSkyline size={900} op={0.55} color={C.sand} />
         </div>
         <div
           style={{
