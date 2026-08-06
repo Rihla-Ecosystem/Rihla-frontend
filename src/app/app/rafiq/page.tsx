@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useLocation } from '@/providers/LocationProvider';
 import { C } from '@/lib/constants/theme';
-import { Glyph } from '@/app/components/atoms';
+import { Glyph, PyramidSkyline } from '@/app/components/atoms';
 import { MapPin, RefreshCw, Send, Mic, Image as ImageIcon, Square, AlertTriangle } from 'lucide-react';
 import { chatService, PERSONAS, type Persona } from '@/services/chatService';
 import { useAppSettings } from '@/lib/settingsStore';
@@ -219,20 +219,72 @@ export default function RafiqPage() {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <style>{`
+        @keyframes rihlaGrad {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes rihlaSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes rihlaFloat {
+          0%, 100% { transform: translateY(0px); }
+          50%      { transform: translateY(-7px); }
+        }
+        @keyframes rihlaParticle {
+          0%   { transform: translateY(0) scale(1); opacity: 0; }
+          12%  { opacity: 0.9; }
+          70%  { opacity: 0.5; }
+          100% { transform: translateY(-110px) scale(0.3); opacity: 0; }
+        }
+        @keyframes rihlaFadeUp {
+          0%   { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes rihlaPulseDot {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.3; }
+        }
+      `}</style>
       {/* Top bar */}
-      <div style={{ background: `linear-gradient(135deg,${C.nile},${C.nileMid})`, padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: `${C.limestone}15`, border: `1px solid ${C.limestone}20`, display: "flex", alignItems: "center", justifyContent: "center" }}><Glyph size={22} light/></div>
+      <div style={{ background: `linear-gradient(-60deg, ${C.basalt}, ${C.nile}, #0B2D2E, ${C.basalt})`, backgroundSize: "300% 300%", animation: "rihlaGrad 14s ease infinite", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, flexShrink: 0, position: "relative", overflow: "hidden" }}>
+        {/* Rotating solar disc */}
+        <div style={{ position: "absolute", right: "-6%", top: -110, width: 300, height: 300, borderRadius: "50%", background: "repeating-conic-gradient(from 0deg, rgba(232,168,32,0) 0deg 9deg, rgba(232,168,32,0.10) 9deg 18deg)", animation: "rihlaSpin 60s linear infinite", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", right: "0%", top: -46, width: 150, height: 150, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,168,32,0.32) 0%, rgba(232,168,32,0.09) 55%, transparent 75%)", pointerEvents: "none" }} />
+
+        {/* Pyramid skyline */}
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: -6, animation: "rihlaFloat 7s ease-in-out 0.4s infinite", pointerEvents: "none" }}>
+          <PyramidSkyline size={460} op={0.55} color={C.sand} />
+        </div>
+
+        {/* Particles */}
+        {[
+          { left: '12%', top: '38%', delay: '0s', dur: '11s', size: 3 },
+          { left: '30%', top: '30%', delay: '2.2s', dur: '13s', size: 2 },
+          { left: '55%', top: '52%', delay: '4.1s', dur: '10s', size: 2.5 },
+          { left: '70%', top: '26%', delay: '1.4s', dur: '12s', size: 2 },
+          { left: '88%', top: '44%', delay: '3.3s', dur: '10s', size: 2.5 },
+        ].map((p, i) => (
+          <div key={i} style={{ position: "absolute", left: p.left, top: p.top, width: p.size, height: p.size, borderRadius: "50%", background: C.solarBright, opacity: 0, animation: `rihlaParticle ${p.dur}s linear ${p.delay} infinite`, pointerEvents: "none" }} />
+        ))}
+
+        {/* Horizon glow */}
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 2, background: "linear-gradient(90deg, transparent, rgba(232,168,32,0.7), rgba(245,192,64,0.9), rgba(232,168,32,0.7), transparent)", backgroundSize: "200% 100%", animation: "rihlaGrad 6s ease infinite", pointerEvents: "none" }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12, position: "relative", zIndex: 2, animation: "rihlaFadeUp 0.5s ease-out both" }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: `${C.limestone}15`, border: `1px solid ${C.limestone}20`, display: "flex", alignItems: "center", justifyContent: "center" }}><Glyph size={32} light/></div>
           <div>
             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "18px", fontWeight: 500, color: C.limestone, lineHeight: 1 }}>Rafiq</div>
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.safeGreen, boxShadow: `0 0 0 2px ${C.safeGreen}35` }}/>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.safeGreen, boxShadow: `0 0 0 2px ${C.safeGreen}35`, animation: "rihlaPulseDot 1.8s ease-in-out infinite" }}/>
               <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 500, color: `${C.limestone}65` }}>Active · {locationLabel} · Core AI</span>
             </div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => { setMsgs([WELCOME_MSG]); setConversationId(undefined); setError(null); }} style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: `${C.limestone}70`, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <div style={{ display: "flex", gap: 8, position: "relative", zIndex: 2, animation: "rihlaFadeUp 0.5s ease-out 0.1s both" }}>
+          <button onClick={() => { setMsgs([WELCOME_MSG]); setConversationId(undefined); setError(null); }} style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: `${C.limestone}70`, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "border-color 0.2s, color 0.2s", }}>
             <RefreshCw size={13} strokeWidth={2}/> New chat
           </button>
           <div style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 6 }}>
