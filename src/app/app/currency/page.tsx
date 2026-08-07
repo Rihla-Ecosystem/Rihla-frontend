@@ -59,6 +59,8 @@ export default function CurrencyPage() {
   const [ratesLoading, setRatesLoading] = useState(true);
   const [amount, setAmount] = useState("100");
   const [ratesRetry, setRatesRetry] = useState(0);
+  const [direction, setDirection] = useState<"fromEgp" | "toEgp">("fromEgp");
+  const [sourceCurrency, setSourceCurrency] = useState("EUR");
 
   useEffect(() => {
     currencyApi.getCatalog().then(setCatalog);
@@ -102,6 +104,14 @@ export default function CurrencyPage() {
   }, [amount]);
 
   const showStale = rates && !rates.available && !!rates.stale;
+
+  const egpPerForeign = useMemo(() => {
+    const foreignRate = rates?.rates?.[sourceCurrency];
+    if (typeof foreignRate !== "number" || foreignRate <= 0) return null;
+    return 1 / foreignRate;
+  }, [rates, sourceCurrency]);
+
+  const ratesAvailable = ratesTable.length > 0;
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.bg }}>
@@ -302,51 +312,151 @@ export default function CurrencyPage() {
           )}
 
           <div style={{ borderTop: `1px solid rgba(27,26,23,0.1)`, marginTop: 18, paddingTop: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <label htmlFor="amt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "16px", color: C.basalt }}>
-                Egyptian Pounds (LE)
-              </label>
-              <input
-                id="amt"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                inputMode="decimal"
-                style={{
-                  width: 140,
-                  background: "#F0EBE0",
-                  border: `1.5px solid rgba(27,26,23,0.15)`,
-                  borderRadius: 10,
-                  padding: "8px 12px",
-                  fontFamily: "'Inter',sans-serif",
-                  fontSize: "15px",
-                  color: C.basalt,
-                  outline: "none",
-                }}
-              />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              {(["fromEgp", "toEgp"] as const).map((d) => {
+                const active = direction === d;
+                return (
+                  <button
+                    key={d}
+                    onClick={() => setDirection(d)}
+                    style={{
+                      background: active ? C.nile : "transparent",
+                      border: `1.5px solid ${active ? C.nile : "rgba(27,26,23,0.13)"}`,
+                      borderRadius: 99,
+                      padding: "6px 14px",
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: "12px",
+                      fontWeight: active ? 600 : 500,
+                      color: active ? C.limestone : "#6B6354",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {d === "fromEgp" ? "EGP → Foreign" : "Foreign → EGP"}
+                  </button>
+                );
+              })}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
-              {ratesTable.map((r) => (
+
+            {direction === "fromEgp" ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <label htmlFor="amt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "16px", color: C.basalt }}>
+                    Egyptian Pounds (LE)
+                  </label>
+                  <input
+                    id="amt"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    inputMode="decimal"
+                    style={{
+                      width: 140,
+                      background: "#F0EBE0",
+                      border: `1.5px solid rgba(27,26,23,0.15)`,
+                      borderRadius: 10,
+                      padding: "8px 12px",
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: "15px",
+                      color: C.basalt,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
+                  {ratesTable.map((r) => (
+                    <div
+                      key={"cv" + r.code}
+                      style={{
+                        background: "#FAF7F0",
+                        border: `1px solid rgba(27,26,23,0.1)`,
+                        borderRadius: 12,
+                        padding: "10px 14px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: C.nile }}>{r.code}</span>
+                      <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "16px", color: C.basalt }}>
+                        {formatMoney(parsedAmount * (r.perOneEgp as number), r.code)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+                  <select
+                    value={sourceCurrency}
+                    onChange={(e) => setSourceCurrency(e.target.value)}
+                    style={{
+                      background: "#F0EBE0",
+                      border: `1.5px solid rgba(27,26,23,0.15)`,
+                      borderRadius: 10,
+                      padding: "8px 12px",
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: "15px",
+                      color: C.basalt,
+                      outline: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {TARGET_CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    inputMode="decimal"
+                    style={{
+                      width: 140,
+                      background: "#F0EBE0",
+                      border: `1.5px solid rgba(27,26,23,0.15)`,
+                      borderRadius: 10,
+                      padding: "8px 12px",
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: "15px",
+                      color: C.basalt,
+                      outline: "none",
+                    }}
+                  />
+                  <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "16px", color: C.basalt }}>
+                    → Egyptian Pounds (LE)
+                  </span>
+                </div>
                 <div
-                  key={"cv" + r.code}
                   style={{
-                    background: "#FAF7F0",
-                    border: `1px solid rgba(27,26,23,0.1)`,
-                    borderRadius: 12,
-                    padding: "10px 14px",
+                    background: "linear-gradient(135deg,#0F3D3E,#1A5253)",
+                    borderRadius: 14,
+                    padding: "14px 18px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
                   }}
                 >
-                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: C.nile }}>{r.code}</span>
-                  <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "16px", color: C.basalt }}>
-                    {formatMoney(parsedAmount * (r.perOneEgp as number), r.code)}
-                  </span>
+                  <div>
+                    <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 700, color: `${C.limestone}60`, letterSpacing: "0.12em" }}>
+                      {parsedAmount} {sourceCurrency} equals
+                    </div>
+                    <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: `${C.limestone}50`, marginTop: 2 }}>
+                      @ {formatRate(egpPerForeign ?? 0)} EGP per 1 {sourceCurrency}
+                    </div>
+                  </div>
+                  <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "30px", color: C.limestone }}>
+                    {egpPerForeign ? formatMoney(parsedAmount * egpPerForeign, "EGP") : "—"}
+                  </div>
                 </div>
-              ))}
-            </div>
-            {ratesTable.length === 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(27,26,23,0.04)", borderRadius: 12, padding: "14px 16px", fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#8B7E6A" }}>
+              </>
+            )}
+
+            {!ratesAvailable && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(27,26,23,0.04)", borderRadius: 12, padding: "14px 16px", fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#8B7E6A", marginTop: 10 }}>
                 <AlertTriangle size={14} color={C.solar} />
                 Conversion is available once the live rate feed is back online.
               </div>

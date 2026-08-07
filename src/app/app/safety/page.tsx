@@ -3,13 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { useLocation } from '@/providers/LocationProvider';
-import { safetyService, type SafetyData, FALLBACK_GOV_PROFILES } from '@/services/safetyService';
+import { useLocation, useLocationLabel } from '@/providers/LocationProvider';
+import { safetyService, type SafetyData } from '@/services/safetyService';
 import { envService } from '@/services/envService';
 import { TopBar } from '@/app/components/layout/TopBar';
 import { Geom, Glyph } from '@/app/components/atoms';
 import { C } from '@/lib/constants/theme';
-import { RiskGauge } from './components/RiskGauge';
 import { SourceHealth, type DataSourceStatus } from './components/SourceHealth';
 import { SafetyGuide } from './components/SafetyGuide';
 import { 
@@ -24,13 +23,6 @@ AlertTriangle,
   Shield,
   RefreshCw
 } from 'lucide-react';
-
-interface GovStatusItem {
-  name: string;
-  status: string;
-  alerts: number;
-  color: string;
-}
 
 const SAFETY_CITIES: { name: string; gov: string; lat: number; lon: number }[] = [
   { name: 'Cairo', gov: 'Cairo', lat: 30.0444, lon: 31.2357 },
@@ -49,11 +41,11 @@ export default function PageSafety() {
   const router = useRouter();
   const { user, isInitialized } = useAuth();
   const { lat, lon, locationName, governorate: providerGov } = useLocation();
+  const locationLabel = useLocationLabel();
 
   const [activeAlert, setActiveAlert] = useState<string | null>(null);
 
   const [safetyData, setSafetyData] = useState<SafetyData | null>(null);
-  const [govStatuses, setGovStatuses] = useState<GovStatusItem[]>([]);
   const [envData, setEnvData] = useState<any>(null);
   const [envSource, setEnvSource] = useState<'live' | 'offline'>('offline');
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -115,35 +107,6 @@ export default function PageSafety() {
       });
       setEnvData(envSnap?.data ?? null);
       setEnvSource(envSnap?.source ?? 'offline');
-
-      // 3. Fetch governorate statuses dynamically
-      const govList = ['Giza', 'Cairo', 'Luxor', 'Aswan', 'Alexandria', 'Sinai', 'Red Sea'];
-      const govResults = await Promise.allSettled(
-        govList.map((g) => safetyService.getSafetyInfo(undefined, undefined, g))
-      );
-
-      const parsedGovs: GovStatusItem[] = govList.map((name, idx) => {
-        const res = govResults[idx];
-        if (res.status === 'fulfilled' && res.value) {
-          const val = res.value;
-          const isSecure = val.status === 'safe';
-          return {
-            name: val.governorate || name,
-            status: val.safetyLevel || (isSecure ? 'Secure' : 'Caution'),
-            alerts: val.activeAlertsCount || 0,
-            color: isSecure ? C.safeGreen : C.alertAmber,
-          };
-        }
-        const profile = FALLBACK_GOV_PROFILES[name];
-        return {
-          name,
-          status: profile?.level || (profile?.status === 'caution' ? 'Caution' : 'Secure'),
-          alerts: profile?.alerts ?? 0,
-          color: profile?.status === 'caution' ? C.alertAmber : C.safeGreen,
-        };
-      });
-
-      setGovStatuses(parsedGovs);
     } catch (err: any) {
       console.error('Failed to load safety data:', err);
       setError(err?.message || 'Failed to fetch safety intelligence from Core Server.');
@@ -292,7 +255,7 @@ export default function PageSafety() {
                   padding: '4px 0',
                 }}
               >
-                <option value="">My location ({activeGov})</option>
+                <option value="">My location ({locationLabel})</option>
                 {SAFETY_CITIES.map((c) => (
                   <option key={c.name} value={c.name} style={{ color: '#1A1209' }}>
                     {c.name}
@@ -340,13 +303,6 @@ export default function PageSafety() {
               </button>
             </div>
           )}
-
-          {/* Risk gauge */}
-          <RiskGauge
-            status={safetyData?.status ?? 'safe'}
-            score={safetyData?.safetyScore ?? null}
-            gov={safetyData?.governorate || currentGov}
-          />
 
           {/* Active alerts */}
           <div>
@@ -439,31 +395,6 @@ export default function PageSafety() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </div>
-
-          {/* Governorate status grid */}
-          <div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fontWeight: 500, color: C.nile, marginBottom: 14 }}>Governorate Safety Status</h2>
-            {isLoading ? (
-              <div style={{ background: C.limestone, borderRadius: 13, padding: '20px', textAlign: 'center', color: '#A89880', fontSize: '12px' }}>
-                Fetching governorates safety indexes...
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 10 }}>
-                {govStatuses.map(({ name, status, alerts, color }) => (
-                  <div key={name} style={{ background: C.limestone, borderRadius: 13, padding: '14px 16px', border: `1.5px solid ${color}20`, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', fontWeight: 700, color: C.nile }}>{name}</span>
-                      {alerts > 0 && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 700, background: `${C.alertAmber}15`, color: C.alertAmber, padding: '2px 7px', borderRadius: 99 }}>{alerts} alert</span>}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 0 3px ${color}25` }} />
-                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', fontWeight: 600, color }}>{status}</span>
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </div>

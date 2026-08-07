@@ -29,6 +29,45 @@ export interface LocationState {
   setLocationOverride: (lat: number, lon: number, name: string, governorate: string) => void;
 }
 
+function formatGovernorate(gov: string): string {
+  const cleaned = gov.replace(/Governorate|محافظة/gi, '').trim();
+  if (!cleaned) return '';
+  return cleaned.includes('Governorate') ? cleaned : `${cleaned} Governorate`;
+}
+
+export function formatCoords(lat: number, lon: number, accuracy: number | null = null): string {
+  const ns = lat >= 0 ? `${lat.toFixed(4)}° N` : `${Math.abs(lat).toFixed(4)}° S`;
+  const ew = lon >= 0 ? `${lon.toFixed(4)}° E` : `${Math.abs(lon).toFixed(4)}° W`;
+  const acc = accuracy != null && Number.isFinite(accuracy) ? ` · ±${Math.round(accuracy)}m` : '';
+  return `${ns}, ${ew}${acc}`;
+}
+
+export function buildLocationLabel(input: {
+  status: LocationStatus;
+  governorate: string;
+  locationName: string | null;
+  lat: number | null;
+  lon: number | null;
+}): string {
+  if (input.status === 'requesting') return 'Requesting location…';
+  if (input.status === 'loading') return 'Locating user…';
+
+  const govName = formatGovernorate(input.governorate);
+  const area = input.locationName?.trim() ?? '';
+
+  if (area) {
+    if (govName && area.toLowerCase().includes(input.governorate.toLowerCase().split(/ governorate/i)[0].trim())) {
+      return area;
+    }
+    if (govName) return `${govName} · ${area}`;
+    return area;
+  }
+
+  if (govName) return `${govName}, Egypt`;
+  if (input.lat != null && input.lon != null) return formatCoords(input.lat, input.lon);
+  return 'Location unavailable';
+}
+
 const LocationContext = createContext<LocationState | undefined>(undefined);
 
 function extractGovernorateFromAddress(address: any, latitude: number, longitude: number): string {
@@ -218,4 +257,9 @@ export function useLocation() {
     throw new Error('useLocation must be used within a LocationProvider');
   }
   return context;
+}
+
+export function useLocationLabel(): string {
+  const { status, governorate, locationName, lat, lon } = useLocation();
+  return buildLocationLabel({ status, governorate, locationName, lat, lon });
 }

@@ -10,6 +10,7 @@ import { userService } from "@/services/userService";
 import { historyService, TripHistoryItem, UserBadgeItem } from "@/services/historyService";
 import { journeysApi, type Journey } from "@/lib/api/journeys";
 import { useRouter } from "next/navigation";
+import { useDemoStore, demoProfile, demoTrips, demoBadges, demoJourneys } from "@/lib/demoStore";
 
 const LEVEL_MAP = [
   { level: 1, title: "Newcomer",   xpNeeded: 0,    color: "#C4B89A" },
@@ -37,7 +38,8 @@ const PERSONA_STYLES = [
 export default function PageProfile() {
   const { user, fetchCurrentUser, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  
+  const demo = useDemoStore();
+
   const [profileData, setProfileData] = useState<any>(null);
   const [userBadges, setUserBadges]   = useState<UserBadgeItem[]>([]);
   const [trips, setTrips]             = useState<TripHistoryItem[]>([]);
@@ -61,6 +63,15 @@ export default function PageProfile() {
     try {
       setLoading(true);
       setError(null);
+
+      if (demo.mode === 'on') {
+        setProfileData(demoProfile());
+        setUserBadges(demoBadges());
+        setTrips(demoTrips());
+        setJourneys(demoJourneys());
+        setLoading(false);
+        return;
+      }
 
       const profile = await userService.getProfile();
       setProfileData(profile);
@@ -93,7 +104,8 @@ export default function PageProfile() {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demo.mode]);
 
   const handleOpenEdit = () => {
     const activeUser = profileData || user;
@@ -179,6 +191,37 @@ export default function PageProfile() {
           <div style={{ textAlign: "center" }}>
             <Loader2 size={36} color={C.nile} className="animate-spin" style={{ margin: "0 auto 12px" }} />
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", color: "#8B7E6A" }}>Loading your profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isOfflineGuest = !user && !profileData && demo.mode !== 'on';
+
+  if (isOfflineGuest) {
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <TopBar location="Your Profile · Rihla" />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+          <div style={{ textAlign: "center", maxWidth: 460, background: C.limestone, borderRadius: 18, border: "1px solid rgba(27,26,23,0.07)", padding: "48px 36px" }}>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: `${C.nile}10`, border: `1.5px solid ${C.nile}25`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+              <Glyph size={34} />
+            </div>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "26px", fontWeight: 500, color: C.nile, marginBottom: 10 }}>
+              Your journey is waiting
+            </h2>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", color: "#6B6354", lineHeight: 1.6, marginBottom: 24 }}>
+              {error && !String(error).toLowerCase().includes("authentication")
+                ? "We couldn't reach the Rihla server right now. Your profile, badges, and quest progress live in the cloud — sign in again once you're back online."
+                : "Sign in to view your profile, badges, quest progress, and journey stats."}
+            </p>
+            <button
+              onClick={() => router.push("/login")}
+              style={{ background: C.nile, color: C.limestone, border: "none", borderRadius: 9, padding: "12px 28px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}
+            >
+              Sign in
+            </button>
           </div>
         </div>
       </div>

@@ -102,5 +102,5 @@ export function subscribeAppSettings(fn: () => void) {
 }
 
 export function useAppSettings(): AppSettings {
-  return useSyncExternalStore(subscribeAppSettings, read, read);
+  return useSyncExternalStore(subscribeAppSettings, read, () => DEFAULTS);
 }

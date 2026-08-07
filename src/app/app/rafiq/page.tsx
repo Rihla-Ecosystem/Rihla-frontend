@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useLocation } from '@/providers/LocationProvider';
+import { useLocation, useLocationLabel } from '@/providers/LocationProvider';
 import { C } from '@/lib/constants/theme';
 import { Glyph, PyramidSkyline } from '@/app/components/atoms';
 import { MapPin, RefreshCw, Send, Mic, Image as ImageIcon, Square, AlertTriangle } from 'lucide-react';
 import { chatService, PERSONAS, type Persona } from '@/services/chatService';
 import { useAppSettings } from '@/lib/settingsStore';
+import { rafiqOfflineAnswer } from '@/app/data/rafiq-offline';
 
 type RafiqMsg = {
   id: string;
@@ -99,7 +100,8 @@ function RafiqBubble({ msg }: { msg: RafiqMsg }) {
 
 export default function RafiqPage() {
   const appSettings = useAppSettings();
-  const { lat, lon, locationName, governorate } = useLocation();
+  const { lat, lon } = useLocation();
+  const locationLabel = useLocationLabel();
   const [msgs,    setMsgs]    = useState<RafiqMsg[]>([WELCOME_MSG]);
   const [input,   setInput]   = useState("");
   const [loading, setLoading] = useState(false);
@@ -141,11 +143,14 @@ export default function RafiqPage() {
       }
       setMsgs(m => m.map(msg => msg.id === rafiqMsgId ? { ...msg, text: response.text } : msg));
     } catch (err: any) {
+      const offline = rafiqOfflineAnswer(text.trim());
       const errMsg: RafiqMsg = {
         id: `r_${Date.now()}`,
         role: "rafiq",
-        text: "I'm having trouble connecting to the AI service. Please try again in a moment.",
-        alert: { level: "warn", text: "Connection issue — please try again" },
+        text: offline.text,
+        sources: offline.sources.length ? offline.sources : undefined,
+        follow: offline.follow.length ? offline.follow : undefined,
+        alert: { level: "warn", text: "Offline mode — serving from the Rihla guidebook" },
         ts: "Just now",
       };
       setMsgs(m => [...m.filter(msg => msg.id !== rafiqMsgId), errMsg]);
@@ -214,8 +219,6 @@ export default function RafiqPage() {
     const q = (e.target as HTMLElement).getAttribute("data-follow");
     if (q) send(q);
   };
-
-  const locationLabel = locationName || governorate || "Current area";
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>

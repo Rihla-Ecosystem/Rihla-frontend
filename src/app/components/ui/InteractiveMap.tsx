@@ -5,7 +5,7 @@ import { useLocation } from '@/providers/LocationProvider';
 import type { RihlaSite } from '@/app/data/rihla-data';
 import type { GeoJsonGeometry } from '@/lib/api/geo-types';
 import { C } from '@/lib/constants/theme';
-import { MapPin, Navigation, RefreshCw, AlertTriangle, Compass, Layers, Star, X, LocateFixed } from 'lucide-react';
+import { MapPin, Navigation, RefreshCw, AlertTriangle, Compass, Layers, Star, LocateFixed } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
 export interface MapTripStop {
@@ -31,6 +31,7 @@ const categoryStyle = (cat: string) =>
   CATEGORY_STYLE[cat.toLowerCase()] || CATEGORY_STYLE.__default;
 
 export interface MapTicketMarker {
+  id?: string;
   latitude: number;
   longitude: number;
   title: string;
@@ -51,6 +52,8 @@ interface InteractiveMapProps {
   selectedGov?: string;
   selectedGovCoords?: { lat: number; lon: number };
   onSelectSite?: (site: RihlaSite) => void;
+  selectedSite?: RihlaSite | null;
+  onClearSelection?: () => void;
   activeCategory?: string;
   routePolyline?: [number, number][] | null;
   tripPolyline?: [number, number][] | null;
@@ -65,6 +68,11 @@ interface InteractiveMapProps {
   originCenter?: { lat: number; lon: number; key: number } | null;
   govFitKey?: number;
   loadingNote?: string | null;
+  overlay?: boolean;
+  onSelectTicket?: (t: MapTicketMarker) => void;
+  clustered?: boolean;
+  onClusteredChange?: (v: boolean) => void;
+  governorateFocusPoints?: { lat: number; lon: number }[] | null;
 }
 
 export function InteractiveMap({
@@ -75,6 +83,7 @@ export function InteractiveMap({
   selectedGov = 'Giza',
   selectedGovCoords = { lat: 29.9870, lon: 31.2118 },
   onSelectSite,
+  selectedSite = null,
   activeCategory = 'All',
   routePolyline = null,
   tripPolyline = null,
@@ -89,11 +98,17 @@ export function InteractiveMap({
   originCenter = null,
   govFitKey = 0,
   loadingNote = null,
+  overlay = false,
+  onSelectTicket,
+  clustered,
+  onClusteredChange,
+  governorateFocusPoints = null,
 }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapInstance = useRef<any>(null);
   const markersGroupRef = useRef<any>(null);
   const routeLayerRef = useRef<any>(null);
+  const routeEndsRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
   const pinLayerRef = useRef<any>(null);
   const boundaryLayerRef = useRef<any>(null);
@@ -101,9 +116,11 @@ export function InteractiveMap({
   const ticketLayerRef = useRef<any>(null);
 
   const { lat: userLat, lon: userLon, status: locStatus, requestLocation } = useLocation();
-  const [selectedSite, setSelectedSite] = useState<RihlaSite | null>(null);
   const [isClustered, setIsClustered] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+
+  const clusterEnabled = clustered ?? isClustered;
+  const setClusterEnabled = onClusteredChange ?? setIsClustered;
 
   // Center coordinates preference: real user location > selected gov coords > default Giza
   const centerLat = userLat ?? selectedGovCoords.lat;
@@ -137,8 +154,17 @@ export function InteractiveMap({
         center: [centerLat, centerLon],
         zoom: 12,
         zoomControl: false,
+        dragging: true,
+        touchZoom: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
         maxBounds: [[22.0, 25.0], [31.5, 37.0]],
-        maxBoundsViscosity: 1.0,
+        maxBoundsViscosity: 0.4,
       });
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -244,10 +270,11 @@ export function InteractiveMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapReady, originCenter?.key]);
 
-  // Fit the map to the selected governorate boundary (or its sites) on demand.
+  // Fit the map to the selected governorate on demand: backend boundary geometry
+  // if available, otherwise local focus points (monument markers / centroid).
   useEffect(() => {
     const map = leafletMapInstance.current;
-    if (!mapReady || !map || govFitKey === 0) return;
+    if (!mapReady || !map || govFitKey === 0 || selectedGov === 'Egypt') return;
     let cancelled = false;
     (async () => {
       const L = (await import('leaflet')).default;
@@ -256,6 +283,19 @@ export function InteractiveMap({
         try {
           const layer = L.geoJSON(governorateGeometry as any);
           map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 12 });
+          return;
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (governorateFocusPoints && governorateFocusPoints.length > 0) {
+        try {
+          const pts: [number, number][] = governorateFocusPoints.map((p) => [p.lat, p.lon]);
+          if (pts.length === 1) {
+            map.setView(pts[0], 9);
+          } else {
+            map.fitBounds(pts, { padding: [50, 50], maxZoom: 11 });
+          }
           return;
         } catch (e) {
           // ignore
@@ -276,7 +316,7 @@ export function InteractiveMap({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, govFitKey]);
+  }, [mapReady, govFitKey, governorateGeometry, governorateFocusPoints, selectedGov]);
 
   // Render country outline + governorate boundary
   useEffect(() => {
@@ -372,7 +412,7 @@ export function InteractiveMap({
 
       const bounds: [number, number][] = [];
 
-      const useClusters = isClustered && displaySites.length > 8;
+      const useClusters = clusterEnabled && displaySites.length > 8;
 
       if (useClusters) {
         const clusters: { centerLat: number; centerLon: number; items: RihlaSite[] }[] = [];
@@ -482,7 +522,6 @@ export function InteractiveMap({
       marker.bindTooltip(site.name, { direction: 'top', offset: [0, -10] });
 
       marker.on('click', () => {
-        setSelectedSite(site);
         if (onSelectSite) onSelectSite(site);
         map.panTo([sLat, sLon], { animate: true });
       });
@@ -492,7 +531,7 @@ export function InteractiveMap({
 
     updateMarkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, sites, activeCategory, isClustered, userLat, userLon, selectedGovCoords, onSelectSite, routePolyline, tripPolyline, governorateGeometry, selectedSite]);
+  }, [mapReady, sites, activeCategory, clusterEnabled, userLat, userLon, selectedGovCoords, onSelectSite, routePolyline, tripPolyline, governorateGeometry, selectedSite]);
 
   // Render route polyline (single OSRM route — solid blue)
   useEffect(() => {
@@ -506,14 +545,40 @@ export function InteractiveMap({
         routeLayerRef.current.remove();
         routeLayerRef.current = null;
       }
+      if (routeEndsRef.current) {
+        routeEndsRef.current.clearLayers();
+        routeEndsRef.current = null;
+      }
       if (routePolyline && routePolyline.length > 1) {
         routeLayerRef.current = L.polyline(routePolyline, {
           color: '#2563eb',
           weight: 4,
           opacity: 0.85,
         }).addTo(map);
+
+        const endsLayer = L.layerGroup().addTo(map);
+        routeEndsRef.current = endsLayer;
+        const dot = (lat: number, lng: number, color: string, title: string) => {
+          const icon = L.divIcon({
+            className: 'custom-route-end',
+            html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          });
+          const m = L.marker([lat, lng], { icon, zIndexOffset: 950 });
+          m.bindTooltip(title, { direction: 'top', offset: [0, -8] });
+          m.addTo(endsLayer);
+        };
+        dot(routePolyline[0][0], routePolyline[0][1], '#16a34a', 'Start');
+        dot(
+          routePolyline[routePolyline.length - 1][0],
+          routePolyline[routePolyline.length - 1][1],
+          '#dc2626',
+          'Destination'
+        );
+
         try {
-          map.fitBounds(routeLayerRef.current.getBounds(), { padding: [50, 50], maxZoom: 15 });
+          map.fitBounds(routeLayerRef.current.getBounds(), { paddingTopLeft: [50, 50], paddingBottomRight: [50, 90], maxZoom: 15 });
         } catch (e) {
           // ignore
         }
@@ -524,6 +589,10 @@ export function InteractiveMap({
       if (routeLayerRef.current) {
         routeLayerRef.current.remove();
         routeLayerRef.current = null;
+      }
+      if (routeEndsRef.current) {
+        routeEndsRef.current.remove();
+        routeEndsRef.current = null;
       }
     };
   }, [mapReady, routePolyline]);
@@ -628,28 +697,18 @@ export function InteractiveMap({
           zIndexOffset: t.selected ? 800 : 500,
         });
 
-        const popupRows = [
-          t.foreignerAdult != null ? `Foreign adult: LE ${t.foreignerAdult}` : null,
-          t.foreignerStudent != null ? `Foreign student: LE ${t.foreignerStudent}` : null,
-          t.egyptianAdult != null ? `Egyptian adult: LE ${t.egyptianAdult}` : null,
-          t.egyptianStudent != null ? `Egyptian student: LE ${t.egyptianStudent}` : null,
-        ].filter(Boolean).join('<br/>');
-
         marker.bindTooltip(t.title, { permanent: false, direction: 'top' });
-        marker.bindPopup(
-          `<div style="font-family:'Inter',sans-serif;font-size:12px;min-width:170px">
-            <div style="font-weight:700;font-family:'Cormorant Garamond',serif;font-size:15px;margin-bottom:4px">${t.title}</div>
-            ${popupRows ? `<div style="color:#6B6354;margin-bottom:6px">${popupRows}</div>` : ''}
-            ${t.url ? `<a href="${t.url}" target="_blank" style="color:#C8831A;font-weight:600;text-decoration:none">Buy tickets →</a>` : ''}
-          </div>`
-        );
+        marker.on('click', () => {
+          if (onSelectTicket) onSelectTicket(t);
+          map.panTo([t.latitude, t.longitude], { animate: true });
+        });
         marker.addTo(layer);
       });
     })();
     return () => {
       cancelled = true;
     };
-  }, [mapReady, ticketMarkers]);
+  }, [mapReady, ticketMarkers, onSelectTicket]);
 
   return (
     <div
@@ -666,6 +725,8 @@ export function InteractiveMap({
         flexDirection: 'column',
       }}
     >
+      {!overlay && (
+        <>
       {/* Map Control Header Bar */}
       <div
         style={{
@@ -708,11 +769,11 @@ export function InteractiveMap({
 
         <div style={{ display: 'flex', gap: 6, pointerEvents: 'auto' }}>
           <button
-            onClick={() => setIsClustered(!isClustered)}
+            onClick={() => setClusterEnabled(!clusterEnabled)}
             title="Toggle marker clustering"
             style={{
-              background: isClustered ? C.nile : 'rgba(255, 255, 255, 0.92)',
-              color: isClustered ? C.limestone : C.nile,
+              background: clusterEnabled ? C.nile : 'rgba(255, 255, 255, 0.92)',
+              color: clusterEnabled ? C.limestone : C.nile,
               border: '1px solid rgba(27,26,23,0.1)',
               borderRadius: 99,
               padding: '6px 12px',
@@ -726,7 +787,7 @@ export function InteractiveMap({
             }}
           >
             <Layers size={13} />
-            {isClustered ? 'Clusters' : 'All Pins'}
+            {clusterEnabled ? 'Clusters' : 'All Pins'}
           </button>
 
           {locStatus === 'permission_denied' && (
@@ -751,9 +812,11 @@ export function InteractiveMap({
           )}
         </div>
       </div>
+        </>
+      )}
 
       {/* Primary Map Container */}
-      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: 340, flex: 1 }} />
+      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: 340, flex: 1, cursor: 'grab' }} />
 
       {/* Re-center to my location (Google-Maps style round button) */}
       <button
@@ -794,8 +857,8 @@ export function InteractiveMap({
         <div
           style={{
             position: 'absolute',
-            bottom: 16,
-            right: 16,
+            bottom: 70,
+            left: 16,
             zIndex: 850,
             background: '#FFFFFF',
             border: '1px solid rgba(27,26,23,0.1)',
@@ -915,85 +978,7 @@ export function InteractiveMap({
         </div>
       )}
 
-      {/* CLICKED MARKER: Selected Site Card Popover */}
-      {selectedSite && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 14,
-            left: 14,
-            right: 14,
-            zIndex: 900,
-            background: C.limestone,
-            borderRadius: 14,
-            padding: '14px 16px',
-            border: '1.5px solid rgba(27,26,23,0.12)',
-            boxShadow: '0 8px 24px rgba(27,26,23,0.15)',
-            display: 'grid',
-            gridTemplateColumns: '80px 1fr auto',
-            gap: 12,
-            alignItems: 'center',
-            animation: 'fadeInUp 0.2s ease-out',
-          }}
-        >
-          <div style={{ width: 80, height: 70, borderRadius: 10, overflow: 'hidden', background: '#EAE6DF' }}>
-            <img src={selectedSite.img} alt={selectedSite.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '13px', fontWeight: 700, color: C.nile }}>
-                {selectedSite.name}
-              </span>
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '10px', color: '#8B7E6A', background: C.limestoneDark, padding: '1px 6px', borderRadius: 4 }}>
-                {selectedSite.cat}
-              </span>
-            </div>
-
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '11px', color: '#A89880', marginBottom: 6 }}>
-              {selectedSite.nameAr}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Star size={11} color={C.sand} fill={C.sand} strokeWidth={0} />
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 700 }}>{selectedSite.rating}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3, color: '#8B7E6A' }}>
-                <Navigation size={10} />
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600 }}>{selectedSite.dist} away</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-            <button
-              onClick={() => setSelectedSite(null)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#A89880', padding: 2 }}
-            >
-              <X size={16} />
-            </button>
-            {onSelectSite && (
-              <button
-                onClick={() => onSelectSite(selectedSite)}
-                style={{
-                  background: C.nile,
-                  color: C.limestone,
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Select Site
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+      {/* CLICKED MARKER: popup rendered by the parent (explore page) overlay */}
     </div>
   );
 }

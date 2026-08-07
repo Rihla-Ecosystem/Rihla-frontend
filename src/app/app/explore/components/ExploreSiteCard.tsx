@@ -295,7 +295,29 @@ export function ExploreSiteCard({
         )}
 
         {/* Footer */}
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(27,26,23,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(27,26,23,0.08)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+            style={{
+              background: selected ? C.nile : C.solar,
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: 10,
+              padding: '8px 14px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              cursor: 'pointer',
+              fontFamily: "'Inter',sans-serif",
+              fontSize: '12px',
+              fontWeight: 700,
+            }}
+          >
+            {selected ? <CheckSquare size={13} /> : <MapPin size={13} />} {selected ? 'Selected' : 'Select'}
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -325,6 +347,7 @@ export function ExploreSiteCard({
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
               style={{
+                marginLeft: 'auto',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 5,

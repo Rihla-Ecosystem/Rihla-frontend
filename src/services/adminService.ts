@@ -1,5 +1,5 @@
 import { apiClient, API_BASE_URL, formatApiError } from '../api';
-import { getAuthHeader } from '../providers/AuthProvider';
+import { tokenManager } from '../lib/api';
 import type { components } from '../api/generated/types';
 
 type User = components['schemas']['User'];
@@ -37,8 +37,8 @@ export interface PaymentRecord {
 const adminFetch = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const headers = new Headers(init?.headers);
   headers.set('Content-Type', 'application/json');
-  const auth = getAuthHeader() as Record<string, string>;
-  if (auth.Authorization) headers.set('Authorization', auth.Authorization);
+  const token = tokenManager.getAccessToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers,

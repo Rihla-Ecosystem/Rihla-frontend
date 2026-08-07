@@ -1,5 +1,5 @@
 import { apiClient } from "../api";
-import { getAuthHeader } from "../providers/AuthProvider";
+import { tokenManager } from "../lib/api";
 import { normalizeChatResponse } from "./chatAdapter";
 import { components } from "../types";
 
@@ -48,8 +48,8 @@ export interface VoiceResult {
 }
 
 const authHeaders = (): Record<string, string> => {
-  const h = getAuthHeader() as Record<string, string>;
-  return h?.Authorization ? { Authorization: h.Authorization } : {};
+  const token = tokenManager.getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 export interface IdentifyResult {

@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { C } from '@/lib/constants/theme';
-import { MapPin } from 'lucide-react';
+import { MapPin, Volume2 } from 'lucide-react';
 import { Glyph } from '@/app/components/atoms';
+import { useLocation, useLocationLabel, formatCoords } from '@/providers/LocationProvider';
+import SwitchSimple from '@/app/components/settings/SwitchSimple';
 
 export default function EmergencyRightColumn({
   locShared,
@@ -14,6 +16,75 @@ export default function EmergencyRightColumn({
   setLocShared: (v: boolean) => void;
   setRafiq: (v: boolean) => void;
 }) {
+  const { lat, lon, accuracy } = useLocation();
+  const locationLabel = useLocationLabel();
+  const coordsLine = lat != null && lon != null ? formatCoords(lat, lon, accuracy) : 'Location unavailable';
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, []);
+
+  useEffect(() => () => stopAudio(), [stopAudio]);
+
+  const speak = useCallback(
+    (text: string, index: number) => {
+      if (typeof window === 'undefined') return;
+      stopAudio();
+      setSpeakingIndex(index);
+
+      let fallbackDone = false;
+      const fallback = () => {
+        if (fallbackDone) return;
+        fallbackDone = true;
+        if (!('speechSynthesis' in window)) {
+          setSpeakingIndex(null);
+          return;
+        }
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ar-EG';
+        utterance.rate = 0.9;
+        const pickVoice = () => {
+          const voices = window.speechSynthesis.getVoices();
+          const arabic = voices.filter((v) => v.lang?.toLowerCase().startsWith('ar'));
+          utterance.voice = arabic.find((v) => v.lang?.toLowerCase().startsWith('ar-eg')) ?? arabic[0] ?? null;
+        };
+        pickVoice();
+        if (window.speechSynthesis.getVoices().length === 0) {
+          window.speechSynthesis.addEventListener('voiceschanged', pickVoice, { once: true });
+        }
+        utterance.onstart = () => setSpeakingIndex(index);
+        utterance.onend = () => setSpeakingIndex(null);
+        utterance.onerror = () => setSpeakingIndex(null);
+        window.speechSynthesis.speak(utterance);
+      };
+
+      const audio = new Audio(
+        `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ar&q=${encodeURIComponent(text)}`
+      );
+      audioRef.current = audio;
+      audio.onended = () => setSpeakingIndex(null);
+      audio.onerror = () => {
+        if (audioRef.current === audio) audioRef.current = null;
+        setSpeakingIndex(null);
+        fallback();
+      };
+      audio.play().catch(() => {
+        if (audioRef.current === audio) audioRef.current = null;
+        setSpeakingIndex(null);
+        fallback();
+      });
+    },
+    [stopAudio]
+  );
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div
@@ -93,28 +164,62 @@ export default function EmergencyRightColumn({
                 alignItems: 'center',
               }}
             >
-              <div>
-                <div
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    style={{
+                      fontFamily: "'Cormorant Garamond',serif",
+                      fontSize: '20px',
+                      color: '#ffb300',
+                      direction: 'rtl',
+                      marginBottom: 2,
+                    }}
+                  >
+                    {p.arabic}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: '11px',
+                      color: `${C.limestone}35`,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {p.romanised}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    speak(p.arabic, i);
+                  }}
+                  title="Tap to hear how to say it"
+                  aria-label={`Hear ${p.meaning}`}
                   style={{
-                    fontFamily: "'Cormorant Garamond',serif",
-                    fontSize: '20px',
-                    color: '#ffb300',
-                    direction: 'rtl',
-                    marginBottom: 2,
+                    background: speakingIndex === i ? 'rgba(255,179,0,0.22)' : 'transparent',
+                    border: `1px solid ${speakingIndex === i ? '#ffb300' : 'rgba(255,179,0,0.35)'}`,
+                    color: speakingIndex === i ? '#ffb300' : 'rgba(255,179,0,0.85)',
+                    borderRadius: 8,
+                    width: 30,
+                    height: 30,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 0.18s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,179,0,0.15)';
+                    e.currentTarget.style.color = '#ffb300';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = speakingIndex === i ? 'rgba(255,179,0,0.22)' : 'transparent';
+                    e.currentTarget.style.color = speakingIndex === i ? '#ffb300' : 'rgba(255,179,0,0.85)';
                   }}
                 >
-                  {p.arabic}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'Inter',sans-serif",
-                    fontSize: '11px',
-                    color: `${C.limestone}35`,
-                    fontStyle: 'italic',
-                  }}
-                >
-                  {p.romanised}
-                </div>
+                  <Volume2 size={15} strokeWidth={2.2} />
+                </button>
               </div>
               <div
                 style={{
@@ -161,7 +266,7 @@ export default function EmergencyRightColumn({
             marginBottom: 4,
           }}
         >
-          Giza Plateau, Cairo
+          {locationLabel}
         </div>
         <div
           style={{
@@ -171,7 +276,7 @@ export default function EmergencyRightColumn({
             marginBottom: 12,
           }}
         >
-          30.0280° N, 31.1325° E · Accuracy: ±8m
+          {coordsLine}
         </div>
         <div
           style={{
@@ -202,29 +307,31 @@ export default function EmergencyRightColumn({
             </span>
           </div>
         </div>
-        <button
-          onClick={() => setLocShared(true)}
+        <div
           style={{
-            width: '100%',
-            background: locShared ? `${C.safeGreen}15` : C.signalRed,
-            border: `1.5px solid ${locShared ? C.safeGreen : C.signalRed}`,
-            borderRadius: 9,
-            padding: '10px 16px',
-            fontFamily: "'Inter',sans-serif",
-            fontSize: '13px',
-            fontWeight: 700,
-            color: locShared ? '#4caf50' : '#fff',
-            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 7,
-            transition: 'all 0.2s',
+            justifyContent: 'space-between',
+            gap: 10,
+            background: locShared ? `${C.safeGreen}15` : `${C.limestone}06`,
+            border: `1.5px solid ${locShared ? C.safeGreen : C.limestone}${locShared ? '' : '18'}`,
+            borderRadius: 9,
+            padding: '10px 14px',
           }}
         >
-          <MapPin size={14} strokeWidth={2.5} />
-          {locShared ? 'Location shared ✓' : 'Share my location'}
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <MapPin size={14} color={locShared ? '#4caf50' : `${C.limestone}60`} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 700, color: locShared ? '#4caf50' : C.limestone }}>
+                {locShared ? 'Location shared' : 'Share my location'}
+              </div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', color: `${C.limestone}45` }}>
+                {locShared ? 'Live coordinates sent to emergency services' : 'Emergency services will see your exact position'}
+              </div>
+            </div>
+          </div>
+          <SwitchSimple checked={locShared} onChange={setLocShared} />
+        </div>
       </div>
 
       <div

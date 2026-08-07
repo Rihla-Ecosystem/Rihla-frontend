@@ -3,7 +3,7 @@
 import { MapPin, Bell, Search, RefreshCw, Menu } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { useRouter } from 'next/navigation';
-import { useLocation } from "@/providers/LocationProvider";
+import { useLocation, useLocationLabel } from "@/providers/LocationProvider";
 import { useAuth } from "@/lib/auth";
 import { Glyph, PyramidSkyline } from "@/app/components/atoms";
 
@@ -22,24 +22,10 @@ const SUN_RAYS = Array.from({ length: 12 }, (_, i) => (i * 30));
 
 export function TopBar({ location: locationProp, onRafiq }: { location?: string; onRafiq?: () => void }) {
   const router = useRouter();
-  const { locationName, governorate, status, requestLocation } = useLocation();
+  const { status, requestLocation } = useLocation();
+  const liveLocation = useLocationLabel();
   const { user } = useAuth();
   const initial = (user?.displayName || "Traveler").charAt(0).toUpperCase();
-
-  const liveLocation = (() => {
-    if (status === 'requesting') return "Requesting location...";
-    if (status === 'loading') return "Locating user...";
-    const govName = governorate || "Giza";
-    const govFormatted = govName.includes("Governorate") || govName.includes("محافظة")
-      ? govName
-      : `${govName} Governorate`;
-
-    if (locationName) {
-      if (locationName.toLowerCase().includes(govName.toLowerCase())) return locationName;
-      return `${govFormatted} · ${locationName}`;
-    }
-    return `${govFormatted}, Egypt`;
-  })();
 
   const pageTitle = locationProp || 'Rihla';
 
@@ -193,10 +179,10 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
               onClick={() => router.push('/app')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, padding: 0, flexShrink: 0 }}
             >
-              <Glyph size={42} light />
+              <Glyph size={54} light />
               <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
-                <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '18px', fontWeight: 500, color: C.limestone, letterSpacing: '0.02em' }}>رحلة Rihla</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '9.5px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: `${C.sand}90`, marginTop: 3 }}>AI Travel Companion</span>
+                <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fontWeight: 500, color: C.limestone, letterSpacing: '0.02em' }}>رحلة Rihla</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: `${C.sand}90`, marginTop: 3 }}>AI Travel Companion</span>
               </span>
             </button>
             <span style={{ width: 1, height: 22, background: `${C.limestone}18`, flexShrink: 0 }} />

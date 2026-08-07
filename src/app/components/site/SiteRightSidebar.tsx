@@ -9,11 +9,13 @@ export default function SiteRightSidebar({
   saved,
   setSaved,
   setRafiq,
+  onDirections,
 }: {
   site: any;
   saved: boolean;
   setSaved: (v: boolean) => void;
   setRafiq: (v: boolean) => void;
+  onDirections?: () => void;
 }) {
   return (
     <div
@@ -110,6 +112,7 @@ export default function SiteRightSidebar({
             </div>
           ))}
           <button
+            onClick={onDirections}
             style={{
               marginTop: 14,
               width: '100%',
