@@ -2,6 +2,7 @@
 
 // @web-version
 import React, { useState } from "react";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   MapPin, Bell, Navigation, Wind, Thermometer, Sun, Shield,
   Search, Map, User, AlertTriangle, Star, Clock, Camera,
@@ -479,6 +480,7 @@ const NAV_ITEMS = [
   { id: "explore", label: "Explore", icon: (a: boolean) => <Compass  size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "rafiq",   label: "Rafiq",   icon: (a: boolean) => <Glyph    size={18}/>,                              special: true },
   { id: "safety",  label: "Safety",  icon: (a: boolean) => <Shield   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "notifications", label: "Alerts", icon: (a: boolean) => <Bell size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "history", label: "History", icon: (a: boolean) => <Clock    size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "wallet",  label: "Wallet",  icon: (a: boolean) => <Wallet   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "profile", label: "Profile", icon: (a: boolean) => <User     size={18} strokeWidth={a ? 2.2 : 1.7}/> },
@@ -3028,6 +3030,132 @@ function PageEmergency({ onBack }: { onBack: () => void }) {
   );
 }
 
+// ─── PAGE: Notifications ────────────────────────────────────────────────────
+const PRIORITY_COLOR: Record<string, string> = {
+  LOW: `${C.safeGreen}`,
+  NORMAL: C.solar,
+  HIGH: C.alertAmber,
+  CRITICAL: C.signalRed,
+};
+
+const TYPE_LABEL: Record<string, string> = {
+  INFO: "Info",
+  WARNING: "Warning",
+  ALERT: "Alert",
+  DANGER: "Danger",
+  EMERGENCY: "Emergency",
+  SUCCESS: "Success",
+};
+
+function timeAgo(iso?: string): string {
+  if (!iso) return "just now";
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const d = Math.floor(hr / 24);
+  return `${d}d ago`;
+}
+
+function PageNotifications() {
+  const nt = useNotifications();
+
+  const [filter, setFilter] = useState<"all" | "unread" | "safety">("all");
+
+  const filtered = nt.inbox.filter((n) => {
+    if (filter === "unread") return !n.isRead;
+    if (filter === "safety") return n.category === "SAFETY";
+    return true;
+  });
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <TopBar location="Giza Plateau, Cairo" />
+      <div style={{ flex: 1, padding: "28px 32px", maxWidth: 1100, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+          <div>
+            <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "26px", fontWeight: 500, color: C.nile, margin: 0 }}>Notifications</h1>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880", marginTop: 3 }}>
+              {nt.unread > 0 ? `${nt.unread} unread` : "All caught up"}{" "}
+              {nt.tracking ? "· GPS tracking active" : "· GPS paused"}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button onClick={nt.resync} style={{ background: "none", border: "1.5px solid rgba(27,26,23,0.13)", borderRadius: 8, padding: "8px 14px", display: "flex", alignItems: "center", gap: 6, fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#6B6354", cursor: "pointer" }}>
+              <RefreshCw size={13} strokeWidth={2}/>Sync
+            </button>
+            <button onClick={nt.markEveryRead} style={{ background: C.nile, border: "none", borderRadius: 8, padding: "8px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.limestone, cursor: "pointer" }}>
+              Mark all read
+            </button>
+          </div>
+        </div>
+
+        {!nt.online && (
+          <div style={{ background: `${C.alertAmber}15`, border: `1px solid ${C.alertAmber}40`, borderRadius: 10, padding: "10px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 8, fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#8a5a1a" }}>
+            <AlertTriangle size={14} strokeWidth={2}/>Offline — updates are queued and will sync when you reconnect.
+          </div>
+        )}
+
+        {/* Filters */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          {(["all", "unread", "safety"] as const).map((f) => (
+            <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? C.nile : "transparent", border: `1.5px solid ${filter === f ? C.nile : "rgba(27,26,23,0.13)"}`, borderRadius: 99, padding: "5px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: filter === f ? C.limestone : "#6B6354", cursor: "pointer", textTransform: "capitalize" }}>
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {/* List */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {!nt.initialized && <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#A89880", padding: "24px 0", textAlign: "center" }}>Loading notifications…</div>}
+          {nt.initialized && filtered.length === 0 && (
+            <div style={{ textAlign: "center", padding: "48px 0", color: "#A89880" }}>
+              <Bell size={28} strokeWidth={1.6} style={{ marginBottom: 8 }}/>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 600, color: "#6B6354" }}>No notifications</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", marginTop: 4 }}>Context-aware alerts will appear here as you move around.</div>
+            </div>
+          )}
+          {filtered.map((n) => {
+            const pc = PRIORITY_COLOR[n.priority] ?? C.safeGreen;
+            return (
+              <div key={n.id} style={{ background: C.limestone, borderRadius: 12, padding: "14px 16px", borderLeft: `3px solid ${pc}`, border: `1px solid rgba(27,26,23,0.07)`, display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: pc, flexShrink: 0, marginTop: 5, boxShadow: !n.isRead ? `0 0 0 3px ${pc}30` : "none" }}/>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+                    <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 600, color: C.nile }}>{n.title}</div>
+                    <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880", flexShrink: 0 }}>{timeAgo(n.createdAt)}</div>
+                  </div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#6B6354", lineHeight: 1.5, marginTop: 3 }}>{n.message}</div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 8 }}>
+                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, background: `${pc}15`, color: pc, borderRadius: 99, padding: "2px 8px" }}>{TYPE_LABEL[n.type] ?? n.type}</span>
+                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, background: `${C.faience}12`, color: C.faience, borderRadius: 99, padding: "2px 8px" }}>{n.category}</span>
+                    {!n.isRead && (
+                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, color: C.signalRed, borderRadius: 99, padding: "2px 8px", backgroundColor: `${C.signalRed}12` }}>New</span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  {!n.isRead && (
+                    <button onClick={() => nt.markOneRead(n.id)} title="Mark read" style={{ background: "none", border: "none", cursor: "pointer", color: C.faience, padding: 4 }}>
+                      <CheckCircle size={16} strokeWidth={2}/>
+                    </button>
+                  )}
+                  <button onClick={() => nt.removeInbox(n.id)} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#B0A89A", padding: 4 }}>
+                    <X size={16} strokeWidth={2}/>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState<string>("landing");
@@ -3049,6 +3177,7 @@ export default function App() {
       case "explore": return <PageExplore goSite={goSite}/>;
       case "rafiq":   return <PageRafiq/>;
       case "safety":  return <PageSafety goEmergency={() => setPage("emergency")}/>;
+      case "notifications": return <PageNotifications/>;
       case "history": return <PageHistory/>;
       case "wallet":  return <PageWallet/>;
       case "profile": return <PageProfile/>;

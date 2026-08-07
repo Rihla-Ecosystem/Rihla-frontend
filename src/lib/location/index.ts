@@ -1,0 +1,13 @@
+export type { GeoPoint, GeofenceEvent, LocationReportReason, LocationTrigger } from './types';
+export { haversineMeters, movedBeyond, km } from './distance';
+export { pointInPolygon, detectGeofenceTransitions } from './geofence';
+export type { GeofenceDefinition, GeofenceDetection } from './geofence';
+export { permissionState, requestPermission } from './permissions';
+export type { PermissionState } from './permissions';
+export { startTracking } from './tracker';
+export type { TrackerCallbacks, TrackerHandle, TrackerOptions } from './tracker';
+export { offlineQueue, backoffDelay } from './offline-queue';
+export type { QueueEntry } from './offline-queue';
+export { shouldReportPosition, reportPosition } from './reporter';
+export type { ReporterOptions, ReporterDecision } from './reporter';
+export * as locationStorage from './storage';
