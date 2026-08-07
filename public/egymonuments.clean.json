@@ -1,0 +1,2938 @@
+[
+  {
+    "id": "Pyramids",
+    "title": "Giza plateau",
+    "category": "archaeological",
+    "governorate": "Giza",
+    "city": "Giza",
+    "latitude": 29.9792,
+    "longitude": 31.1342,
+    "prices": {
+      "egyptian": {
+        "adult": 60,
+        "student": 30
+      },
+      "foreigner": {
+        "adult": 700,
+        "student": 350
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 08:00 am Last Entry 03:30 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/December2025/KVD7Uwi5OyTbRcoaynp3.jpg",
+      "https://egymonuments.com/storage/all-you-needs/November2024/NZdfZUQjCldlQ89Gew9G.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/I2QZagGoEtUG7Rx5jxCt.jpg",
+      "https://egymonuments.com/storage/events/May2025/BdNKY21sa2iACJfgN7fq.webp"
+    ],
+    "url": "https://egymonuments.com/details/Pyramids",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "EgyptianMuseum",
+    "title": "Egyptian Museum",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 550,
+        "student": 275
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/1y0KT0K4REkCMEwpfoZl.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/yuGpPBfXZWCNkG7XoSql.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/a3ypORKKlS1jPr6GzzaS.jpg",
+      "https://egymonuments.com/storage/events/May2024/T5269Hn6mXz0t0zwUiDx.png"
+    ],
+    "url": "https://egymonuments.com/details/EgyptianMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SharmElSheikhMuseum",
+    "title": "Sharm El Sheikh Museum",
+    "category": "archaeological",
+    "governorate": "South Sinai",
+    "city": "Sharm El Sheikh",
+    "latitude": 27.9158,
+    "longitude": 34.33,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 10:00 am Last Entry 12:00 pm",
+      "winter": "from 10:00 am Last Entry 12:00 pm",
+      "ramadan": "from 10:00 am Last Entry 01:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/OgLj1QWaUwJrsgKD7QFq.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/YlOh8GuBrVoB2Pp17TDl.jpg",
+      "https://egymonuments.com/storage/events/May2024/MkkHjPCEjjwGbnnK3S7a.png"
+    ],
+    "url": "https://egymonuments.com/details/SharmElSheikhMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "HurghadaMuseum",
+    "title": "Hurghada Museum",
+    "category": "archaeological",
+    "governorate": "Red Sea",
+    "city": "Hurghada",
+    "latitude": 27.2579,
+    "longitude": 33.8116,
+    "prices": {
+      "egyptian": {
+        "adult": 80,
+        "student": 40
+      },
+      "foreigner": {
+        "adult": 300,
+        "student": 150
+      }
+    },
+    "opening_hours": {
+      "summer": "from 10:00 am Last Entry 12:00 pm",
+      "winter": "from 10:00 am Last Entry 12:00 pm",
+      "ramadan": "from 10:00 am Last Entry 01:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/BYyg1w8VBDfFAkxmqoIq.jpg",
+      "https://egymonuments.com/storage/events/May2024/m0YV9Qp7WQyaw44ylfOt.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/2mv3HcAdr8VAMSUe4AEl.jpg"
+    ],
+    "url": "https://egymonuments.com/details/HurghadaMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "LuxorTemple",
+    "title": "Luxor Temple",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6995,
+    "longitude": 32.6395,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 500,
+        "student": 250
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 07:00 pm",
+      "winter": "from 06:00 am Last Entry 07:00 pm",
+      "ramadan": "from 06:00 am Last Entry 07:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/DbaPFBGc251LcFfjgAn9.jpg",
+      "https://egymonuments.com/storage/events/May2024/b7LjSMxi1wDiDPpznoa0.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/kWkt0WmYnJdrpnM38xU3.jpg",
+      "https://egymonuments.com/storage/events/May2024/62p6KGE6UPpANerI85L7.png"
+    ],
+    "url": "https://egymonuments.com/details/LuxorTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "KarnakTemple",
+    "title": "Karnak Temple",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7188,
+    "longitude": 32.6573,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 600,
+        "student": 300
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 04:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/44JDSKJlbMWgje2BLlLw.jpg",
+      "https://egymonuments.com/storage/events/May2024/rAFQgBSCkYHI66VygOB0.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/624Mw8TqFAzBTn4Zdwd4.jpg",
+      "https://egymonuments.com/storage/events/May2024/PxjPeVDrWS0ZvMIc9vtE.png"
+    ],
+    "url": "https://egymonuments.com/details/KarnakTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "HatshepsutTemple",
+    "title": "Hatshepsut Temple",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7381,
+    "longitude": 32.6067,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 440,
+        "student": 220
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/K71JJa01IeiqdJXToZs2.jpg",
+      "https://egymonuments.com/storage/events/May2024/7kRzJ4Ao64lBrYafF9lW.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/cPTbscIeAT7NwNa0ZygO.jpg",
+      "https://egymonuments.com/storage/events/May2024/t8N5Wruhbs3PtGr1ywqh.png"
+    ],
+    "url": "https://egymonuments.com/details/HatshepsutTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AbuSimbelTemple",
+    "title": "Abu Simbel Temple",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Abu Simbel",
+    "latitude": 22.3372,
+    "longitude": 31.6258,
+    "prices": {
+      "egyptian": {
+        "adult": 60,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 1272,
+        "student": 670
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 04:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/rPLfoEAgWXatjAqKwqZY.jpg",
+      "https://egymonuments.com/storage/events/May2024/yTSfqwiLrn5Grqc8WcjH.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/EENkhoWhTtrm3ZWz6Jgg.jpg",
+      "https://egymonuments.com/storage/events/May2024/j5XErw9Vb6ac5ebnEu3V.png"
+    ],
+    "url": "https://egymonuments.com/details/AbuSimbelTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "CopticMuseum",
+    "title": "Coptic Museum",
+    "category": "christian",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 280,
+        "student": 140
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/fwyHvDhfjPaNybH9Pyla.jpg",
+      "https://egymonuments.com/storage/events/May2024/HgENWWz3Vis3ZPLUM8WQ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/1a1XwUedeDOBIbGMuxNR.jpg",
+      "https://egymonuments.com/storage/events/May2024/xbz49rIHSplP9GGNeX3q.jpg"
+    ],
+    "url": "https://egymonuments.com/details/CopticMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "DandarahTemple",
+    "title": "Dandarah Temple",
+    "category": "archaeological",
+    "governorate": "Qena",
+    "city": "Qena",
+    "latitude": 26.1416,
+    "longitude": 32.67,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 300,
+        "student": 150
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/sFfsKRL13p0AiJ3157xU.jpg",
+      "https://egymonuments.com/storage/events/May2024/KmoRivt7hsi65VPbBiSq.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/TAUY6grtW5RIxbsb4Tk3.jpg",
+      "https://egymonuments.com/storage/events/May2024/bDEEzCyqIwwD1wzaQtIO.png"
+    ],
+    "url": "https://egymonuments.com/details/DandarahTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "DeirElMadinaTemple",
+    "title": "Deir El Madina",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7286,
+    "longitude": 32.5934,
+    "prices": {
+      "egyptian": {
+        "adult": null,
+        "student": null
+      },
+      "foreigner": {
+        "adult": null,
+        "student": null
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 05:00 pm",
+      "ramadan": "from 06:00 am Last Entry 05:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/SJ8CySMhsdTRSZga7HRs.jpg",
+      "https://egymonuments.com/storage/events/May2024/aINtiqQZ5PzIJiqt2KZU.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/sRMfDXFS5mr5I7CpzZYD.jpg",
+      "https://egymonuments.com/storage/events/May2024/3zepE7MerfGxiGiBLK1R.jpg"
+    ],
+    "url": "https://egymonuments.com/details/DeirElMadinaTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ValleyOfKings",
+    "title": "Valley Of Kings",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7402,
+    "longitude": 32.6014,
+    "prices": {
+      "egyptian": {
+        "adult": 60,
+        "student": 30
+      },
+      "foreigner": {
+        "adult": 750,
+        "student": 375
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/June2024/OsMyhBsdPYpuTB9SE0Y8.jpg",
+      "https://egymonuments.com/storage/events/May2024/vk1tQ8LovsnxiD9U5gGC.jpg",
+      "https://egymonuments.com/storage/all-you-needs/June2024/kpx10hPwHkdks3cPDo2x.jpg",
+      "https://egymonuments.com/storage/events/May2024/aeaMcBGxiVLI4ttDZQwb.jpg"
+    ],
+    "url": "https://egymonuments.com/details/ValleyOfKings",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "LuxorMuseum",
+    "title": "Luxor Museum",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 400,
+        "student": 200
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 12:00 pm",
+      "winter": "from 09:00 am Last Entry 01:00 pm",
+      "ramadan": "from 09:00 am Last Entry 1:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/June2024/KnP2C8bzeNpTWy5FPEhj.jpg",
+      "https://egymonuments.com/storage/events/May2024/sIQWFuYiZ2kmhKR7f0So.jpg",
+      "https://egymonuments.com/storage/all-you-needs/June2024/lzQCuj6ii7loPQT840K8.jpg",
+      "https://egymonuments.com/storage/events/May2024/PSeTmx279orLTmTQYMtD.jpg"
+    ],
+    "url": "https://egymonuments.com/details/LuxorMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "EsnaTemple",
+    "title": "Esna Temple",
+    "category": "archaeological",
+    "governorate": "Qena",
+    "city": "Esna",
+    "latitude": 25.2934,
+    "longitude": 32.5542,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/XbVrMalJKTJFNfyG7LgD.jpg",
+      "https://egymonuments.com/storage/events/May2024/Z2F3OKymnSpUSUBbs5WO.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/MVT5ghvPhos2VsIYIhuj.jpg",
+      "https://egymonuments.com/storage/events/May2024/EQaQu7GiBTJNMuKHGYQj.png"
+    ],
+    "url": "https://egymonuments.com/details/EsnaTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nAll prices are in Egyptian Pounds.\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SalahEldinCitadel",
+    "title": "Salah Eldin Citadel",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0292,
+    "longitude": 31.2613,
+    "prices": {
+      "egyptian": {
+        "adult": 60,
+        "student": 30
+      },
+      "foreigner": {
+        "adult": 550,
+        "student": 275
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 08:00 am Last Entry 03:30 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/zapew8nuiApVEKppF8tc.jpg",
+      "https://egymonuments.com/storage/events/May2024/zJrERzgNAtjczYZ1gUtW.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/lfntfVWCuQepL4VCFRD3.jpg",
+      "https://egymonuments.com/storage/events/May2024/NIl4HGc97xCK8P6Ep4O7.png"
+    ],
+    "url": "https://egymonuments.com/details/SalahEldinCitadel",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "MedinetHabu",
+    "title": "Medinet Habu",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7198,
+    "longitude": 32.6,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/cqJzPwCJE3jCkNZpEklN.jpg",
+      "https://egymonuments.com/storage/events/May2024/ySu18A7lmI1c34EejC9y.jpg",
+      "https://egymonuments.com/storage/events/May2024/lQBXY1sX6ja4pSGb48LD.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/5kd8wVLYha6FQ9yV32XJ.jpg"
+    ],
+    "url": "https://egymonuments.com/details/MedinetHabu",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "PhilaeTemple",
+    "title": "Philae Temple",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0239,
+    "longitude": 32.8843,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 550,
+        "student": 275
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/tpvRu0nfEboGkIEzwc83.jpg",
+      "https://egymonuments.com/storage/events/May2024/GfiOLFKH7lPdcKs2ijqv.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/CYMdkyjC7h9w2jO76fWz.jpg",
+      "https://egymonuments.com/storage/events/May2024/UlaCXfHm1CaEwPaqYfbW.png"
+    ],
+    "url": "https://egymonuments.com/details/PhilaeTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians above 60 years.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "KomOmboTemple",
+    "title": "Kom Ombo Temple",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.4526,
+    "longitude": 32.9286,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 450,
+        "student": 225
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 08:00 pm",
+      "winter": "from 07:00 am Last Entry 08:00 pm",
+      "ramadan": "from 07:00 am Last Entry 08:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/WNCyKgslm8PLE5JzJCpJ.jpg",
+      "https://egymonuments.com/storage/events/May2024/6ilSf7pIgNVESwWGkJvw.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/NDqtCyhK5MQm4zu8vbGM.jpg",
+      "https://egymonuments.com/storage/events/May2024/vSh2qNZIgnA8D6lGrD55.png"
+    ],
+    "url": "https://egymonuments.com/details/KomOmboTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "MummificationMuseumLuxor",
+    "title": "Mummification museum",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 12:00 pm",
+      "winter": "from 09:00 am Last Entry 01:00 pm",
+      "ramadan": "from 09:00 am Last Entry 01:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/June2024/IsY2jFu0JS0nxdMHquDD.jpg",
+      "https://egymonuments.com/storage/events/May2024/Q34vkitFFOEBRgQCaxX8.jpg",
+      "https://egymonuments.com/storage/all-you-needs/June2024/9TLS71Khkdsr8gxbHjDB.jpg",
+      "https://egymonuments.com/storage/events/May2024/4m9U01UKa7V6EXgF64dZ.jpg"
+    ],
+    "url": "https://egymonuments.com/details/MummificationMuseumLuxor",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Ramesseum",
+    "title": "Ramesseum",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7276,
+    "longitude": 32.6105,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/u1jFBcJNkcT5J1xBhse0.jpg",
+      "https://egymonuments.com/storage/events/May2024/eBBYqYTVdv4dWr7slXaS.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/XxBlGLKyeLzqlNEWGjYJ.jpg",
+      "https://egymonuments.com/storage/events/May2024/ajsyMh8o7wVrpRvu3mtk.png"
+    ],
+    "url": "https://egymonuments.com/details/Ramesseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SaqqaraMonuments",
+    "title": "Saqqara Monuments",
+    "category": "archaeological",
+    "governorate": "Giza",
+    "city": "Giza",
+    "latitude": 29.871,
+    "longitude": 31.2165,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 600,
+        "student": 300
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 08:00 am Last Entry 03:30 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/Bg7MJIss8P7n6pH82UEC.jpg",
+      "https://egymonuments.com/storage/events/May2024/xPdcUqra8ieLgfh3HRDM.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/gb08EvR1KDyGJy74ZrSq.jpg",
+      "https://egymonuments.com/storage/events/May2024/E2SsebDw6aZxIipfjFGY.png"
+    ],
+    "url": "https://egymonuments.com/details/SaqqaraMonuments",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "TheTempleOfHorusAtEdfu",
+    "title": "The Temple Of Horus",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Edfu",
+    "latitude": 24.9786,
+    "longitude": 32.8734,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 550,
+        "student": 275
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/dakJHFrNvUOkmNmSUUua.jpg",
+      "https://egymonuments.com/storage/events/May2024/ova44qih0Qs4dk0nzCzX.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/SWsJaGt3ZWGIbLlM15jF.jpg",
+      "https://egymonuments.com/storage/events/May2024/0BvPthCgQz3fSXuHP0pa.png"
+    ],
+    "url": "https://egymonuments.com/details/TheTempleOfHorusAtEdfu",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "TombsOfTheNobles",
+    "title": "Tombs Of The Nobles",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": null,
+        "student": null
+      },
+      "foreigner": {
+        "adult": null,
+        "student": null
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/958khaDI5AXnIb4Pwb7D.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/AGY9h9fbKhKzFUspyHbT.jpg"
+    ],
+    "url": "https://egymonuments.com/details/TombsOfTheNobles",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "UnfinishedObelisk",
+    "title": "Unfinished Obelisk",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0779,
+    "longitude": 32.8953,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/NWEfa3H5zLPU8zU9U0jZ.jpg",
+      "https://egymonuments.com/storage/events/May2024/QQzPv5GS5HTXGCMzQfj5.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/BT1FRwYmITtm4YMkZ6Cb.jpg",
+      "https://egymonuments.com/storage/events/May2024/lQewmil3pZA1Xno0Ze1t.png"
+    ],
+    "url": "https://egymonuments.com/details/UnfinishedObelisk",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ValleyOfTheQueens",
+    "title": "Valley Of The Queens",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7277,
+    "longitude": 32.5926,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/June2024/OkaE5m5MyLzhtIu2ExlC.jpg",
+      "https://egymonuments.com/storage/all-you-needs/June2024/yhbSYRFgYLNYad0rIl09.jpg",
+      "https://egymonuments.com/storage/events/May2024/pTcmihgaZ6eocgBwyQzU.png"
+    ],
+    "url": "https://egymonuments.com/details/ValleyOfTheQueens",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "IslamicMuseum",
+    "title": "Islamic art museum",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 340,
+        "student": 170
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:30 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/Vch9MIWA7PKbXcdyRXwf.jpg",
+      "https://egymonuments.com/storage/events/May2024/J1559HMPKBqsQerPMhor.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/6xLA5bLdywI4WvGPUjlo.jpg",
+      "https://egymonuments.com/storage/events/May2024/5VZ8d1eihIuuADzeLZ8s.png"
+    ],
+    "url": "https://egymonuments.com/details/IslamicMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "BaronEmpainPalace",
+    "title": "Baron Empain Palace",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 60,
+        "student": 30
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 05:00 pm",
+      "winter": "from 09:00 am Last Entry 05:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:30 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/May2024/u13dCUpi0XddTWVgzLvE.jpg",
+      "https://egymonuments.com/storage/events/May2024/bSXQc54GSF14uovlrItR.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/VQ6gJAsh3iBBcKED4Pf5.jpg",
+      "https://egymonuments.com/storage/events/May2024/f0W0nFxGlouLIPULa4rJ.jpg"
+    ],
+    "url": "https://egymonuments.com/details/BaronEmpainPalace",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "NubiaMuseum",
+    "title": "Nubia Museum",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0833,
+    "longitude": 32.885,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 400,
+        "student": 200
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/December2024/BrKPKWCXeU5j5QMcG6VM.jpg",
+      "https://egymonuments.com/storage/events/May2024/wsG0dsEdHUAotdAhqqxY.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/JBFSnmFCeTUcRiJoExgB.jpg",
+      "https://egymonuments.com/storage/events/May2024/0Dglpm2AoonM4EaudfbK.png"
+    ],
+    "url": "https://egymonuments.com/details/NubiaMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SerapeumofAlexandria",
+    "title": "Serapeum of Alexandria",
+    "category": "archaeological",
+    "governorate": "Alexandria",
+    "city": "Alexandria",
+    "latitude": 31.197,
+    "longitude": 29.902,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/fx1iGafXNivbvrHcnLVP.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/f8D3XGC0gZWqFu6OATBd.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/Ghd9knooNkri2MUo2Fap.jpg",
+      "https://egymonuments.com/storage/events/May2024/PT8875oK2aOHe1cxjKBh.jpg"
+    ],
+    "url": "https://egymonuments.com/details/SerapeumofAlexandria",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "KomelShoqafaCatacombs",
+    "title": "Catacombs",
+    "category": "archaeological",
+    "governorate": "Alexandria",
+    "city": "Alexandria",
+    "latitude": 31.1754,
+    "longitude": 29.8862,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/B1sP2bFGdKj8ul7jBAqD.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/6NDUXwx1QUeT99EoJITn.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/uFPHI7y3hFUR3LYtaTiB.jpg",
+      "https://egymonuments.com/storage/events/May2024/994RCMKZZHSHC2DvEBek.jpg"
+    ],
+    "url": "https://egymonuments.com/details/KomelShoqafaCatacombs",
+    "description": "kids -Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AlexandriaNationalMuseum",
+    "title": "Alexandria National Museum",
+    "category": "archaeological",
+    "governorate": "Alexandria",
+    "city": "Alexandria",
+    "latitude": 31.2001,
+    "longitude": 29.9187,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/xONaMuRL9bL6dvQb0f3z.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/vOokKY6aUWDpJ5oredkB.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/MB6Bi1zuHLdtTfSGSBy4.jpg",
+      "https://egymonuments.com/storage/events/May2024/0rks2WFadeX3omwAkHRl.jpg"
+    ],
+    "url": "https://egymonuments.com/details/AlexandriaNationalMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "CitadelofQaitbay",
+    "title": "Qaitbay Citadel",
+    "category": "archaeological",
+    "governorate": "Alexandria",
+    "city": "Alexandria",
+    "latitude": 31.2137,
+    "longitude": 29.8855,
+    "prices": {
+      "egyptian": {
+        "adult": 60,
+        "student": 30
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 07:00 pm",
+      "winter": "from 09:00 am Last Entry 05:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/5jK5ipuPVj9xqgfF3Ekf.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/iMgRXyyfY3Eh91fHM4MU.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/ZffKgtWIUgTAVzy3FN4d.jpg",
+      "https://egymonuments.com/storage/events/May2024/ffUGszgvQEVcprxIhgxP.jpg"
+    ],
+    "url": "https://egymonuments.com/details/CitadelofQaitbay",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nPhotography with mobile phone is free of charge.\nFree entry for Egyptians above 60 years.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "RomanAmphitheatre",
+    "title": "Ancient Roman Theatre",
+    "category": "archaeological",
+    "governorate": "Alexandria",
+    "city": "Alexandria",
+    "latitude": 31.1987,
+    "longitude": 29.904,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/ENwBoYB1bjpDMlTQ5bRo.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/KqkHwl9OOVwpbDHva6TO.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/uNWga0y4Hlpnl6uFHXU9.jpg",
+      "https://egymonuments.com/storage/events/May2024/wedR6XwT5Cq1EpqxluHN.jpg"
+    ],
+    "url": "https://egymonuments.com/details/RomanAmphitheatre",
+    "description": ""
+  },
+  {
+    "id": "RoyalJewelleryMuseum",
+    "title": "Royal Jewellery Museum",
+    "category": "archaeological",
+    "governorate": "Alexandria",
+    "city": "Alexandria",
+    "latitude": 31.2001,
+    "longitude": 29.9187,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/AqXkEzbSq5Nhre7fPS4C.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/G8eaPnl3updW3MFtHfbj.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/h19A9lUaPh2BKQQ40ITT.jpg",
+      "https://egymonuments.com/storage/events/May2024/MZgONhRKM2op2Y1LKHvt.jpg"
+    ],
+    "url": "https://egymonuments.com/details/RoyalJewelleryMuseum",
+    "description": "Free entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nFree entry for children below 6 years.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "CarterHouse",
+    "title": "Carter House",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/OIpP8ueXt78sLT6heNey.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/AytbEcrQLWkTWhvIjbL3.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/4x6zMwCC8gMPPhYI1M5I.jpg",
+      "https://egymonuments.com/storage/events/May2024/WV7wt75U0u2cKFXvlNWj.jpg"
+    ],
+    "url": "https://egymonuments.com/details/CarterHouse",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Merenptah",
+    "title": "Mernpetah",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 04:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/ugjO3swGh6ucmPF3mbPo.jpg",
+      "https://egymonuments.com/storage/all-you-needs/September2024/rsT69HA6z0sVUnRCn5fW.jpg",
+      "https://egymonuments.com/storage/all-you-needs/September2024/J5sJOXsqZLbjQFLPenRU.jpg",
+      "https://egymonuments.com/storage/events/September2024/c6KaQCYYnw1wwT1LFywG.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Merenptah",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "DeirEl-shelwit",
+    "title": "Deir El-shelwit",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/TDyHueVhxBfGMEr1nXXH.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/4HJK8NxWKAF5O2fba0m7.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/xnDl9o46nktTWZc0yYZc.jpg",
+      "https://egymonuments.com/storage/events/May2024/9qGoi4nAhG6P3yr7yiOO.jpg"
+    ],
+    "url": "https://egymonuments.com/details/DeirEl-shelwit",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Dahshur",
+    "title": "Dahshur",
+    "category": "archaeological",
+    "governorate": "Giza",
+    "city": "Giza",
+    "latitude": 29.8078,
+    "longitude": 31.2034,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/RM0iPcSbhIpg3uYaBnYz.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/ggRb1bCnYJ720fnsUHTw.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/Iai0Za0Cg5LCzczfU3D4.jpg",
+      "https://egymonuments.com/storage/events/May2024/r8mCZrBasRzCLPF952xk.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Dahshur",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Memphis",
+    "title": "Memphis",
+    "category": "archaeological",
+    "governorate": "Giza",
+    "city": "Giza",
+    "latitude": 29.8455,
+    "longitude": 31.256,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/cxlRiFuYniC00AxocB8m.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/rIaDW3Q6eyp2zOFwmPcQ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/idEYpdYgXvI7GJuqvBSS.jpg",
+      "https://egymonuments.com/storage/events/May2024/htcO9YMaXe7FZRAeuMJM.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Memphis",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "PrinceMohamedAliPalace",
+    "title": "Prince Mohamed Aly Palace",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 60,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/EEeJ08ipUcrnTkIJf7IL.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/EFaEQ0LjrbKRb832lDMk.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/TdFGsOsSpGzbmgYNs25h.jpg",
+      "https://egymonuments.com/storage/events/May2024/eeubm193zf1anxMqGj2j.jpg"
+    ],
+    "url": "https://egymonuments.com/details/PrinceMohamedAliPalace",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "RoyalChariotsMuseum",
+    "title": "Royal Chariots Museum",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 30,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 300,
+        "student": 150
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/DB7hHm4898H7ayJddtAs.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/IEbuaEhd5FrUS6W3mcqr.jpg",
+      "https://egymonuments.com/storage/all-you-needs/May2024/jr6PVqEt03qlbZ9RAzYa.jpg",
+      "https://egymonuments.com/storage/events/May2024/9WaNjGsQIzkMTmz4Ct7q.jpg"
+    ],
+    "url": "https://egymonuments.com/details/RoyalChariotsMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "GraecoRomanMuseum",
+    "title": "Graeco-Roman  Museum",
+    "category": "archaeological",
+    "governorate": "Alexandria",
+    "city": "Alexandria",
+    "latitude": 31.2009,
+    "longitude": 29.9063,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 400,
+        "student": 200
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 03:00 pm",
+      "winter": "from 09:00 am Last Entry 03:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/yimTubjJ7U4NaiBofbvh.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/lDmWHRwPRqKpMOXdf8Mg.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/8D5MnPLtUHypkzWUc2ug.jpg",
+      "https://egymonuments.com/storage/events/September2024/RheWgCSKZFd7fn6gM7BL.jpg"
+    ],
+    "url": "https://egymonuments.com/details/GraecoRomanMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "TempleOfAmada",
+    "title": "Temple Of Amada",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0889,
+    "longitude": 32.8998,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 150,
+        "student": 75
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/WEY0AFZcinABv0JKCaXw.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/kquHuyQ5BxXtKesBjBrg.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/wGXnLe4Q9vC1Jts5JfWu.jpg",
+      "https://egymonuments.com/storage/events/May2024/rki3WdoQaN8FfwjL1CBC.jpg"
+    ],
+    "url": "https://egymonuments.com/details/TempleOfAmada",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "TempleOfWadiEl-Sebua",
+    "title": "Temple Of Wadi El-Sebua",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0889,
+    "longitude": 32.8998,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 150,
+        "student": 75
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/VhjVl4XPcSHSOIz4s7kQ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/U8PhiSmmBEaMlagpXtTr.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/SuMhT7TjDh3G78wwCoGT.jpg",
+      "https://egymonuments.com/storage/events/May2024/v7gvq3BTMyrsxg3WSYqS.jpg"
+    ],
+    "url": "https://egymonuments.com/details/TempleOfWadiEl-Sebua",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "TempleofKalabsha",
+    "title": "Temple of Kalabsha",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0889,
+    "longitude": 32.8998,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/yy6vbBkkKqTDlZ3Me7DU.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/hvtUWAoy8o12Cl5aCwgX.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/y5Obj5a1psuEaPYl32Sa.jpg",
+      "https://egymonuments.com/storage/events/May2024/diqsTLcA1mfH50txBYl8.jpg"
+    ],
+    "url": "https://egymonuments.com/details/TempleofKalabsha",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nFREE ENTRY POLICY\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Elmoezstreet",
+    "title": "Elmoez street",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/4f3V9LTJc8Q9kl78SyXG.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/VEYFVNsI51cEBYPmsULX.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/61G7b819JFJ1T9LNLQ5L.jpg",
+      "https://egymonuments.com/storage/events/September2024/p62sn2fJqpIQwXyMqEkB.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Elmoezstreet",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "BabZuweila",
+    "title": "Bab Zuwaila",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/XVtXVGYNfokKHHdKqlFk.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/ySfTsq3HluRHPS2aeqPG.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/NKdOo2hwuMpilAk0H003.jpg",
+      "https://egymonuments.com/storage/events/May2024/HeZDzn7IdH7pQyWpfY7z.jpg"
+    ],
+    "url": "https://egymonuments.com/details/BabZuweila",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Houseofsuhaym",
+    "title": "House of suhaym",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/qnITIt7sRhVviVUsDibc.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/Yqa23R54o66YM0FV0k5Y.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/x0qG6wLwrvl64LzZU5Na.jpg",
+      "https://egymonuments.com/storage/events/May2024/aAqvJSFWESX6791EskbQ.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Houseofsuhaym",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Wasilahouse",
+    "title": "Wasila Historical House",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/zxakJfqCyD7rnmghAeIj.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/2R2sGEM55ly6PyzYu1z2.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/6GkrmRRIyUAWGhxFcXP2.jpg",
+      "https://egymonuments.com/storage/events/May2024/34GOmOVsg33PtVfSR7cq.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Wasilahouse",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Elharawy",
+    "title": "House of al-Harawy",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/SwEx68J4pbMfn0Q8o1JQ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/NRYLH2StTVonOGEc4pmB.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/6wP7aReVwH9b4S5OpyOj.jpg",
+      "https://egymonuments.com/storage/events/May2024/GbPJTKIN39X8VsJJEEIv.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Elharawy",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SabielOfNafesa",
+    "title": "Sabiel Nafesa Al-Bayda",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 60,
+        "student": 30
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/nxPo1JPcuNjvxZZ8kGtJ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/TMXmVNlZWyWMkYKbuKvf.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/9Pi39CFMGUYSzoI8yv1J.jpg",
+      "https://egymonuments.com/storage/events/May2024/a7b2iefa5AUbQKy4Szk6.jpg"
+    ],
+    "url": "https://egymonuments.com/details/SabielOfNafesa",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Gamaleldin",
+    "title": "Gamal El-Din El-Zahabi house",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 30,
+        "student": 15
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/LGzSXaPGPJsNqXQaJKBE.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/UZbo7WG2u6re2M57Kn3F.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/1dxILSu3oMZUWAbqYRAc.jpg",
+      "https://egymonuments.com/storage/events/May2024/QDOWM2kYWvnzBXqo9YFL.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Gamaleldin",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AlGhuriDome",
+    "title": "Al Ghuri Dome",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 150,
+        "student": 75
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/8YLUm7LdSdl4sSVYNyJC.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/cNfpaP0IkGsEO3KBceLf.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/EYDDViUNq9Ks4H4jqAVg.jpg",
+      "https://egymonuments.com/storage/events/May2024/Q4GNyep3PEvfqL6IJzyB.jpg"
+    ],
+    "url": "https://egymonuments.com/details/AlGhuriDome",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "WikalaOfAl-Guri",
+    "title": "Wikala Of Al-Guri",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/QAK561c86IqSYqocHc81.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/RbWLAdvXy58mIo4eYuVA.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/8yUxlRaHQGRP7UfkMH7A.jpg",
+      "https://egymonuments.com/storage/events/September2024/fr4yiqbGisb1wm73Hbpn.jpg"
+    ],
+    "url": "https://egymonuments.com/details/WikalaOfAl-Guri",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nAll prices are in Egyptian Pounds.\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "GayerAndersonMuseum",
+    "title": "Gayer Anderson Museum",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/3KxuKW7AYc5cKj9IB28A.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/izir2x7vKaGf2KmDDkWX.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/O37WgAynXu699pv41E7F.jpg",
+      "https://egymonuments.com/storage/events/May2024/LEFxptsl0NmRygkfevhb.jpg"
+    ],
+    "url": "https://egymonuments.com/details/GayerAndersonMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ElkabTombs",
+    "title": "Elkab Tombs",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0889,
+    "longitude": 32.8998,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/8lVsULy0d7UKFgMtHRoc.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/Iuo2AevevfmhIIgTRphd.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/GBF1xVqGtHIn70fgLFs8.png",
+      "https://egymonuments.com/storage/events/September2024/mVM66qbRq25eW28TtkHP.png"
+    ],
+    "url": "https://egymonuments.com/details/ElkabTombs",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SamaanMonastery",
+    "title": "Samaan Monastery",
+    "category": "christian",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0889,
+    "longitude": 32.8998,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/Q93dTgVMuHHyfgIGL1f9.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/jh2PixnBQs7Fpl0LqU8p.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/pAaDz9ji2qjcm5t2lp1i.jpg",
+      "https://egymonuments.com/storage/events/September2024/5IZuFYM6TmAaTgVqzx7l.jpg"
+    ],
+    "url": "https://egymonuments.com/details/SamaanMonastery",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AirDome",
+    "title": "Air Dome",
+    "category": "islamic",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0889,
+    "longitude": 32.8998,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/Uo7dsEqYWYKkk0CLi9uI.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/eYhzy1XS0pvmFAe2vmef.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/ytBFzyf8EhfFbgHN7bnw.png",
+      "https://egymonuments.com/storage/events/September2024/5hAIvJ733cD6i0qKCjK3.png"
+    ],
+    "url": "https://egymonuments.com/details/AirDome",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ElephantineIsland",
+    "title": "Elephantine Island",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0844,
+    "longitude": 32.8881,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 08:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/No6HOLS7McEDIdNMdQfh.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/jTqVaW4McqgUOxVY0TEo.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/7kJMa8GnupY0Q6VPMAKU.jpg",
+      "https://egymonuments.com/storage/events/September2024/smW8VgtOTBeKFnzV053F.png"
+    ],
+    "url": "https://egymonuments.com/details/ElephantineIsland",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SehelIsland",
+    "title": "Sehel Island",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0608,
+    "longitude": 32.8705,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/LTuYqLcIwOAS85yRoIrA.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/xVfnpZSiM3mwEJrNwXmU.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/Qu13oBODgRs7igOHhh1H.png",
+      "https://egymonuments.com/storage/events/September2024/f7Mb1ian1RAM3gmfQdaT.png"
+    ],
+    "url": "https://egymonuments.com/details/SehelIsland",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ThePyramidsofMeidum",
+    "title": "The Pyramids of Meidum",
+    "category": "archaeological",
+    "governorate": "Beni Suef",
+    "city": "Beni Suef",
+    "latitude": 29.3887,
+    "longitude": 31.1573,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 150,
+        "student": 75
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/VNEe6kZpfdBF3jhnVNl8.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/AsadZs3HE2J5XAn9UXr3.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/wWi4XD8bUgUM59Oydnu0.png",
+      "https://egymonuments.com/storage/events/September2024/WjJf4JxI7dTcYf9LRhx9.png"
+    ],
+    "url": "https://egymonuments.com/details/ThePyramidsofMeidum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "FraserTombs",
+    "title": "Fraser Tombs",
+    "category": "archaeological",
+    "governorate": "Minya",
+    "city": "Minya",
+    "latitude": 28.1099,
+    "longitude": 30.7503,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/OuWF5MNDabv3NLnJKbsG.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/RN1NZ92ivihKRUlp9A7F.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/09Zk8Mq6bbEDh1wPbJqm.png",
+      "https://egymonuments.com/storage/events/September2024/qwfJH9qMA2eS6R2akj0H.png"
+    ],
+    "url": "https://egymonuments.com/details/FraserTombs",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must show their ID.\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ZawyetSultan",
+    "title": "Zawyet Sultan",
+    "category": "archaeological",
+    "governorate": "Minya",
+    "city": "Minya",
+    "latitude": 28.1,
+    "longitude": 30.75,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/j1BGorxFYH0rKi6fnlKl.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/W1gKDEZgU08SDh1SUTdO.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/dWuQ6wyDda1yt2Pac2kI.png",
+      "https://egymonuments.com/storage/events/September2024/z8SzIwQE3GIhUzRYPLiW.png"
+    ],
+    "url": "https://egymonuments.com/details/ZawyetSultan",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Amarna",
+    "title": "Amarna",
+    "category": "archaeological",
+    "governorate": "Minya",
+    "city": "Minya",
+    "latitude": 27.63,
+    "longitude": 30.95,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 pm Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/yM0ETUVqih8CCpO3LTUR.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/4vduuTzIeRGCQ421FVFZ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/SXlxPcBuqc4yxqPinD3S.jpg",
+      "https://egymonuments.com/storage/events/May2024/yao10G3Y2pTqePMJSztG.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Amarna",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "MalawyMuseum",
+    "title": "Malawy Museum",
+    "category": "archaeological",
+    "governorate": "Minya",
+    "city": "Minya",
+    "latitude": 28.1099,
+    "longitude": 30.7503,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 02:00 pm",
+      "winter": "from 09:00 am Last Entry 02:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/yKZlSPjT80hUnmuLTmmQ.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/0Rlx6CLJT3yn1eNaLOau.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/toLVTNH2ex4IpyxCEPHT.png",
+      "https://egymonuments.com/storage/events/September2024/OBA0EpKlkllcybYLIH0p.png"
+    ],
+    "url": "https://egymonuments.com/details/MalawyMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nVisit Regulations\nPhotography with mobile phone is free of charge.\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "MeirMonumentalTombs",
+    "title": "Meir Monumental Tombs",
+    "category": "archaeological",
+    "governorate": "Asyut",
+    "city": "Asyut",
+    "latitude": 27.44,
+    "longitude": 30.7,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/HqOGulTtUb5luXiRrvOy.png",
+      "https://egymonuments.com/storage/all-you-needs/September2024/ESWk4UA2A1JtUtnjOndk.png",
+      "https://egymonuments.com/storage/all-you-needs/September2024/ZtHshmBCynE4hxSWBExL.png",
+      "https://egymonuments.com/storage/events/September2024/cHN7vtnS6ULw4cuHmpcS.png"
+    ],
+    "url": "https://egymonuments.com/details/MeirMonumentalTombs",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ElHawawish",
+    "title": "El Hawawish",
+    "category": "archaeological",
+    "governorate": "Sohag",
+    "city": "Sohag",
+    "latitude": 26.5569,
+    "longitude": 31.6948,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 150,
+        "student": 75
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/V479rr6CNRawlN0kBxN0.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/q1Tdmgh8uj7nVcfq3gsP.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/bvqxkdmQVbWefwuPRfxR.png",
+      "https://egymonuments.com/storage/events/September2024/Qm1gX61FDlVLXHBvr5wh.png"
+    ],
+    "url": "https://egymonuments.com/details/ElHawawish",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "MeritAmunTemple",
+    "title": "Merit Amun Temple",
+    "category": "archaeological",
+    "governorate": "Sohag",
+    "city": "Sohag",
+    "latitude": 26.5569,
+    "longitude": 31.6948,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/1DJNZ5aqCTBhda7EuYGD.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/RHUv4gHIPQ6Jsyo8je8B.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/cB672pET1eCgxihhG4jb.png",
+      "https://egymonuments.com/storage/events/September2024/h8qgRwz3HGOLeBPQh2LF.png"
+    ],
+    "url": "https://egymonuments.com/details/MeritAmunTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SohagNationalMuseum",
+    "title": "Sohag National Museum",
+    "category": "archaeological",
+    "governorate": "Sohag",
+    "city": "Sohag",
+    "latitude": 26.5569,
+    "longitude": 31.6948,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 150,
+        "student": 75
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 02:30 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/nIPJRHpPAe7DJzydiJey.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/qPQIgeLQ8PLNniqgm3w5.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/WAnni5Pk1G57aeTZgcbI.png",
+      "https://egymonuments.com/storage/events/September2024/t0tElJtw9hVZQf8SUYyp.png"
+    ],
+    "url": "https://egymonuments.com/details/SohagNationalMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ElSheikhHamad",
+    "title": "Sheikh Hamad Area",
+    "category": "archaeological",
+    "governorate": "Sohag",
+    "city": "Sohag",
+    "latitude": 26.5569,
+    "longitude": 31.6948,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 150,
+        "student": 75
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/e81LHBfd1tRLKtTKmCYR.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/GKJTVOKKSvnmdDVMGWMj.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/g1Zo1dBkqcHtei9ovvEs.png",
+      "https://egymonuments.com/storage/events/September2024/b7purPUwVtOxzOI4kWKS.png"
+    ],
+    "url": "https://egymonuments.com/details/ElSheikhHamad",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AbydosTemple",
+    "title": "Abydos Temple",
+    "category": "archaeological",
+    "governorate": "Sohag",
+    "city": "Sohag",
+    "latitude": 26.185,
+    "longitude": 31.9189,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 260,
+        "student": 130
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/EFo9XqrerJpyMkYT7LeQ.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/0KyjiqWfgihWAGGX0H2x.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/t6AtZTHcdu5MFfrdDKOI.png",
+      "https://egymonuments.com/storage/events/September2024/8572LCsuzto1fCV3H0TG.png"
+    ],
+    "url": "https://egymonuments.com/details/AbydosTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ShunetElZebib",
+    "title": "Shunet El Zebib",
+    "category": "archaeological",
+    "governorate": "Sohag",
+    "city": "Sohag",
+    "latitude": 26.5569,
+    "longitude": 31.6948,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 04:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/u2FBW6g3MaCvFABrLNUV.png",
+      "https://egymonuments.com/storage/all-you-needs/September2024/h3uV3h6Nk7SysCkuzsaQ.png",
+      "https://egymonuments.com/storage/all-you-needs/September2024/HZJOXnFGHU3RAZuGcq1Q.png",
+      "https://egymonuments.com/storage/events/September2024/643MNEqffVsjp0LkgLp2.PNG"
+    ],
+    "url": "https://egymonuments.com/details/ShunetElZebib",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "PrinceYoussefPalace",
+    "title": "Prince Youssef Palace",
+    "category": "archaeological",
+    "governorate": "Qena",
+    "city": "Qena",
+    "latitude": 26.1644,
+    "longitude": 32.7266,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 08:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/2iKpzVORQEI5DwFU0A7b.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/emASrAfyR9FPoToVrjpK.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/VQUgV4yT4D8Qx0m7HZdb.png",
+      "https://egymonuments.com/storage/events/September2024/CVyT65k9cfCZT8KdU7zG.png"
+    ],
+    "url": "https://egymonuments.com/details/PrinceYoussefPalace",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "SuezcanalMuseum",
+    "title": "Suez canal Museum",
+    "category": "archaeological",
+    "governorate": "Ismailia",
+    "city": "Ismailia",
+    "latitude": 30.5965,
+    "longitude": 32.2715,
+    "prices": {
+      "egyptian": {
+        "adult": 40,
+        "student": 20
+      },
+      "foreigner": {
+        "adult": 400,
+        "student": 200
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/XrBqtdnhirYLhsy72Iyg.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/wq8yFMmQfLhWQV7LSD4c.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/yt5IFVxuUISYBg3UbRc3.jpg",
+      "https://egymonuments.com/storage/events/May2024/2PN4e1yXP9qr7yxDg0vu.jpg"
+    ],
+    "url": "https://egymonuments.com/details/SuezcanalMuseum",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "BeniHassanTomb",
+    "title": "Beni Hassan Tomb",
+    "category": "archaeological",
+    "governorate": "Minya",
+    "city": "Minya",
+    "latitude": 27.9333,
+    "longitude": 30.8766,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 08:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/viAKpsfCzIDQfDtkcJi1.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/XqqBKnRQS8TIeXxnZEoN.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/eooXNwD68DOKvCvmOS6L.jpg",
+      "https://egymonuments.com/storage/events/May2024/qUM95pCHh1nMKNPjHYTM.jpg"
+    ],
+    "url": "https://egymonuments.com/details/BeniHassanTomb",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Mosque-MadrassaSultanHassan",
+    "title": "Mosque- Madrassa Sultan Hassan",
+    "category": "islamic",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": null,
+        "student": null
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/2fE8VAWl0sjxkg5NoMaK.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/LcAvLFBsVIjca2zlPB3u.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/F774xcZXKQssvoeT0Tcj.jpg",
+      "https://egymonuments.com/storage/events/May2024/yGXiXQe4R2k8eVDgWbEG.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Mosque-MadrassaSultanHassan",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "ElAssasif",
+    "title": "El Assasif",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.7263,
+    "longitude": 32.6076,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/JDa0E89hEIqdhlluR0Ai.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/7Fxo3GBTFQQBXklTFdY1.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/vxcNuPGOKdqBObjsf8bh.jpg",
+      "https://egymonuments.com/storage/events/May2024/PXZdjT4075XKicoBtir0.jpg"
+    ],
+    "url": "https://egymonuments.com/details/ElAssasif",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Tombofpabasa",
+    "title": "Tomb of pabasa",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/D2UJgzXouD0gY64cAH1i.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/DtiQPVzD524tWB3DNy63.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/3Z1oYNeWkuGiOYU4ZUNl.jpg",
+      "https://egymonuments.com/storage/events/May2024/Xg7Psgv33RcyGD13et54.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Tombofpabasa",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "El-TodTemple",
+    "title": "El-Tod Temple",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 05:00 pm",
+      "winter": "from 07:00 am Last Entry 04:00 pm",
+      "ramadan": "from 07:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/jTzyESyZiJk9Pzh8Mdvw.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/MdUo8QG9p78hHEJumAEk.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/rJEicGhj5Znm12Ngev4R.jpg",
+      "https://egymonuments.com/storage/events/May2024/nuXdiKwbCFC1vqzucIVM.jpg"
+    ],
+    "url": "https://egymonuments.com/details/El-TodTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AlMualla",
+    "title": "Al-Mualla Tombs",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 08:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/K7JmNHG6uzOzrEuczJ2N.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/BD67LmWn5ou4m23NWpXd.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/vTaDeUaTa0P37M88tHcb.jpg",
+      "https://egymonuments.com/storage/events/May2024/q8ZRf45edi1fV7u3cMVT.jpg"
+    ],
+    "url": "https://egymonuments.com/details/AlMualla",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "MutTemple",
+    "title": "Mut Temple",
+    "category": "archaeological",
+    "governorate": "Luxor",
+    "city": "Luxor",
+    "latitude": 25.6872,
+    "longitude": 32.6396,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 06:00 am Last Entry 05:00 pm",
+      "winter": "from 06:00 am Last Entry 04:00 pm",
+      "ramadan": "from 06:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/May2024/tauJ09v5BByZaodkY9z0.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/nEYDHPmy8p1MZR9hXJj5.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/6vnjKcRUHLgLjrfJVog3.jpg",
+      "https://egymonuments.com/storage/events/May2024/tJCckkOru4qITymMnFWT.jpg"
+    ],
+    "url": "https://egymonuments.com/details/MutTemple",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Gebelal-Silsila",
+    "title": "Gebel al-Silsila",
+    "category": "archaeological",
+    "governorate": "Aswan",
+    "city": "Aswan",
+    "latitude": 24.0889,
+    "longitude": 32.8998,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 07:00 am Last Entry 03:00 pm",
+      "winter": "from 07:00 am Last Entry 03:00 pm",
+      "ramadan": "from 07:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/n5S0ASaWymfbS12adFk8.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/PqhXnnf8asGyWfqpBzD8.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/5M12XO0R7hjIkOqFGH2e.png",
+      "https://egymonuments.com/storage/events/September2024/LQ88nZ7zdjhk7ttThPpe.png"
+    ],
+    "url": "https://egymonuments.com/details/Gebelal-Silsila",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AlhammamyaTombs",
+    "title": "Alhammamya Tombs",
+    "category": "archaeological",
+    "governorate": "Asyut",
+    "city": "Asyut",
+    "latitude": 27.1809,
+    "longitude": 31.1837,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 100,
+        "student": 50
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/vVF9hhy5iCXzAAh9c2DD.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/5PjpoDECaiyjrcL4ZkyS.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/jpxLBpQuRDPw3gwKcq5M.png",
+      "https://egymonuments.com/storage/events/September2024/RhdySCLYMD7eU3sl0QQ2.png"
+    ],
+    "url": "https://egymonuments.com/details/AlhammamyaTombs",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nAll prices are in Egyptian Pounds.\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Tunael-Gebel",
+    "title": "Tuna el-Gebel",
+    "category": "archaeological",
+    "governorate": "Minya",
+    "city": "Minya",
+    "latitude": 27.7666,
+    "longitude": 30.7,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/eMjLkoZ4LQABLzU98Diq.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/ZoBI2eAbxvV0htKgyu76.png",
+      "https://egymonuments.com/storage/all-you-needs/December2024/OvM71i46jUIAiJX3DEfi.png",
+      "https://egymonuments.com/storage/events/September2024/GLbeoYAJDmqxtyP4aqsV.png"
+    ],
+    "url": "https://egymonuments.com/details/Tunael-Gebel",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Mary%27sTree",
+    "title": "Mary's Tree",
+    "category": "christian",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/LrYphckp8y9HuJnr4g3c.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/mAq6po3HalyPjhUc8Gsf.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/jGnQxgWn2HgUSztY41hw.jpg",
+      "https://egymonuments.com/storage/events/September2024/hw7YX8EV2quhvQmmg4sJ.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Mary%27sTree",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "AlMatariyyahObelisk",
+    "title": "Al Matariyyah Obelisk",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 200,
+        "student": 100
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:00 am Last Entry 04:00 pm",
+      "winter": "from 08:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/dCwam2m2zqz2WUB3ucPZ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/S6hHcmtltmbiS0UcK4Qu.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/Xf8y1syrgpvNXPRuu6gr.jpg",
+      "https://egymonuments.com/storage/events/September2024/iOEAYmKgCdEVxrQSaXTr.jpg"
+    ],
+    "url": "https://egymonuments.com/details/AlMatariyyahObelisk",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "RawdaIslandNilometer",
+    "title": "Rawda Island Nilometer",
+    "category": "archaeological",
+    "governorate": "Cairo",
+    "city": "Cairo",
+    "latitude": 30.0444,
+    "longitude": 31.2357,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 04:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/OpPYZeHvCbXnuENBbPdG.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/7mHZ07y0xQhYPb4JCWhY.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/jp2CXfAsAIXvhiez4VKq.jpg",
+      "https://egymonuments.com/storage/events/September2024/Q8p1qUT7yJ3T1IJkqTtC.jpg"
+    ],
+    "url": "https://egymonuments.com/details/RawdaIslandNilometer",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "RosettaCityMonuments",
+    "title": "Rosetta City Monuments",
+    "category": "archaeological",
+    "governorate": "Beheira",
+    "city": "Rosetta",
+    "latitude": 31.4021,
+    "longitude": 30.4177,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 08:30 am Last Entry 03:00 pm",
+      "winter": "from 08:30 am Last Entry 03:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/xmZjBftwXwoQnzPFmgIZ.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/lcCLW1sLMt6FaDHf1Zoq.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/baWBG9hr2Ys9g0YkIEu2.jpg",
+      "https://egymonuments.com/storage/events/September2024/s1ZRWoKNUBwKzxFCnGhE.jpg"
+    ],
+    "url": "https://egymonuments.com/details/RosettaCityMonuments",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "KafrElshaikh",
+    "title": "Kafr al-Sheikh Museum",
+    "category": "archaeological",
+    "governorate": "Kafr El Sheikh",
+    "city": "Kafr El Sheikh",
+    "latitude": 31.1113,
+    "longitude": 30.9395,
+    "prices": {
+      "egyptian": {
+        "adult": 20,
+        "student": 10
+      },
+      "foreigner": {
+        "adult": 220,
+        "student": 110
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 03:00 pm",
+      "winter": "from 09:00 am Last Entry 03:00 pm",
+      "ramadan": "from 09:00 am Last Entry 02:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/7oXPU4SK7vslMTjSoeLc.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/pVwt32fW6MaFZSbP8MJk.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/Q8hv4oMEb8V3y1i6DPs7.jpg",
+      "https://egymonuments.com/storage/events/September2024/qTrSQ0XtGIaITHlZl0hH.jpg"
+    ],
+    "url": "https://egymonuments.com/details/KafrElshaikh",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "Tanis%28Sanal-Hagar%29",
+    "title": "Tanis (San al-Hagar)",
+    "category": "archaeological",
+    "governorate": "Sharqia",
+    "city": "San el-Hagar",
+    "latitude": 30.9778,
+    "longitude": 31.8814,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 05:00 pm",
+      "winter": "from 09:00 am Last Entry 04:00 pm",
+      "ramadan": "from 09:00 am Last Entry 03:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/September2024/AHSEXFXF8qEYnmzH6BqF.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/bXXJM6dogpvKRXftXDWl.jpg",
+      "https://egymonuments.com/storage/all-you-needs/December2024/sJFi5f6T7QS56oJwYzaL.jpg",
+      "https://egymonuments.com/storage/events/September2024/8XNXFXXeeq5oB4UCX0ag.jpg"
+    ],
+    "url": "https://egymonuments.com/details/Tanis%28Sanal-Hagar%29",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian’s Spouse with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "TempleofAghurmiinSiwa",
+    "title": "Temple of Aghurmi in Siwa",
+    "category": "archaeological",
+    "governorate": "Matrouh",
+    "city": "Siwa",
+    "latitude": 29.1928,
+    "longitude": 25.5268,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 05:00 pm",
+      "winter": "from 09:00 am Last Entry 05:00 pm",
+      "ramadan": "from 09:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/events/January2025/RIgK370xrIxsW7yLrjiv.jpg",
+      "https://egymonuments.com/storage/all-you-needs/January2025/BysmDjJs0O7Netzned7l.png",
+      "https://egymonuments.com/storage/events/January2025/RxWoZ4RdvPbHbd1EuMxX.jpg"
+    ],
+    "url": "https://egymonuments.com/details/TempleofAghurmiinSiwa",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  },
+  {
+    "id": "TombsofGabalal-Mawta",
+    "title": "Tombs of Gabal al-Mawta",
+    "category": "archaeological",
+    "governorate": "Matrouh",
+    "city": "Siwa",
+    "latitude": 29.2055,
+    "longitude": 25.5219,
+    "prices": {
+      "egyptian": {
+        "adult": 10,
+        "student": 5
+      },
+      "foreigner": {
+        "adult": 120,
+        "student": 60
+      }
+    },
+    "opening_hours": {
+      "summer": "from 09:00 am Last Entry 05:00 pm",
+      "winter": "from 09:00 am Last Entry 05:00 pm",
+      "ramadan": "from 09:00 am Last Entry 04:00 pm"
+    },
+    "images": [
+      "https://egymonuments.com/storage/all-you-needs/January2025/gC442qzuS9hsq1oJi0GP.png",
+      "https://egymonuments.com/storage/all-you-needs/January2025/eMY3kNZtZgvEdW1F2LTm.png"
+    ],
+    "url": "https://egymonuments.com/details/TombsofGabalal-Mawta",
+    "description": "Free entry for children below 6 years.\nFree entry for Egyptians with special needs.\nFree entry for Egyptians above 60 years.\nPhotography with mobile phone is free of charge.\nVisit Regulations\nPlease adhere to opening and closing hours for every site.\nTo ensure a pleasant experience, please make sure that you arrive at least one hour prior to the site's closing time.\nKeep hold of your ticket at all times.\nStudents must present a valid ID and their age must not exceed 24\nEgyptian's wife with other nationalities should be treated as Egyptian.\nAll prices are in Egyptian Pounds.\nFollow Us On\nMinistry of Tourism and Antiquities\nExperience Egypt\nFor support"
+  }
+]

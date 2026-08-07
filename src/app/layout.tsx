@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import "../styles/index.css";
+import { AuthProvider } from "@/lib/auth";
+import { LocationProvider } from "@/providers/LocationProvider";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { LocationMocker } from '@/app/components/ui/LocationMocker';
 
 export const metadata: Metadata = {
-  title: "Define Visual Direction for Rihla",
+  title: "Rihla - AI Travel Companion",
   description:
     "Rihla is an AI-powered travel companion designed for international tourists in Egypt, offering personalized itineraries and local insights to enhance exploration and ensure a luxurious experience.",
 };
@@ -17,7 +21,18 @@ export default function RootLayout({
       <head>
         <style>{`html, body { height: 100%; margin: 0; } #root { height: 100%; }`}</style>
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AuthProvider>
+          <LocationProvider>
+            <QueryProvider>
+              {children}
+              {process.env.NODE_ENV === 'development' && <LocationMocker />}
+            </QueryProvider>
+          </LocationProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
+
+
