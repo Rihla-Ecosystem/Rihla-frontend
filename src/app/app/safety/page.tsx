@@ -4,25 +4,31 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useLocation, useLocationLabel } from '@/providers/LocationProvider';
-import { safetyService, type SafetyData } from '@/services/safetyService';
+import { safetyService, FALLBACK_GOV_PROFILES, type SafetyData } from '@/services/safetyService';
 import { envService } from '@/services/envService';
 import { TopBar } from '@/app/components/layout/TopBar';
 import { Geom, Glyph } from '@/app/components/atoms';
 import { C } from '@/lib/constants/theme';
 import { SourceHealth, type DataSourceStatus } from './components/SourceHealth';
 import { SafetyGuide } from './components/SafetyGuide';
-import { 
-AlertTriangle,
+import {
+  AlertTriangle,
   MapPin,
   Thermometer,
-  Sun, 
-  Wind, 
-  Globe, 
-  Phone, 
-  CheckCircle, 
-  Shield,
-  RefreshCw
+  Sun,
+  Wind,
+  Globe,
+  Phone,
+  CheckCircle,
+  ShieldAlert,
+  Compass,
+  Sparkles,
+  ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
+import { RiskGauge } from './components/RiskGauge';
+
+const SAFETY_POLL_MS = 60000;
 
 const SAFETY_CITIES: { name: string; gov: string; lat: number; lon: number }[] = [
   { name: 'Cairo', gov: 'Cairo', lat: 30.0444, lon: 31.2357 },
@@ -52,6 +58,8 @@ export default function PageSafety() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const inFlightRef = React.useRef(false);
 
   // Authentication check
   useEffect(() => {
@@ -89,9 +97,12 @@ export default function PageSafety() {
     ? { lat: activeCity.lat, lon: activeCity.lon }
     : { lat: lat ?? 29.9792, lon: lon ?? 31.1342 };
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const loadData = useCallback(async (opts?: { silent?: boolean }) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    const silent = opts?.silent === true;
+    if (!silent) setIsLoading(true);
+    if (!silent) setError(null);
     try {
       const targetLat = activeCoords.lat;
       const targetLon = activeCoords.lon;
@@ -107,11 +118,15 @@ export default function PageSafety() {
       });
       setEnvData(envSnap?.data ?? null);
       setEnvSource(envSnap?.source ?? 'offline');
+      setLastUpdated(new Date());
     } catch (err: any) {
-      console.error('Failed to load safety data:', err);
-      setError(err?.message || 'Failed to fetch safety intelligence from Core Server.');
+      if (!silent) {
+        console.error('Failed to load safety data:', err);
+        setError(err?.message || 'Failed to fetch safety intelligence from Core Server.');
+      }
     } finally {
-      setIsLoading(false);
+      inFlightRef.current = false;
+      if (!silent) setIsLoading(false);
     }
   }, [activeCoords.lat, activeCoords.lon, activeGov]);
 
@@ -121,21 +136,31 @@ export default function PageSafety() {
     }
   }, [user, loadData]);
 
+  // Live-poll safety + env data while the tab is visible; skip when hidden.
+  // The visibility guard avoids wasted network calls in background tabs.
+  useEffect(() => {
+    if (!user) return;
+    let hidden = document.hidden;
+    const tick = () => {
+      if (!hidden && !document.hidden) {
+        loadData({ silent: true });
+      }
+    };
+    const onVisibility = () => {
+      hidden = document.hidden;
+      if (!hidden) tick();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    const id = window.setInterval(tick, SAFETY_POLL_MS);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [user, loadData]);
+
   const goEmergency = () => {
     router.push('/app/safety/emergency');
   };
-
-  // Format emergency contacts list from API response
-  const emergencyContactsList = React.useMemo(() => {
-    const contacts = safetyData?.emergencyContacts;
-    return [
-      { label: 'Tourist Police', number: contacts?.touristPolice || '126', icon: <Shield size={18} strokeWidth={2} />, color: C.nile, desc: '24/7 · English spoken' },
-      { label: 'Ambulance', number: contacts?.ambulance || '123', icon: <Phone size={18} strokeWidth={2} />, color: C.signalRed, desc: 'Emergency medical' },
-      { label: 'Fire Brigade', number: '180', icon: <AlertTriangle size={18} strokeWidth={2} />, color: C.terracotta, desc: 'Fire & rescue' },
-      { label: 'General Emergency', number: contacts?.generalEmergency || '112', icon: <Shield size={18} strokeWidth={2} />, color: C.copper, desc: 'National emergency' },
-      { label: 'Rihla Emergency', number: 'In-app', icon: <Glyph size={18} />, color: C.faience, desc: 'Direct AI + human support' },
-    ];
-  }, [safetyData]);
 
   // Construct dynamic safety tips/alerts items (severity color-coded like EventsList)
   const dynamicAlerts = React.useMemo(() => {
@@ -193,6 +218,47 @@ export default function PageSafety() {
     ];
   }, [envData]);
 
+  // Scam radar — surfaced as an actionable awareness item for the current area.
+  const scamRadar = React.useMemo(() => {
+    const level = (safetyData?.scamRiskLevel || 'Low').toLowerCase();
+    const count = safetyData?.scamAlertsCount ?? 0;
+    const cfg =
+      level === 'high'
+        ? { color: C.signalRed, bg: `${C.signalRed}10`, advice: 'Elevated scam activity near popular sites. Verify any official-looking vendors and never pay before receiving a service.' }
+        : level === 'moderate'
+        ? { color: C.alertAmber, bg: `${C.alertAmber}12`, advice: 'Some scam reports nearby. Agree fares before riding, decline unsolicited guides, and keep valuables secured.' }
+        : { color: C.safeGreen, bg: `${C.safeGreen}0F`, advice: 'No significant scam activity reported in your area. Stay aware in crowded tourist spots.' };
+    return { level, count, label: level.charAt(0).toUpperCase() + level.slice(1), ...cfg };
+  }, [safetyData]);
+
+  // Nearby safety overview — cities closest to the traveler's current context, not a full comparison.
+  const nearbyOverview = React.useMemo(() => {
+    const refLat = activeCoords.lat;
+    const refLon = activeCoords.lon;
+    const distKm = (lat: number, lon: number) => {
+      const R = 6371;
+      const dLat = ((lat - refLat) * Math.PI) / 180;
+      const dLon = ((lon - refLon) * Math.PI) / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos((refLat * Math.PI) / 180) * Math.cos((lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    };
+    const profileFor = (gov: string) =>
+      FALLBACK_GOV_PROFILES[gov] ?? FALLBACK_GOV_PROFILES[gov === 'South Sinai' ? 'Sinai' : ''] ?? FALLBACK_GOV_PROFILES.Cairo;
+    return SAFETY_CITIES
+      .map((c) => {
+        const p = profileFor(c.gov);
+        return {
+          name: c.name,
+          gov: c.gov,
+          distance: distKm(c.lat, c.lon),
+          score: p.score,
+          status: p.status,
+        };
+      })
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 5);
+  }, [activeCoords.lat, activeCoords.lon]);
+
   // Data source health transparency (live vs offline fallback)
   const dataSources: DataSourceStatus[] = React.useMemo(() => {
     const live = safetyData?.source === 'live';
@@ -226,15 +292,15 @@ export default function PageSafety() {
         <div style={{ position: 'absolute', right: -40, top: -40 }}><Geom size={240} color={C.alertAmber} op={0.025} /></div>
         <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 32 }}>
           <div>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, color: `${C.limestone}45`, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 8 }}>Real-time Safety Intelligence</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, color: `${C.limestone}45`, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 8 }}>Stay Aware · Stay Informed</div>
             <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(22px,3vw,34px)', fontWeight: 400, color: C.limestone, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 8 }}>
-              Safety &amp; <span style={{ fontStyle: 'italic', color: C.alertAmber }}>Alerts</span>
+              Your Safety, <span style={{ fontStyle: 'italic', color: C.alertAmber }}>Made Simple</span>
             </h1>
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', color: `${C.limestone}50`, lineHeight: 1.6, maxWidth: 480 }}>
               {safetyData?.source === 'offline'
-                ? 'Core Server unreachable — showing built-in safety estimate from cached profile.'
-                : 'Monitoring Core Server API · Egyptian Tourist Safety Index · '}
-              {safetyData?.updatedAt && !isLoading ? `Updated ${new Date(safetyData.updatedAt).toLocaleTimeString()}` : 'Just now'}
+                ? 'Live sources unreachable — showing a trusted built-in estimate for your area.'
+                : 'Trusted, up-to-date guidance for your journey — what to know and how to act. '}
+              {lastUpdated && !isLoading ? `Updated ${lastUpdated.toLocaleTimeString()}` : safetyData?.updatedAt && !isLoading ? `Updated ${new Date(safetyData.updatedAt).toLocaleTimeString()}` : 'Just now'}
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
@@ -266,12 +332,12 @@ export default function PageSafety() {
             <div style={{ display: 'flex', gap: 12 }}>
             {[
               { 
-                label: 'Overall', 
+                label: 'Your status', 
                 val: isLoading ? '...' : (safetyData?.safetyLevel?.toUpperCase() || 'SAFE'), 
                 col: safetyData?.status === 'warning' ? C.signalRed : safetyData?.status === 'caution' ? C.alertAmber : C.safeGreen 
               },
               { label: safetyData?.governorate || activeGov, val: `${safetyData?.safetyScore || 90}%`, col: C.safeGreen },
-              { label: 'Active alerts', val: String(safetyData?.activeAlertsCount ?? 0), col: C.signalRed }
+              { label: 'Things to know', val: String(safetyData?.activeAlertsCount ?? 0), col: C.signalRed }
             ].map(({ label, val, col }) => (
               <div key={label} style={{ background: `${C.limestone}08`, border: `1px solid ${col}30`, borderRadius: 12, padding: '14px 18px', textAlign: 'center', minWidth: 100 }}>
                 <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', color: `${C.limestone}45`, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
@@ -298,7 +364,7 @@ export default function PageSafety() {
                   <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#7F1D1D' }}>{error}</div>
                 </div>
               </div>
-              <button onClick={loadData} style={{ background: '#DC2626', color: '#FFF', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={() => loadData()} style={{ background: '#DC2626', color: '#FFF', border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                 Retry
               </button>
             </div>
@@ -307,10 +373,14 @@ export default function PageSafety() {
           {/* Active alerts */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-              <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fontWeight: 500, color: C.nile }}>Active Alerts &amp; Advisories</h2>
+              <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fontWeight: 500, color: C.nile }}>What to Know Near You</h2>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${safetyData?.source === 'offline' ? C.alertAmber : C.signalRed}10`, border: `1px solid ${safetyData?.source === 'offline' ? C.alertAmber : C.signalRed}25`, borderRadius: 99, padding: '3px 10px' }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: safetyData?.source === 'offline' ? C.alertAmber : C.signalRed, animation: 'pulse 2s infinite' }} />
                 <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', fontWeight: 700, color: safetyData?.source === 'offline' ? C.alertAmber : C.signalRed }}>{safetyData?.source === 'offline' ? 'OFFLINE ESTIMATE' : 'LIVE API'}</span>
+              </div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${C.faience}10`, border: `1px solid ${C.faience}25`, borderRadius: 99, padding: '3px 10px' }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.faience, animation: 'pulse 2s infinite' }} />
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', fontWeight: 700, color: C.faience }}>AUTO-REFRESH 60S</span>
               </div>
             </div>
 
@@ -398,10 +468,101 @@ export default function PageSafety() {
               </div>
             )}
           </div>
+
+          {/* Nearby Safety Overview — cities close to the traveler's current context */}
+          <div style={{ background: C.limestone, borderRadius: 16, padding: '18px', border: '1px solid rgba(27,26,23,0.07)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 9, background: `${C.faience}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.faience, flexShrink: 0 }}>
+                <Compass size={15} />
+              </div>
+              <div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', fontWeight: 700, color: C.nile }}>Nearby Safety Overview</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880' }}>Places around your current location</div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 8, marginTop: 12 }}>
+              {nearbyOverview.map((place) => {
+                const isActive = place.name === selectedCity || (selectedCity === '' && place.name === nearbyOverview[0]?.name);
+                const col = place.status === 'caution' ? C.alertAmber : C.safeGreen;
+                return (
+                  <button
+                    key={place.name}
+                    onClick={() => setSelectedCity(isActive && selectedCity === place.name ? '' : place.name)}
+                    style={{
+                      background: isActive ? `${col}10` : '#FAF7F0',
+                      border: `1px solid ${isActive ? col : 'rgba(27,26,23,0.07)'}`,
+                      borderRadius: 12,
+                      padding: '12px 13px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12.5px', fontWeight: 700, color: C.nile }}>{place.name}</span>
+                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '14px', fontWeight: 800, color: col }}>{place.score}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: col, flexShrink: 0 }} />
+                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', color: '#A89880' }}>
+                        {place.status === 'caution' ? 'Caution' : 'Safe'} · {place.distance} km
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 10, fontFamily: "'Inter',sans-serif", fontSize: '10px', color: '#A89880' }}>
+              Estimated from built-in profiles · tap a city to preview its safety
+            </div>
+          </div>
+
+          {/* Rafiq assistance — actionable, decision-support CTA */}
+          <div style={{ background: `linear-gradient(135deg,${C.solar}14,#FAF3E4)`, border: `1px solid ${C.solar}30`, borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: `${C.solar}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.solar, flexShrink: 0 }}>
+              <Sparkles size={18} />
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '13.5px', fontWeight: 700, color: C.nile, marginBottom: 2 }}>Ask Rafiq for a personal safety read</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11.5px', color: '#6B6354', lineHeight: 1.5 }}>
+                Get trip-specific guidance, scam checks for your route, and what to avoid — tuned to you.
+              </div>
+            </div>
+            <button
+              onClick={() => router.push('/app/rafiq')}
+              style={{
+                background: C.nile,
+                color: '#fff',
+                border: 'none',
+                borderRadius: 10,
+                padding: '9px 14px',
+                fontFamily: "'Inter',sans-serif",
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                flexShrink: 0,
+              }}
+            >
+              Ask Rafiq <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Right column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Overall risk — traveler's personal status */}
+          <RiskGauge
+            status={safetyData?.status ?? null}
+            score={safetyData?.safetyScore ?? null}
+            gov={activeGov}
+          />
 
           {/* SOS button */}
           <div style={{ background: `linear-gradient(160deg,${C.signalRed},#8B1E18)`, borderRadius: 16, padding: '22px 20px', textAlign: 'center' }}>
@@ -413,21 +574,21 @@ export default function PageSafety() {
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: `${C.limestone}55` }}>Opens emergency mode with guided response</div>
           </div>
 
-          {/* Emergency contacts */}
+          {/* Scam radar — nearby risk awareness */}
           <div style={{ background: C.limestone, borderRadius: 16, padding: '18px', border: '1px solid rgba(27,26,23,0.07)' }}>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, color: '#A89880', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>Emergency Contacts</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {emergencyContactsList.map(({ label, number, icon, color, desc }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(27,26,23,0.05)' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}12`, border: `1px solid ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>{icon}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', fontWeight: 700, color: C.nile }}>{label}</div>
-                    <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880' }}>{desc}</div>
-                  </div>
-                  <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '18px', fontWeight: 600, color, flexShrink: 0 }}>{number}</div>
-                </div>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 9, background: scamRadar.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: scamRadar.color, flexShrink: 0 }}>
+                <ShieldAlert size={15} />
+              </div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, color: '#A89880', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Nearby Scam Awareness</div>
             </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '22px', fontWeight: 800, color: scamRadar.color }}>{scamRadar.label}</span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880' }}>
+                {scamRadar.count > 0 ? `${scamRadar.count} recent report${scamRadar.count === 1 ? '' : 's'}` : 'No recent reports'}
+              </span>
+            </div>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#5C5346', lineHeight: 1.55, margin: 0 }}>{scamRadar.advice}</p>
           </div>
 
           {/* AI Safety Guide (streams a live briefing, falls back to tips offline) */}

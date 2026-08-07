@@ -1,11 +1,12 @@
 "use client";
 
-import { MapPin, Bell, Search, RefreshCw, Menu } from "lucide-react";
+import { MapPin, Search, RefreshCw, Menu } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { useRouter } from 'next/navigation';
 import { useLocation, useLocationLabel } from "@/providers/LocationProvider";
 import { useAuth } from "@/lib/auth";
 import { Glyph, PyramidSkyline } from "@/app/components/atoms";
+import { NotificationBell } from "@/app/components/ui/NotificationBell";
 
 const PARTICLES = [
   { left: '6%',  top: '42%', delay: '0s',    dur: '11s', size: 3 },
@@ -272,35 +273,7 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
               />
             </div>
 
-            <button
-              style={{
-                background: 'rgba(245,239,224,0.07)',
-                border: '1px solid rgba(245,239,224,0.16)',
-                borderRadius: 10,
-                width: 38,
-                height: 38,
-                position: 'relative',
-                cursor: 'pointer',
-                color: `${C.limestone}80`,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'color 0.2s, border-color 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = C.solarBright;
-                e.currentTarget.style.borderColor = 'rgba(232,168,32,0.55)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = `${C.limestone}80`;
-                e.currentTarget.style.borderColor = 'rgba(245,239,224,0.16)';
-              }}
-            >
-              <Bell size={17} strokeWidth={1.9} style={{ animation: 'rihlaWiggle 5s ease-in-out infinite' }} />
-              <span style={{ position: 'absolute', top: -2, right: -2, width: 9, height: 9, borderRadius: '50%', background: C.alertAmber, border: '2px solid #162C2C' }}>
-                <span style={{ position: 'absolute', inset: -2, borderRadius: '50%', background: C.alertAmber, animation: 'rihlaPing 1.8s ease-out infinite' }} />
-              </span>
-            </button>
+            <NotificationBell />
 
             <div
               onClick={() => router.push('/app/profile')}

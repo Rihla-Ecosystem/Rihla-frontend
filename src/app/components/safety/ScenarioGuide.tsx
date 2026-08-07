@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { C } from '@/lib/constants/theme';
 import { FIRST_AID } from '@/app/data/safety-data';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Volume2, VolumeX } from 'lucide-react';
+import { speak, stopSpeaking } from '@/lib/speech';
 
 export default function ScenarioGuide({
   scenario,
@@ -19,6 +20,69 @@ export default function ScenarioGuide({
   setCalled: (s: string | null) => void;
 }) {
   const activeScenario = FIRST_AID.find((f) => f.id === (scenario as string));
+  const [speaking, setSpeaking] = useState(false);
+  const [autoRead, setAutoRead] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const stopCurrent = () => {
+    stopSpeaking();
+    setSpeaking(false);
+    clearTimer();
+  };
+
+  // Read the current step aloud (the actual first-aid instruction).
+  const readStep = (text: string) => {
+    stopCurrent();
+    setSpeaking(true);
+    speak(text, {
+      lang: 'en',
+      rate: 0.95,
+      onEnd: () => {
+        setSpeaking(false);
+        // In auto-read mode, advance to the next step after finishing the current one.
+        if (autoRead && activeScenario && step < activeScenario.steps.length - 1) {
+          setStep((s) => s + 1);
+        } else if (autoRead) {
+          setAutoRead(false);
+        }
+      },
+      onError: () => {
+        setSpeaking(false);
+      },
+    });
+  };
+
+  // Keep steps in sync: whenever `step` changes in auto-read mode, speak it.
+  useEffect(() => {
+    if (!autoRead || !activeScenario) return;
+    readStep(activeScenario.steps[step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, autoRead]);
+
+  // Cancel speech + timers when the scenario changes or the component unmounts.
+  useEffect(() => {
+    return () => {
+      stopCurrent();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenario]);
+
+  const toggleAutoRead = () => {
+    if (autoRead) {
+      setAutoRead(false);
+      stopCurrent();
+    } else if (activeScenario) {
+      setAutoRead(true);
+      readStep(activeScenario.steps[step]);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -98,7 +162,9 @@ export default function ScenarioGuide({
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              gap: 10,
               marginBottom: 16,
+              flexWrap: 'wrap',
             }}
           >
             <div
@@ -113,14 +179,61 @@ export default function ScenarioGuide({
             >
               {activeScenario.title} · Step-by-step
             </div>
-            <div
-              style={{
-                fontFamily: "'Inter',sans-serif",
-                fontSize: '11px',
-                color: `${C.limestone}35`,
-              }}
-            >
-              Step {step + 1} of {activeScenario.steps.length}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={() => readStep(activeScenario.steps[step])}
+                disabled={speaking && !autoRead}
+                title={speaking ? 'Listening…' : 'Read this step aloud'}
+                aria-label="Read this step aloud"
+                style={{
+                  background: speaking && !autoRead ? `${activeScenario.color}20` : `${C.limestone}08`,
+                  border: `1px solid ${speaking ? activeScenario.color : `${C.limestone}15`}`,
+                  borderRadius: 8,
+                  padding: '6px 10px',
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: speaking && !autoRead ? activeScenario.color : `${C.limestone}60`,
+                  cursor: speaking && !autoRead ? 'pointer' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                }}
+              >
+                {speaking && !autoRead ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                {speaking && !autoRead ? 'Stop' : 'Read'}
+              </button>
+              <button
+                onClick={toggleAutoRead}
+                title={autoRead ? 'Stop voice guide' : 'Read all steps aloud, advancing automatically'}
+                aria-label={autoRead ? 'Stop voice guide' : 'Start voice guide'}
+                style={{
+                  background: autoRead ? `${activeScenario.color}22` : `${C.limestone}08`,
+                  border: `1.5px solid ${autoRead ? activeScenario.color : `${C.limestone}15`}`,
+                  borderRadius: 8,
+                  padding: '6px 10px',
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: autoRead ? activeScenario.color : `${C.limestone}60`,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                }}
+              >
+                {autoRead ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                {autoRead ? 'Stop guide' : 'Voice guide'}
+              </button>
+              <span
+                style={{
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: '11px',
+                  color: `${C.limestone}35`,
+                }}
+              >
+                Step {step + 1} of {activeScenario.steps.length}
+              </span>
             </div>
           </div>
 
@@ -250,10 +363,35 @@ export default function ScenarioGuide({
                     fontSize: '12px',
                     color: i === step ? C.limestone : `${C.limestone}40`,
                     lineHeight: 1.5,
+                    flex: 1,
                   }}
                 >
                   {s}
                 </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setStep(i);
+                    readStep(s);
+                  }}
+                  title={`Hear step ${i + 1}`}
+                  aria-label={`Hear step ${i + 1}`}
+                  style={{
+                    background: 'none',
+                    border: `1px solid ${speaking && i === step ? activeScenario.color : `${C.limestone}12`}`,
+                    borderRadius: 6,
+                    width: 24,
+                    height: 24,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: speaking && i === step ? activeScenario.color : `${C.limestone}45`,
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  }}
+                >
+                  {speaking && i === step ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                </button>
               </div>
             ))}
           </div>

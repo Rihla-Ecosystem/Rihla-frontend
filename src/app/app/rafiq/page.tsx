@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useLocation, useLocationLabel } from '@/providers/LocationProvider';
 import { C } from '@/lib/constants/theme';
 import { Glyph, PyramidSkyline } from '@/app/components/atoms';
@@ -102,6 +103,8 @@ export default function RafiqPage() {
   const appSettings = useAppSettings();
   const { lat, lon } = useLocation();
   const locationLabel = useLocationLabel();
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams?.get('q')?.trim() || '';
   const [msgs,    setMsgs]    = useState<RafiqMsg[]>([WELCOME_MSG]);
   const [input,   setInput]   = useState("");
   const [loading, setLoading] = useState(false);
