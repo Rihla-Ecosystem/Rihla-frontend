@@ -1,11 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
 import { AppShell } from '@/app/components/layout/AppShell';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { syncAppSettingsFromServer } from '@/lib/settingsStore';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      syncAppSettingsFromServer();
+    }
+  }, [user]);
 
   const getPageFromPath = (path: string): string => {
     if (path === '/app' || path === '/app/' || path.startsWith('/app/home')) return 'home';

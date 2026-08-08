@@ -113,14 +113,4 @@ export const walletApi = {
       checkoutUrl: data?.data?.checkoutUrl,
     };
   },
-
-  confirmPayment: async (
-    paymentId: string
-  ): Promise<{ success: boolean; tokens: number }> => {
-    const { data } = await apiClient.post<{ success: boolean; tokens: number }>(
-      "/wallet/confirm",
-      { paymentId }
-    );
-    return { success: !!data?.success, tokens: data?.tokens ?? 0 };
-  },
 };

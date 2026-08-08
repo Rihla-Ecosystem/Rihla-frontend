@@ -117,6 +117,84 @@ function normalizeSafetyData(payload: any): SafetyData {
   };
 }
 
+// Core-Server /safety proxies Risk_Intelligence, returning a multi-city map:
+// { safety: { cairo: { updatedAt, events[], overallRisk }, ... } }.
+// Map it onto the flat SafetyData model the page renders.
+const CITY_STATUS: Record<string, SafetyData['status']> = {
+  info: 'safe',
+  advisory: 'caution',
+  warning: 'warning',
+  critical: 'warning',
+};
+
+const CITY_SCORE: Record<string, number> = {
+  info: 92,
+  advisory: 78,
+  warning: 58,
+  critical: 42,
+};
+
+const CITY_LEVEL: Record<string, string> = {
+  info: 'Low Risk',
+  advisory: 'Moderate Risk',
+  warning: 'High Risk',
+  critical: 'Critical Risk',
+};
+
+function titleCase(value: string): string {
+  return value
+    .replace(/[_]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function mapCityMap(payload: any, gov?: string): SafetyData | null {
+  const map = payload?.safety ?? payload;
+  if (!map || typeof map !== 'object') return null;
+
+  let entry: any = null;
+  let key = '';
+  const govKey = (gov || '').toLowerCase().trim();
+  for (const [k, v] of Object.entries(map)) {
+    const kc = k.replace(/_/g, ' ').toLowerCase();
+    if (govKey && (kc === govKey || kc.includes(govKey) || govKey.includes(kc))) {
+      entry = v;
+      key = k;
+      break;
+    }
+  }
+  if (!entry) {
+    const first = Object.entries(map)[0];
+    entry = first?.[1];
+    key = first?.[0] ?? '';
+  }
+  if (!entry || typeof entry !== 'object') return null;
+
+  const overall = pickString(entry?.overallRisk) || 'info';
+  const events: any[] = Array.isArray(entry?.events) ? entry.events : [];
+  const tips = events
+    .filter((e) => e && typeof e.headline === 'string')
+    .map((e) => e.headline)
+    .slice(0, 4);
+
+  return {
+    governorate: gov || titleCase(key) || 'Egypt',
+    safetyScore: CITY_SCORE[overall] ?? 92,
+    safetyLevel: CITY_LEVEL[overall] ?? 'Low Risk',
+    status: CITY_STATUS[overall] ?? 'safe',
+    activeAlertsCount: events.length,
+    scamRiskLevel: 'Low',
+    scamAlertsCount: 0,
+    emergencyContacts: {
+      touristPolice: '126',
+      ambulance: '123',
+      generalEmergency: '112',
+    },
+    safetyTips: tips.length ? tips : FALLBACK_TIPS.slice(0, 4),
+    updatedAt: pickString(entry?.updatedAt) || new Date().toISOString(),
+    source: 'live',
+  };
+}
+
 export const safetyService = {
   getSafetySnapshot: async (lat?: number, lon?: number, gov?: string): Promise<SafetySnapshot> => {
     try {
@@ -126,6 +204,10 @@ export const safetyService = {
         },
       });
       if (!error && data) {
+        const mapped = mapCityMap(data, gov);
+        if (mapped && hasMeaningfulSafetyData(mapped)) {
+          return { data: mapped, source: 'live' };
+        }
         const normalized = normalizeSafetyData(data);
         if (hasMeaningfulSafetyData(normalized)) {
           return { data: normalized, source: 'live' };
@@ -150,6 +232,10 @@ export const safetyService = {
 
       if (res.ok) {
         const payload = await res.json();
+        const mapped = mapCityMap(payload, gov);
+        if (mapped && hasMeaningfulSafetyData(mapped)) {
+          return { data: mapped, source: 'live' };
+        }
         const normalized = normalizeSafetyData(payload);
         if (hasMeaningfulSafetyData(normalized)) {
           return { data: normalized, source: 'live' };
