@@ -4,14 +4,7 @@
  */
 
 export const getApiBaseUrl = (): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!baseUrl) {
-    console.warn(
-      '[API Config Warning]: NEXT_PUBLIC_API_BASE_URL environment variable is not defined.'
-    );
-    return '';
-  }
-  return baseUrl;
+  return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 };
 
 export const API_CONFIG = {

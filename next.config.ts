@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
         destination: "/app",
         permanent: true,
       },
+      {
+        source: "/app/tickets",
+        destination: "/app/monuments",
+        permanent: true,
+      },
+      {
+        source: "/app/tickets/:path*",
+        destination: "/app/monuments/:path*",
+        permanent: true,
+      },
     ];
   },
 };

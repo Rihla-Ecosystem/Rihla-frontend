@@ -10,6 +10,8 @@ export interface ExploreGovernorateOption {
 
 export const EXPLORE_CATEGORY_CHIPS = ['All', 'archaeological', 'islamic', 'christian', 'infrastructure'] as const;
 
+export const ALL_EGYPT_VALUE = '__all__';
+
 interface ExploreSearchBarProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -21,6 +23,39 @@ interface ExploreSearchBarProps {
 }
 
 const chipLabel = (c: string) => (c === 'All' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1));
+
+const GOV_NAME_COLORS = [
+  '#DC2626',
+  '#EA580C',
+  '#D97706',
+  '#65A30D',
+  '#16A34A',
+  '#0D9488',
+  '#0891B2',
+  '#2563EB',
+  '#4F46E5',
+  '#7C3AED',
+  '#C026D3',
+  '#DB2777',
+  '#E11D48',
+  '#F59E0B',
+  '#10B981',
+  '#06B6D4',
+  '#3B82F6',
+  '#8B5CF6',
+  '#A855F7',
+  '#EC4899',
+  '#84CC16',
+  '#14B8A6',
+  '#0EA5E9',
+  '#6366F1',
+  '#D946EF',
+  '#F97316',
+  '#9333EA',
+];
+
+export const govNameColor = (name: string, index: number) =>
+  GOV_NAME_COLORS[index % GOV_NAME_COLORS.length];
 
 export function ExploreSearchBar({
   search,
@@ -110,9 +145,10 @@ export function ExploreSearchBar({
             outline: 'none',
           }}
         >
-          <option value="">All Egypt</option>
-          {governorates.map((g) => (
-            <option key={g.name} value={g.name}>
+          <option value="">My location</option>
+          <option value={ALL_EGYPT_VALUE}>All Egypt</option>
+          {governorates.map((g, i) => (
+            <option key={g.name} value={g.name} style={{ color: govNameColor(g.name, i) }}>
               {g.name}
             </option>
           ))}

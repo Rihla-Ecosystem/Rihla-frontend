@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "../styles/index.css";
 import { AuthProvider } from "@/lib/auth";
 import { LocationProvider } from "@/providers/LocationProvider";
-import { QueryProvider } from "@/providers/QueryProvider";
 import { LocationMocker } from '@/app/components/ui/LocationMocker';
+import { TestHub } from '@/app/components/ui/TestHub';
 
 export const metadata: Metadata = {
   title: "Rihla - AI Travel Companion",
@@ -24,10 +24,9 @@ export default function RootLayout({
       <body className="antialiased">
         <AuthProvider>
           <LocationProvider>
-            <QueryProvider>
-              {children}
-              {process.env.NODE_ENV === 'development' && <LocationMocker />}
-            </QueryProvider>
+            {children}
+            {process.env.NODE_ENV === 'development' && <LocationMocker />}
+            {process.env.NODE_ENV === 'development' && <TestHub />}
           </LocationProvider>
         </AuthProvider>
       </body>

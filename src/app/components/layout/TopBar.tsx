@@ -1,11 +1,12 @@
 "use client";
 
-import { MapPin, Bell, Search, RefreshCw, Menu } from "lucide-react";
+import { MapPin, Search, RefreshCw, Menu } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { useRouter } from 'next/navigation';
-import { useLocation } from "@/providers/LocationProvider";
+import { useLocation, useLocationLabel } from "@/providers/LocationProvider";
 import { useAuth } from "@/lib/auth";
 import { Glyph, PyramidSkyline } from "@/app/components/atoms";
+import { NotificationBell } from "@/app/components/ui/NotificationBell";
 
 const PARTICLES = [
   { left: '6%',  top: '42%', delay: '0s',    dur: '11s', size: 3 },
@@ -22,24 +23,10 @@ const SUN_RAYS = Array.from({ length: 12 }, (_, i) => (i * 30));
 
 export function TopBar({ location: locationProp, onRafiq }: { location?: string; onRafiq?: () => void }) {
   const router = useRouter();
-  const { locationName, governorate, status, requestLocation } = useLocation();
+  const { status, requestLocation } = useLocation();
+  const liveLocation = useLocationLabel();
   const { user } = useAuth();
   const initial = (user?.displayName || "Traveler").charAt(0).toUpperCase();
-
-  const liveLocation = (() => {
-    if (status === 'requesting') return "Requesting location...";
-    if (status === 'loading') return "Locating user...";
-    const govName = governorate || "Giza";
-    const govFormatted = govName.includes("Governorate") || govName.includes("محافظة")
-      ? govName
-      : `${govName} Governorate`;
-
-    if (locationName) {
-      if (locationName.toLowerCase().includes(govName.toLowerCase())) return locationName;
-      return `${govFormatted} · ${locationName}`;
-    }
-    return `${govFormatted}, Egypt`;
-  })();
 
   const pageTitle = locationProp || 'Rihla';
 
@@ -193,10 +180,10 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
               onClick={() => router.push('/app')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, padding: 0, flexShrink: 0 }}
             >
-              <Glyph size={42} light />
+              <Glyph size={54} light />
               <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
-                <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '18px', fontWeight: 500, color: C.limestone, letterSpacing: '0.02em' }}>رحلة Rihla</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '9.5px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: `${C.sand}90`, marginTop: 3 }}>AI Travel Companion</span>
+                <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fontWeight: 500, color: C.limestone, letterSpacing: '0.02em' }}>رحلة Rihla</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: `${C.sand}90`, marginTop: 3 }}>AI Travel Companion</span>
               </span>
             </button>
             <span style={{ width: 1, height: 22, background: `${C.limestone}18`, flexShrink: 0 }} />
@@ -286,35 +273,7 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
               />
             </div>
 
-            <button
-              style={{
-                background: 'rgba(245,239,224,0.07)',
-                border: '1px solid rgba(245,239,224,0.16)',
-                borderRadius: 10,
-                width: 38,
-                height: 38,
-                position: 'relative',
-                cursor: 'pointer',
-                color: `${C.limestone}80`,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'color 0.2s, border-color 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = C.solarBright;
-                e.currentTarget.style.borderColor = 'rgba(232,168,32,0.55)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = `${C.limestone}80`;
-                e.currentTarget.style.borderColor = 'rgba(245,239,224,0.16)';
-              }}
-            >
-              <Bell size={17} strokeWidth={1.9} style={{ animation: 'rihlaWiggle 5s ease-in-out infinite' }} />
-              <span style={{ position: 'absolute', top: -2, right: -2, width: 9, height: 9, borderRadius: '50%', background: C.alertAmber, border: '2px solid #162C2C' }}>
-                <span style={{ position: 'absolute', inset: -2, borderRadius: '50%', background: C.alertAmber, animation: 'rihlaPing 1.8s ease-out infinite' }} />
-              </span>
-            </button>
+            <NotificationBell />
 
             <div
               onClick={() => router.push('/app/profile')}

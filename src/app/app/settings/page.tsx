@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { BookOpen, LogOut, Check, Loader2 } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { Geom, Glyph } from "@/app/components/atoms";
@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { userService } from "@/services/userService";
 import { historyService } from "@/services/historyService";
-import { useAppSettings, setAppSettings, type AppUnits } from "@/lib/settingsStore";
+import { useAppSettings, setAppSettings, syncAppSettingsFromServer, type AppUnits } from "@/lib/settingsStore";
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
@@ -55,6 +55,12 @@ export default function PageSettings() {
 
   const [savedStatus, setSavedStatus] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      syncAppSettingsFromServer();
+    }
+  }, [user]);
 
   const flash = useCallback((msg: string) => {
     setSavedStatus(msg);
@@ -219,17 +225,13 @@ export default function PageSettings() {
             <SettingsRow label="Scam &amp; Safety Alerts" sub="Immediate alerts for active threats near you" right={<Toggle on={settings.notifs.scamAlerts} onChange={() => toggleNotif("scamAlerts")} />} />
             <SettingsRow label="Weather Warnings" sub="UV, heat, and severe weather alerts" right={<Toggle on={settings.notifs.weather} onChange={() => toggleNotif("weather")} />} />
             <SettingsRow label="Rafiq Tips" sub="Proactive local tips based on where you are" right={<Toggle on={settings.notifs.rafiqTips} onChange={() => toggleNotif("rafiqTips")} />} />
-            <SettingsRow label="Journey XP &amp; Badges" sub="Celebrate milestones as you explore" right={<Toggle on={settings.notifs.journeyXP} onChange={() => toggleNotif("journeyXP")} />} />
-            <SettingsRow label="Site Updates" sub="Opening hours, closures, and changes" right={<Toggle on={settings.notifs.siteUpdates} onChange={() => toggleNotif("siteUpdates")} />} />
-            <SettingsRow label="Rihla News &amp; Offers" sub="Product updates and promotions" border={false} right={<Toggle on={settings.notifs.marketing} onChange={() => toggleNotif("marketing")} />} />
+            <SettingsRow label="Journey XP &amp; Badges" sub="Celebrate milestones as you explore" border={false} right={<Toggle on={settings.notifs.journeyXP} onChange={() => toggleNotif("journeyXP")} />} />
           </SettingsSection>
 
           {/* Privacy */}
           <SettingsSection title="Privacy &amp; Data">
             <SettingsRow label="Live Location" sub="Required for scam alerts and nearby sites" right={<Toggle on={settings.privacy.locationLive} onChange={() => togglePrivacy("locationLive")} />} />
-            <SettingsRow label="Share Visit History" sub="Anonymised data helps improve Rihla" right={<Toggle on={settings.privacy.shareHistory} onChange={() => togglePrivacy("shareHistory")} />} />
-            <SettingsRow label="Usage Analytics" sub="Helps us improve the app experience" right={<Toggle on={settings.privacy.analytics} onChange={() => togglePrivacy("analytics")} />} />
-            <SettingsRow label="Crash Reports" sub="Automatically send diagnostic data" border={false} right={<Toggle on={settings.privacy.crashReports} onChange={() => togglePrivacy("crashReports")} />} />
+            <SettingsRow label="Usage Analytics" sub="Helps us improve the app experience" border={false} right={<Toggle on={settings.privacy.analytics} onChange={() => togglePrivacy("analytics")} />} />
           </SettingsSection>
 
           {/* Account */}

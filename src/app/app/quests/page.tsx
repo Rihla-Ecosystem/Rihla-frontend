@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { C } from "@/lib/constants/theme";
 import { TopBar } from "@/app/components/layout/TopBar";
 import { journeysApi, type Journey } from "@/lib/api/journeys";
-import { ShieldCheck, Landmark, CheckCircle2, Lock, RefreshCw } from "lucide-react";
+import { useDemoStore, demoJourneys } from "@/lib/demoStore";
+import { ShieldCheck, Landmark, CheckCircle2, Lock, RefreshCw, WifiOff } from "lucide-react";
 
 const SCAM_SLUGS = [
   "scam-smart-traveler",
@@ -22,8 +23,147 @@ const ARCHAEOLOGY_SLUGS = [
   "coptic-islamic-cairo",
 ];
 
+const OFFLINE_QUESTS: Journey[] = [
+  {
+    id: "offline-scam-smart-traveler",
+    slug: "scam-smart-traveler",
+    title: "The Smart Traveler",
+    description: "Learn to spot the classic bazaar tricks before they spot you.",
+    xpReward: 150,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 5,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-taxi-tricks",
+    slug: "taxi-tricks",
+    title: "Taxi Tricks & Fair Fares",
+    description: "Master the meter, the fare, and the 'friend discount' that never was.",
+    xpReward: 120,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 4,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-street-money-exchange",
+    slug: "street-money-exchange",
+    title: "Street Money Exchange",
+    description: "Why that 'great rate' on the street is the most expensive deal in Cairo.",
+    xpReward: 100,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 3,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-fake-guide-papyrus",
+    slug: "fake-guide-papyrus",
+    title: "The Fake Guide & the Papyrus",
+    description: "The 'official guide' who materialises at your elbow — and how to decline.",
+    xpReward: 100,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 3,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-atm-card-scam",
+    slug: "atm-card-scam",
+    title: "ATM & Card Cloning",
+    description: "Protect your card at Cairo ATMs and in restaurants with card readers.",
+    xpReward: 130,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 4,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-giza-plateau",
+    slug: "giza-plateau",
+    title: "The Giza Plateau",
+    description: "Pyramids, the Sphinx, and the plateau's hidden corners.",
+    xpReward: 200,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 6,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-karnak-luxor",
+    slug: "karnak-luxor",
+    title: "Karnak & Luxor",
+    description: "The great temple complex and the avenue of sphinxes.",
+    xpReward: 180,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 5,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-abu-simbel-nubia",
+    slug: "abu-simbel-nubia",
+    title: "Abu Simbel & Nubia",
+    description: "The relocated temples of Ramesses II — a marvel of ancient and modern engineering.",
+    xpReward: 180,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 4,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+  {
+    id: "offline-coptic-islamic-cairo",
+    slug: "coptic-islamic-cairo",
+    title: "Coptic & Islamic Cairo",
+    description: "Churches, mosques, and a thousand years of layered faith in Old Cairo.",
+    xpReward: 160,
+    isActive: false,
+    steps: [],
+    completedSteps: 0,
+    totalSteps: 5,
+    isCompleted: false,
+    startedAt: null,
+    completedAt: null,
+    nextStep: null,
+  },
+];
+
 export default function QuestsPage() {
   const router = useRouter();
+  const demo = useDemoStore();
   const [quests, setQuests] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -33,13 +173,22 @@ export default function QuestsPage() {
     let active = true;
     setLoading(true);
     setError(false);
+    if (demo.mode === 'on') {
+      setQuests(demoJourneys());
+      setError(false);
+      setLoading(false);
+      return;
+    }
     journeysApi
       .list()
       .then((data) => {
         if (active) setQuests(data || []);
       })
       .catch(() => {
-        if (active) setError(true);
+        if (active) {
+          setQuests(OFFLINE_QUESTS);
+          setError(true);
+        }
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -47,7 +196,7 @@ export default function QuestsPage() {
     return () => {
       active = false;
     };
-  }, [retryKey]);
+  }, [retryKey, demo.mode]);
 
   const scamQuests = SCAM_SLUGS.map((slug) => quests.find((q) => q.slug === slug)).filter(
     (q): q is Journey => !!q
@@ -84,32 +233,35 @@ export default function QuestsPage() {
               <div key={i} style={{ height: 150, background: "rgba(27,26,23,0.06)", borderRadius: 14, animation: "pulse 1.4s ease-in-out infinite" }} />
             ))}
           </div>
-        ) : error ? (
-          <div style={{ textAlign: "center", padding: 50 }}>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "20px", color: C.basalt }}>Could not load quests</div>
-            <button
-              onClick={() => setRetryKey((k) => k + 1)}
-              style={{
-                marginTop: 14,
-                background: C.nile,
-                color: C.limestone,
-                border: "none",
-                borderRadius: 10,
-                padding: "9px 18px",
-                fontFamily: "'Inter',sans-serif",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <RefreshCw size={14} /> Retry
-            </button>
-          </div>
         ) : (
           <>
+            {error && (
+              <div style={{ background: "#FFF8EC", border: `1px solid ${C.sand}40`, borderRadius: 12, padding: "14px 18px", marginBottom: 22, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <WifiOff size={16} color={C.copper} style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1, fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: "#7A5A1E" }}>
+                  Offline preview — showing quests from the Rihla guidebook. Your live progress will appear when you reconnect.
+                </span>
+                <button
+                  onClick={() => setRetryKey((k) => k + 1)}
+                  style={{
+                    background: C.nile,
+                    color: C.limestone,
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "7px 14px",
+                    fontFamily: "'Inter',sans-serif",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <RefreshCw size={13} /> Retry
+                </button>
+              </div>
+            )}
             <QuestSection
               title="Scam Shield"
               subtitle="Learn to spot the tricks of the bazaar — and travel smart."

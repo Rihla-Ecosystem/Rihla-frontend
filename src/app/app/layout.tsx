@@ -1,12 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
 import { AppShell } from '@/app/components/layout/AppShell';
 import { usePathname, useRouter } from 'next/navigation';
-import { LocationTester } from '@/app/components/ui/LocationTester';
+import { useAuth } from '@/lib/auth';
+import { syncAppSettingsFromServer } from '@/lib/settingsStore';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      syncAppSettingsFromServer();
+    }
+  }, [user]);
 
   const getPageFromPath = (path: string): string => {
     if (path === '/app' || path === '/app/' || path.startsWith('/app/home')) return 'home';
@@ -14,7 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (path.startsWith('/app/rafiq')) return 'rafiq';
     if (path.startsWith('/app/safety')) return 'safety';
     if (path.startsWith('/app/history')) return 'history';
-    if (path.startsWith('/app/tickets')) return 'tickets';
+    if (path.startsWith('/app/monuments')) return 'monuments';
     if (path.startsWith('/app/currency')) return 'currency';
     if (path.startsWith('/app/quests')) return 'quests';
     if (path.startsWith('/app/wallet')) return 'wallet';
@@ -50,7 +59,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppShell activePage={activePage} setPage={setPage} go={go}>
       {children}
-      <LocationTester />
     </AppShell>
   );
 }

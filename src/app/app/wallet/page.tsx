@@ -10,6 +10,7 @@ import {
   type WalletTransaction,
   type TokenPackage,
 } from "@/lib/api/wallet";
+import { useDemoStore, demoWallet } from "@/lib/demoStore";
 import {
   Wallet,
   Coins,
@@ -20,11 +21,13 @@ import {
   Sparkles,
   CreditCard,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 
 export default function WalletPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const demo = useDemoStore();
 
   const [balance, setBalance] = useState<number>(0);
   const [lifetimeTokens, setLifetimeTokens] = useState<number>(0);
@@ -33,10 +36,21 @@ export default function WalletPage() {
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [packagesFailed, setPackagesFailed] = useState(false);
 
   const load = async () => {
     setLoading(true);
     setError(null);
+    setPackagesFailed(false);
+    if (demo.mode === 'on') {
+      const w = demoWallet();
+      setBalance(w.balance);
+      setLifetimeTokens(w.lifetimeTokens);
+      setTransactions(w.transactions);
+      setPackages(w.packages);
+      setLoading(false);
+      return;
+    }
     try {
       const [bal, txs, pkgs] = await Promise.allSettled([
         walletApi.getBalance(),
@@ -49,8 +63,13 @@ export default function WalletPage() {
       }
       if (txs.status === "fulfilled") setTransactions(txs.value);
       if (pkgs.status === "fulfilled") setPackages(pkgs.value);
+      if (pkgs.status === "rejected") setPackagesFailed(true);
       if (bal.status === "rejected" && txs.status === "rejected") {
-        setError("We could not reach the wallet service. Please try again.");
+        setError(
+          user
+            ? "We could not reach the wallet service. Your balance and transactions are stored in the cloud — reconnect and hit Sync."
+            : "Sign in to view your token balance and transactions."
+        );
       }
     } finally {
       setLoading(false);
@@ -60,7 +79,7 @@ export default function WalletPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [demo.mode]);
 
   const handlePurchase = async (pkg: TokenPackage) => {
     setPurchasingId(pkg.id);
@@ -135,8 +154,17 @@ export default function WalletPage() {
 
       <div style={{ maxWidth: 1040, width: "100%", margin: "0 auto", padding: "24px 32px", boxSizing: "border-box", flex: 1 }}>
         {error && (
-          <div style={{ background: "#FFF5F5", border: "1px solid #FECACA", borderRadius: 12, padding: "12px 16px", color: "#991B1B", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, marginBottom: 16 }}>
-            {error}
+          <div style={{ background: "#FFF5F5", border: "1px solid #FECACA", borderRadius: 12, padding: "12px 16px", color: "#991B1B", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, marginBottom: 16, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1 }}>{error}</span>
+            {!user && (
+              <button
+                onClick={() => router.push("/login")}
+                style={{ background: C.nile, color: C.limestone, border: "none", borderRadius: 8, padding: "7px 16px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+              >
+                Sign in
+              </button>
+            )}
           </div>
         )}
 
@@ -306,7 +334,12 @@ export default function WalletPage() {
               </div>
             ))}
           </div>
-          {!loading && packages.length === 0 && (
+          {!loading && packages.length === 0 && packagesFailed && (
+            <div style={{ background: "rgba(27,26,23,0.04)", borderRadius: 14, padding: 30, textAlign: "center", fontFamily: "'Inter',sans-serif", fontStyle: "italic", color: "#8B7E6A" }}>
+              Token packages could not be loaded while offline. Reconnect and hit Sync.
+            </div>
+          )}
+          {!loading && packages.length === 0 && !packagesFailed && (
             <div style={{ background: "rgba(27,26,23,0.04)", borderRadius: 14, padding: 30, textAlign: "center", fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", color: "#8B7E6A" }}>
               No packages available right now.
             </div>

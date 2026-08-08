@@ -7,7 +7,7 @@ import { Glyph, GlyphFull, Geom } from "@/app/components/atoms";
 import {
   MapPin, Bell, Navigation, Wind, Thermometer, Sun, Shield, Search, Map, User, AlertTriangle, Star, Clock, Camera,
   ArrowRight, Globe, Phone, CreditCard, Wifi, CheckCircle, X, ChevronLeft, ChevronRight, Menu,
-  Home, Compass, Settings, BarChart2, Wallet, LogOut, Zap, Filter, SlidersHorizontal, BookOpen, Send, Mic, ChevronDown, RefreshCw, Ticket, Banknote, Landmark
+  Home, Compass, Settings, BarChart2, Wallet, LogOut, Zap, Filter, SlidersHorizontal, BookOpen, Send, Mic, ChevronDown, RefreshCw, Ticket, Banknote, Landmark, Trophy
 } from "lucide-react";
 
 export const NAV_ITEMS = [
@@ -16,9 +16,9 @@ export const NAV_ITEMS = [
   { id: "rafiq",   label: "Rafiq",   icon: (a: boolean) => <Glyph    size={18}/>,                              special: true },
   { id: "safety",  label: "Safety",  icon: (a: boolean) => <Shield   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "history", label: "History", icon: (a: boolean) => <Clock    size={18} strokeWidth={a ? 2.2 : 1.7}/> },
-  { id: "tickets", label: "Tickets", icon: (a: boolean) => <Ticket   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "monuments", label: "Monuments", icon: (a: boolean) => <Landmark size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "currency", label: "Currency", icon: (a: boolean) => <Banknote size={18} strokeWidth={a ? 2.2 : 1.7}/> },
-  { id: "quests",  label: "Quests",  icon: (a: boolean) => <Landmark size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "quests",  label: "Quests",  icon: (a: boolean) => <Trophy   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "wallet",  label: "Wallet",  icon: (a: boolean) => <Wallet   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "profile", label: "Profile", icon: (a: boolean) => <User     size={18} strokeWidth={a ? 2.2 : 1.7}/> },
 { id: "settings",label: "Settings",icon: (a: boolean) => <Settings size={18} strokeWidth={a ? 2.2 : 1.7}/> },
@@ -46,8 +46,8 @@ export function AppShell({ activePage, setPage, go, children }: { activePage: st
     <div style={{ display: "flex", height: "100vh", background: C.bg, overflow: "hidden" }}>
       <aside style={{ width: collapsed ? 64 : 220, background: "#111009", display: "flex", flexDirection: "column", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
         <div style={{ padding: collapsed ? "18px 14px" : "26px 20px", borderBottom: `1px solid ${C.limestone}10`, display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          <Glyph size={40} light/>
-          {!collapsed && <div><div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "19px", fontWeight: 500, color: C.limestone, lineHeight: 1 }}>رحلة Rihla</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: `${C.sand}80`, marginTop: 3 }}>AI Companion</div></div>}
+          <Glyph size={56} light/>
+          {!collapsed && <div><div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "22px", fontWeight: 500, color: C.limestone, lineHeight: 1 }}>رحلة Rihla</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: `${C.sand}80`, marginTop: 3 }}>AI Companion</div></div>}
         </div>
         <nav style={{ flex: 1, padding: "12px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
           {NAV_ITEMS.map(({ id, label, icon, adminOnly }) => {

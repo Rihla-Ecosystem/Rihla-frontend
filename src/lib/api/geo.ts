@@ -35,6 +35,83 @@ function toSite(poi: GeoPoi): Site {
   };
 }
 
+const ROUTE_TIMEOUT_MS = 10000;
+const FALLBACK_DRIVE_KMH = 45;
+
+const ROUTE_PROVIDERS = [
+  'https://routing.openstreetmap.de/routed-car',
+  'https://router.project-osrm.org',
+];
+
+function haversineMeters(
+  aLat: number,
+  aLon: number,
+  bLat: number,
+  bLon: number
+): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLon = toRad(bLon - aLon);
+  const s =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+}
+
+function fallbackDuration(distanceMeters: number): number {
+  return Math.round((distanceMeters / 1000 / FALLBACK_DRIVE_KMH) * 3600);
+}
+
+async function fetchJsonWithTimeout(url: string, timeoutMs: number): Promise<any | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Tries each routing provider until one responds.
+async function fetchRouteJson(
+  path: 'route' | 'trip',
+  coords: string,
+  extraQuery: string
+): Promise<any | null> {
+  for (const base of ROUTE_PROVIDERS) {
+    const url = `${base}/${path}/v1/driving/${coords}?overview=full&geometries=geojson${extraQuery}`;
+    const json = await fetchJsonWithTimeout(url, ROUTE_TIMEOUT_MS);
+    if (json) return json;
+  }
+  return null;
+}
+
+// OSRM GeoJSON returns [longitude, latitude]; Leaflet polylines need [latitude, longitude].
+function normalizeCoords(coords: [number, number][]): [number, number][] {
+  return coords.map(([lng, lat]) => [lat, lng]);
+}
+
+function fallbackRoute(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number }
+) {
+  const distanceMeters = haversineMeters(from.latitude, from.longitude, to.latitude, to.longitude);
+  return {
+    coordinates: [
+      [from.latitude, from.longitude],
+      [to.latitude, to.longitude],
+    ] as [number, number][],
+    distanceMeters,
+    durationSeconds: fallbackDuration(distanceMeters),
+    approximate: true,
+  };
+}
+
 export const geoApi = {
   getGovernorates: async (): Promise<GeoGovernorate[]> => {
     const { data } = await apiClient.get<GeoGovernorate[]>("/geo/governorates");
@@ -85,20 +162,18 @@ categories: categories?.join(",") || HERITAGE_CATEGORIES.join(","),
     from: { latitude: number; longitude: number },
     to: { latitude: number; longitude: number }
   ) => {
-    const url =
-      `https://router.project-osrm.org/route/v1/driving/` +
-      `${from.longitude},${from.latitude};${to.longitude},${to.latitude}` +
-      `?overview=full&geometries=geojson`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const json = await res.json();
+    const coords = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`;
+    const json = await fetchRouteJson('route', coords, '');
     const route = json?.routes?.[0];
-    if (!route?.geometry?.coordinates) return null;
-    return {
-      coordinates: route.geometry.coordinates as [number, number][],
-      distanceMeters: route.distance || 0,
-      durationSeconds: route.duration || 0,
-    };
+    if (route?.geometry?.coordinates) {
+      return {
+        coordinates: normalizeCoords(route.geometry.coordinates as [number, number][]),
+        distanceMeters: route.distance || 0,
+        durationSeconds: route.duration || 0,
+        approximate: false,
+      };
+    }
+    return fallbackRoute(from, to);
   },
 
   getTrip: async (
@@ -110,28 +185,42 @@ categories: categories?.join(",") || HERITAGE_CATEGORIES.join(","),
       `${start.longitude},${start.latitude}`,
       ...sites.map((s) => `${s.longitude},${s.latitude}`),
     ].join(";");
-    const url =
-      `https://router.project-osrm.org/trip/v1/driving/${coords}` +
-      `?roundtrip=false&source=first&overview=full&geometries=geojson`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      const json = await res.json();
-      const trip = json?.trips?.[0];
-      const waypoints: { waypoint_index: number }[] = json?.waypoints || [];
-      if (!trip?.geometry?.coordinates || waypoints.length === 0) return null;
+    const json = await fetchRouteJson('trip', coords, '&roundtrip=false&source=first');
+    const trip = json?.trips?.[0];
+    const waypoints: { waypoint_index: number }[] = json?.waypoints || [];
+    if (trip?.geometry?.coordinates && waypoints.length > 0) {
       const order = [...waypoints]
         .sort((a, b) => a.waypoint_index - b.waypoint_index)
         .map((w) => w.waypoint_index);
       return {
-        coordinates: trip.geometry.coordinates as [number, number][],
+        coordinates: normalizeCoords(trip.geometry.coordinates as [number, number][]),
         distanceMeters: trip.distance || 0,
         durationSeconds: trip.duration || 0,
         orderedStops: order.slice(1).map((idx) => sites[idx - 1]),
+        approximate: false,
       };
-    } catch {
-      return null;
     }
+    let distanceMeters = 0;
+    let prev = start;
+    for (const site of sites) {
+      distanceMeters += haversineMeters(
+        prev.latitude,
+        prev.longitude,
+        site.latitude,
+        site.longitude
+      );
+      prev = site;
+    }
+    return {
+      coordinates: [
+        [start.latitude, start.longitude],
+        ...sites.map((s) => [s.latitude, s.longitude]),
+      ] as [number, number][],
+      distanceMeters,
+      durationSeconds: fallbackDuration(distanceMeters),
+      orderedStops: sites,
+      approximate: true,
+    };
   },
 
   search: async (
@@ -149,3 +238,37 @@ categories: categories?.join(",") || HERITAGE_CATEGORIES.join(","),
     return ((data || {}).pois || []).map(toSite);
   },
 };
+
+export function googleMapsDirectionsUrl(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number }
+): string {
+  return (
+    `https://www.google.com/maps/dir/?api=1` +
+    `&origin=${from.latitude},${from.longitude}` +
+    `&destination=${to.latitude},${to.longitude}` +
+    `&travelmode=driving`
+  );
+}
+
+export function googleMapsTripUrl(
+  start: { latitude: number; longitude: number },
+  stops: { latitude: number; longitude: number }[]
+): string {
+  const origin = `${start.latitude},${start.longitude}`;
+  const destination =
+    stops.length > 0
+      ? `${stops[stops.length - 1].latitude},${stops[stops.length - 1].longitude}`
+      : origin;
+  const waypoints = stops
+    .slice(0, -1)
+    .map((s) => `${s.latitude},${s.longitude}`)
+    .join("|");
+  return (
+    `https://www.google.com/maps/dir/?api=1` +
+    `&origin=${origin}` +
+    `&destination=${destination}` +
+    `&travelmode=driving` +
+    (waypoints ? `&waypoints=${waypoints}` : "")
+  );
+}
