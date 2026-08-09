@@ -133,8 +133,8 @@ export default function PageProfile() {
         xp: 250,
         badges: ['First Steps', 'Giza Explorer'],
         quests: { 'scam-smart-traveler': { completedSteps: 2, totalSteps: 5, isCompleted: false } },
-        walletBalance: 1200,
-        lifetimeTokens: 250
+        walletBalance: 500,
+        lifetimeTokens: 500
       }));
     }
     window.location.reload();
