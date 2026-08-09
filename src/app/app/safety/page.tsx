@@ -42,7 +42,6 @@ import {
 } from 'lucide-react';
 import { buildSafetyContext, buildRafiqUrl } from '@/lib/rafiq';
 import { AskRafiqButton } from '@/app/components/rafiq';
-import { incidentReportService, type IncidentSeverity, type IncidentType } from '@/services/incidentReportService';
 
 const SAFETY_POLL_MS = 60000;
 
@@ -81,12 +80,6 @@ export default function PageSafety() {
   const inFlightRef = React.useRef(false);
   const prevStatusRef = React.useRef<string | null>(null);
   const [riskNotice, setRiskNotice] = useState<{ title: string; body: string } | null>(null);
-  const [showReportForm, setShowReportForm] = useState(false);
-  const [reportType, setReportType] = useState<IncidentType>('SAFETY');
-  const [reportSeverity, setReportSeverity] = useState<IncidentSeverity>('MEDIUM');
-  const [reportDescription, setReportDescription] = useState('');
-  const [reportSubmitting, setReportSubmitting] = useState(false);
-  const [reportMessage, setReportMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isInitialized && !user) router.push('/login');
@@ -270,33 +263,6 @@ export default function PageSafety() {
 
   const goEmergency = () => router.push('/app/safety/emergency');
 
-  const submitReport = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (reportDescription.trim().length < 10) {
-      setReportMessage('Please provide at least 10 characters.');
-      return;
-    }
-    setReportSubmitting(true);
-    setReportMessage(null);
-    try {
-      await incidentReportService.create({
-        type: reportType,
-        severity: reportSeverity,
-        description: reportDescription.trim(),
-        lat: activeCoords.lat,
-        lng: activeCoords.lon,
-        relatedSiteName: activeGov,
-      });
-      setReportDescription('');
-      setReportMessage('Report submitted for review. Thank you.');
-      window.setTimeout(() => setShowReportForm(false), 1200);
-    } catch (err) {
-      setReportMessage(err instanceof Error ? err.message : 'Could not submit the report.');
-    } finally {
-      setReportSubmitting(false);
-    }
-  };
-
   const askRafiq = useCallback((headline: string) => {
     const ctx = buildSafetyContext(safetyData!, activeGov);
     const url = buildRafiqUrl(ctx);
@@ -337,42 +303,34 @@ export default function PageSafety() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
       <TopBar onRafiq={() => router.push('/app/rafiq')} />
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 32px 0' }}>
-        <button
-          onClick={() => setShowReportForm(true)}
-          style={{ background: 'transparent', border: `1px solid ${C.terracotta}55`, color: C.terracotta, borderRadius: 8, padding: '8px 13px', fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+      {/* Government security notice for the current location */}
+      <div style={{ padding: '10px 32px 0' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 12,
+            background: `linear-gradient(135deg,${C.nile},#0F3D3E)`,
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: 14,
+            padding: '12px 16px',
+          }}
         >
-          Report an issue
-        </button>
-      </div>
-
-      {showReportForm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,61,62,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <form onSubmit={submitReport} style={{ width: '100%', maxWidth: 520, background: C.limestone, borderRadius: 16, padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <h2 style={{ margin: 0, fontFamily: "'Cormorant Garamond',serif", fontSize: 25, color: C.nile }}>Report an issue</h2>
-              <button type="button" onClick={() => setShowReportForm(false)} style={{ border: 'none', background: 'transparent', color: '#8B7E6A', fontSize: 22, cursor: 'pointer' }}>×</button>
+          <span style={{ width: 34, height: 34, borderRadius: 10, background: `${C.solar}20`, color: C.solarBright, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <ShieldAlert size={17} />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', fontWeight: 700, color: `${C.limestone}75`, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 3 }}>
+              Government security note · {activeGov}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-              <label style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: C.nile }}>Type
-                <select value={reportType} onChange={(e) => setReportType(e.target.value as IncidentType)} style={{ width: '100%', marginTop: 6, padding: 10, borderRadius: 8, border: '1px solid #D4CBB8', background: '#fff' }}>
-                  <option value="SAFETY">Safety</option><option value="SCAM">Scam</option><option value="SERVICE">Service</option><option value="DAMAGE">Damage</option><option value="ACCESSIBILITY">Accessibility</option><option value="OTHER">Other</option>
-                </select>
-              </label>
-              <label style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: C.nile }}>Severity
-                <select value={reportSeverity} onChange={(e) => setReportSeverity(e.target.value as IncidentSeverity)} style={{ width: '100%', marginTop: 6, padding: 10, borderRadius: 8, border: '1px solid #D4CBB8', background: '#fff' }}>
-                  <option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option>
-                </select>
-              </label>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12.5px', color: C.limestone, lineHeight: 1.55 }}>
+              {safetyData?.govNote && safetyData.govNote.trim()
+                ? safetyData.govNote
+                : `${activeGov} is under standard tourist safety monitoring. Follow official guidance and keep emergency numbers saved.`}
             </div>
-            <label style={{ display: 'block', fontFamily: "'Inter',sans-serif", fontSize: 12, color: C.nile }}>Description
-              <textarea value={reportDescription} onChange={(e) => setReportDescription(e.target.value)} minLength={10} maxLength={2000} rows={5} placeholder="Describe what happened and where..." style={{ display: 'block', width: '100%', marginTop: 6, padding: 10, borderRadius: 8, border: '1px solid #D4CBB8', resize: 'vertical', boxSizing: 'border-box' }} />
-            </label>
-            {reportMessage && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: reportMessage.startsWith('Report submitted') ? C.safeGreen : C.signalRed }}>{reportMessage}</p>}
-            <button type="submit" disabled={reportSubmitting} style={{ marginTop: 14, width: '100%', border: 'none', borderRadius: 9, padding: 12, background: C.nile, color: C.limestone, fontFamily: "'Inter',sans-serif", fontWeight: 700, cursor: reportSubmitting ? 'wait' : 'pointer' }}>{reportSubmitting ? 'Submitting...' : 'Submit report'}</button>
-          </form>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Hero — decision-focused status */}
       <TravelStatusHero

@@ -50,6 +50,7 @@ export interface CityState {
   scamRiskLevel?: 'high' | 'moderate' | 'low';
   activeAlertsCount?: number;
   totalSignals?: number;
+  govNote?: string | null;
 }
 
 export interface SafetyData {
@@ -72,6 +73,7 @@ export interface SafetyData {
   events: SafetyEvent[];
   cities: CityState[];
   categories: Partial<Record<EventCategory, number>>;
+  govNote?: string | null;
 }
 
 export interface SafetySnapshot {
@@ -285,6 +287,7 @@ function mapCityMap(payload: any, gov?: string, refLat?: number, refLon?: number
       ...(scam === 'high' || scam === 'moderate' || scam === 'low' ? { scamRiskLevel: scam } : {}),
       ...(typeof raw?.activeAlertsCount === 'number' ? { activeAlertsCount: raw.activeAlertsCount } : {}),
       ...(typeof raw?.totalSignals === 'number' ? { totalSignals: raw.totalSignals } : {}),
+      ...(typeof raw?.govNote === 'string' && raw.govNote.trim() ? { govNote: raw.govNote } : {}),
     });
   }
 
@@ -328,6 +331,7 @@ function mapCityMap(payload: any, gov?: string, refLat?: number, refLon?: number
     events: entryCity.events,
     cities,
     categories: countCategories(entryCity.events),
+    govNote: entryCity.govNote ?? null,
   };
 }
 
