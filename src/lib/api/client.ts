@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { API_CONFIG, getApiBaseUrl } from './config';
 import { tokenManager } from './token-manager';
+import { refreshAccessToken } from './refresh';
 import { CustomAxiosRequestConfig, RefreshSubscriber } from './types';
 
 let isRefreshing = false;
@@ -87,26 +88,12 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Call refresh token endpoint with HTTP credentials
-        const refreshResponse = await axios.post(
-          `${getApiBaseUrl()}${API_CONFIG.refreshEndpoint}`,
-          {},
-          {
-            withCredentials: true,
-            headers: API_CONFIG.headers,
-          }
-        );
-
-        const newAccessToken: string | undefined =
-          refreshResponse.data?.accessToken ||
-          refreshResponse.data?.data?.accessToken;
+        // Refresh the access token (single-flight, shared with the openapi-fetch client)
+        const newAccessToken = await refreshAccessToken();
 
         if (!newAccessToken) {
           throw new Error('Invalid token refresh response format.');
         }
-
-        // Store new access token
-        tokenManager.setAccessToken(newAccessToken);
 
         // Update Authorization header for original request
         if (originalRequest.headers) {

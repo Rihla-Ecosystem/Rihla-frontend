@@ -1,10 +1,11 @@
 import createClient, { Middleware } from "openapi-fetch";
 import type { paths } from "./generated/types";
-import { tokenManager } from "../lib/api";
+import { tokenManager, API_CONFIG, getApiBaseUrl } from "../lib/api";
+import { refreshAccessToken } from "../lib/api/refresh";
 
-// The base URL must be set in the frontend config or .env
-// We default to the local core server if not set
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+// The base URL must be set in the frontend config or .env.
+// getApiBaseUrl() falls back to the local Core server for development.
+export const API_BASE_URL = getApiBaseUrl();
 
 export const apiClient = createClient<paths>({ baseUrl: API_BASE_URL });
 
@@ -16,9 +17,34 @@ const authMiddleware: Middleware = {
     }
     return request;
   },
-  async onResponse({ response }) {
-    // Optionally handle 401 refresh logic here or rely on client.ts
-    return response;
+  async onResponse({ request, response }) {
+    if (response.status !== 401) return response;
+
+    const url = new URL(request.url, API_BASE_URL);
+
+    // Never refresh-retry the refresh or login endpoints themselves
+    if (
+      url.pathname.includes(API_CONFIG.refreshEndpoint) ||
+      url.pathname.includes("/auth/login")
+    ) {
+      return response;
+    }
+
+    // Prevent retry loops — only attempt the refresh once per request
+    if (request.headers.get("x-rihla-refreshed")) {
+      return response;
+    }
+
+    const newToken = await refreshAccessToken();
+    if (!newToken) {
+      tokenManager.triggerLogout();
+      return response;
+    }
+
+    const retried = request.clone();
+    retried.headers.set("Authorization", `Bearer ${newToken}`);
+    retried.headers.set("x-rihla-refreshed", "1");
+    return fetch(retried);
   }
 };
 

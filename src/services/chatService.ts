@@ -1,11 +1,11 @@
 import { apiClient } from "../api";
-import { tokenManager } from "../lib/api";
+import { tokenManager, getApiBaseUrl } from "../lib/api";
 import { normalizeChatResponse } from "./chatAdapter";
 import { components } from "../types";
 import { InsufficientBalanceError } from "@/lib/api/wallet";
 import type { RafiqContext } from "@/lib/rafiq";
 
-const CORE_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+const CORE_API_URL = getApiBaseUrl();
 
 export type Persona = "auto" | "tour_guide" | "local_expert" | "safety_guru";
 
