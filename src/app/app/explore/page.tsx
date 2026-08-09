@@ -223,6 +223,7 @@ export default function ExplorePage() {
   const [safetyData, setSafetyData] = useState<SafetyData | null>(null);
   const [safetySource, setSafetySource] = useState<'live' | 'offline' | null>(null);
   const [showAllRecommendations, setShowAllRecommendations] = useState(false);
+  const [recommendationsCollapsed, setRecommendationsCollapsed] = useState(false);
   const safetyViewedRef = useRef<string | null>(null);
 
   // Selection / routing
@@ -631,7 +632,13 @@ export default function ExplorePage() {
 
   const recommendedSites = useMemo(() => {
     const statusWeight = safetyData?.status === 'safe' ? 3 : safetyData?.status === 'caution' ? 2 : safetyData?.status ? 1 : 0;
+    const radiusKm = radius / 1000;
     return [...sites]
+      .filter((s) => {
+        if (s.lat == null || s.lon == null) return false;
+        const distKm = calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, s.lat, s.lon);
+        return distKm <= radiusKm;
+      })
       .sort((a, b) => {
         const aDistance = a.lat != null && a.lon != null ? calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, a.lat, a.lon) : 999;
         const bDistance = b.lat != null && b.lon != null ? calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, b.lat, b.lon) : 999;
@@ -639,7 +646,7 @@ export default function ExplorePage() {
         const bScore = (b.rating > 0 ? Math.min(b.rating, 5) * 2 : 0) + statusWeight + (b.tips?.length ? 1 : 0) - Math.min(bDistance, 25) / 25;
         return bScore - aScore;
       });
-  }, [sites, safetyData?.status, searchOrigin.lat, searchOrigin.lon]);
+  }, [sites, safetyData?.status, searchOrigin.lat, searchOrigin.lon, radius]);
 
   const radiusGuidance = radius <= 5000
     ? { title: 'Explore nearby safely', description: 'Nearby places, area safety status, and things to know before visiting.' }
@@ -1367,16 +1374,27 @@ export default function ExplorePage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.nile, fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 800 }}>
                 <Sparkles size={13} color={C.solar} /> Recommended nearby
               </div>
-              <div style={{ color: '#8B7E6A', fontFamily: "'Inter',sans-serif", fontSize: 10, marginTop: 2 }}>Prioritized for relevance, data quality, and distance.</div>
+              {!recommendationsCollapsed && <div style={{ color: '#8B7E6A', fontFamily: "'Inter',sans-serif", fontSize: 10, marginTop: 2 }}>Prioritized for relevance, data quality, and distance.</div>}
             </div>
-            <button
-              onClick={() => setShowAllRecommendations((value) => !value)}
-              style={{ border: 'none', background: 'transparent', color: C.copper, fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
-            >
-              {showAllRecommendations ? 'Recommended' : 'Show all places'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {!recommendationsCollapsed && (
+                <button
+                  onClick={() => setShowAllRecommendations((value) => !value)}
+                  style={{ border: 'none', background: 'transparent', color: C.copper, fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  {showAllRecommendations ? 'Recommended' : 'Show all places'}
+                </button>
+              )}
+              <button
+                onClick={() => setRecommendationsCollapsed((value) => !value)}
+                aria-label={recommendationsCollapsed ? 'Expand recommendations' : 'Collapse recommendations'}
+                style={{ border: 'none', background: 'transparent', color: '#8B7E6A', cursor: 'pointer', display: 'inline-flex', padding: 4 }}
+              >
+                <ChevronDown size={15} style={{ transition: 'transform 0.2s', transform: recommendationsCollapsed ? 'rotate(-90deg)' : 'none' }} />
+              </button>
+            </div>
           </div>
-          {(showAllRecommendations ? recommendedSites : recommendedSites.slice(0, 3)).map((site) => (
+          {!recommendationsCollapsed && (showAllRecommendations ? recommendedSites : recommendedSites.slice(0, 3)).map((site) => (
             <button
               key={site.id}
               onClick={() => selectSite(site)}
