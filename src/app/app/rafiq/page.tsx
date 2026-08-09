@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocation, useLocationLabel } from '@/providers/LocationProvider';
 import { C } from '@/lib/constants/theme';
 import { Glyph, PyramidSkyline } from '@/app/components/atoms';
-import { MapPin, RefreshCw, Send, Mic, Image as ImageIcon, Square, AlertTriangle } from 'lucide-react';
-import { chatService, PERSONAS, type Persona } from '@/services/chatService';
+import { MapPin, RefreshCw, Send, Mic, Image as ImageIcon, Square, AlertTriangle, Trash2, History as HistoryIcon, Volume2, VolumeX, Zap } from 'lucide-react';
+import { chatService, PERSONAS, type Persona, type ConversationSummary } from '@/services/chatService';
 import { useAppSettings } from '@/lib/settingsStore';
 import { rafiqOfflineAnswer } from '@/app/data/rafiq-offline';
+import { parseRafiqContext, getInitialQuery, getConversationTitle, type RafiqContextEnvelope } from '@/lib/rafiq';
+import { walletApi, InsufficientBalanceError } from '@/lib/api/wallet';
 
 type RafiqMsg = {
   id: string;
@@ -17,6 +19,7 @@ type RafiqMsg = {
   sources?: string[];
   follow?: string[];
   alert?: { level: "info" | "warn" | "danger"; text: string };
+  audioUrl?: string;
   ts: string;
 };
 
@@ -36,7 +39,7 @@ const TOPIC_PILLS = [
   { label: "Hidden gems",     query: "What do most tourists miss at Giza?"           },
 ];
 
-function RafiqBubble({ msg }: { msg: RafiqMsg }) {
+function RafiqBubble({ msg, speaking, onToggleAudio }: { msg: RafiqMsg; speaking: boolean; onToggleAudio: (msg: RafiqMsg) => void }) {
   const isRafiq = msg.role === "rafiq";
   const parts   = msg.text.split(/\*\*(.+?)\*\*/g);
   const rendered = parts.map((p, i) =>
@@ -76,6 +79,15 @@ function RafiqBubble({ msg }: { msg: RafiqMsg }) {
         <div style={{ background: "linear-gradient(145deg,#FAF7F0,#F5EDD8)", border: `1px solid ${C.sand}22`, borderRadius: "4px 16px 16px 16px", padding: "14px 16px" }}>
           <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "9px", fontWeight: 700, color: C.copper, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>◈ Rafiq · {msg.ts}</div>
           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", fontSize: "14px", color: C.nile, lineHeight: 1.75, margin: 0 }}>{rendered}</p>
+          {/* Voice reply audio control */}
+          {msg.audioUrl && (
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(27,26,23,0.07)", display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={() => onToggleAudio(msg)} title={speaking ? "Stop" : "Play reply"} style={{ background: speaking ? `${C.alertAmber}18` : C.nile, border: "none", borderRadius: 99, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}>
+                {speaking ? <VolumeX size={14} color={C.alertAmber}/> : <Volume2 size={14} color={C.limestone}/>}
+              </button>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: speaking ? C.alertAmber : C.nile }}>{speaking ? "Playing…" : "Play spoken reply"}</span>
+            </div>
+          )}
           {/* Sources */}
           {msg.sources && (
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(27,26,23,0.07)", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -100,13 +112,42 @@ function RafiqBubble({ msg }: { msg: RafiqMsg }) {
 }
 
 export default function RafiqPage() {
+  return (
+    <Suspense fallback={null}>
+      <RafiqPageContent />
+    </Suspense>
+  );
+}
+
+function RafiqPageContent() {
   const appSettings = useAppSettings();
+  const router = useRouter();
   const { lat, lon } = useLocation();
   const locationLabel = useLocationLabel();
   const searchParams = useSearchParams();
-  const initialQuery = searchParams?.get('q')?.trim() || '';
-  const [msgs,    setMsgs]    = useState<RafiqMsg[]>([WELCOME_MSG]);
-  const [input,   setInput]   = useState("");
+  const initialQuery = getInitialQuery(searchParams);
+
+  // Parse contextual envelope from URL
+  const envelope = parseRafiqContext(searchParams);
+  const contextRef = React.useRef<RafiqContextEnvelope | null>(envelope);
+  const titleForContext = envelope?.context ? getConversationTitle(envelope.context) : "";
+
+  // Initialize messages with contextual welcome if available
+  const initialMsgs = React.useMemo(() => {
+    if (envelope?.context && envelope.welcome) {
+      return [{
+        id: "m0",
+        role: "rafiq" as const,
+        text: envelope.welcome,
+        follow: envelope.suggestions,
+        ts: "Now",
+      }];
+    }
+    return [WELCOME_MSG];
+  }, [envelope]);
+
+  const [msgs,    setMsgs]    = useState<RafiqMsg[]>(initialMsgs);
+  const [input,   setInput]   = useState(initialQuery);
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
@@ -118,18 +159,146 @@ export default function RafiqPage() {
   });
   const [listening, setListening] = useState(false);
   const [identifying, setIdentifying] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [activeTitle, setActiveTitle] = useState<string>(titleForContext || "New chat");
+  const [lastCostTokens, setLastCostTokens] = useState<number | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const transcriptRef = useRef<string>("");
+  const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    void loadBalance();
+    void loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch { /* noop */ }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadBalance = async () => {
+    try {
+      const { balance: b } = await walletApi.getBalance();
+      setBalance(b);
+      setShowUpgrade(false);
+    } catch {
+      setBalance(null);
+    }
+  };
+
+  const loadConversations = async () => {
+    setHistoryLoading(true);
+    try {
+      const list = await chatService.getConversations();
+      setConversations(list);
+    } catch {
+      // ignore — history sidebar is best-effort
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setSpeakingId(null);
+  };
+
+  const playAudio = (url: string, msgId: string) => {
+    stopAudio();
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    setSpeakingId(msgId);
+    audio.play().catch(() => setSpeakingId(null));
+    audio.onended = () => setSpeakingId(null);
+    audio.onerror = () => setSpeakingId(null);
+  };
+
+  const toggleAudio = (msg: RafiqMsg) => {
+    if (speakingId === msg.id && audioRef.current) {
+      stopAudio();
+    } else if (msg.audioUrl) {
+      playAudio(msg.audioUrl, msg.id);
+    }
+  };
+
+  const handleNewChat = () => {
+    stopAudio();
+    setMsgs([WELCOME_MSG]);
+    setConversationId(undefined);
+    setActiveTitle(titleForContext || "New chat");
+    setLastCostTokens(null);
+    setError(null);
+    setInput("");
+    setShowHistory(false);
+    setShowUpgrade(false);
+  };
+
+  const handleDeleteConversation = async (convId: string) => {
+    try {
+      await chatService.deleteConversation(convId);
+      setConversations(prev => prev.filter(c => c.id !== convId));
+      if (convId === conversationId) handleNewChat();
+    } catch (err: any) {
+      setError(err?.message || "Failed to delete conversation");
+    }
+  };
+
+  const openConversation = async (conv: ConversationSummary) => {
+    if (loading) return;
+    stopAudio();
+    setHistoryLoading(true);
+    setError(null);
+    try {
+      const list = await chatService.getMessages(conv.id);
+      setConversationId(conv.id);
+      setActiveTitle(conv.title || "Conversation");
+      setLastCostTokens(null);
+      setInput("");
+      if (list.length === 0) {
+        setMsgs([WELCOME_MSG]);
+      } else {
+        setMsgs(list.map((m, i) => ({
+          id: m.id,
+          role: m.role === "user" ? "user" : "rafiq",
+          text: m.content,
+          ts: m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Earlier",
+        })));
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to load conversation");
+    } finally {
+      setHistoryLoading(false);
+      setShowHistory(false);
+    }
+  };
 
   const send = async (text: string) => {
     if (!text.trim() || loading) return;
+    stopAudio();
     const userMsg: RafiqMsg = { id: `u_${Date.now()}`, role: "user", text: text.trim(), ts: "Just now" };
     setMsgs(m => [...m, userMsg]);
     setInput("");
     setLoading(true);
     setError(null);
+    setShowUpgrade(false);
     const rafiqMsgId = `r_${Date.now()}`;
     setMsgs(m => [...m, { id: rafiqMsgId, role: "rafiq", text: "", ts: "Just now" }]);
     try {
@@ -139,13 +308,30 @@ export default function RafiqPage() {
         (token) => {
           setMsgs(m => m.map(msg => msg.id === rafiqMsgId ? { ...msg, text: msg.text + token } : msg));
         },
-        { lat: lat ?? undefined, lon: lon ?? undefined, conversationId }
+        {
+          lat: lat ?? undefined,
+          lon: lon ?? undefined,
+          conversationId,
+          context: contextRef.current?.context,
+          title: !conversationId ? titleForContext || undefined : undefined,
+        }
       );
       if (response.conversationId) {
         setConversationId(response.conversationId);
       }
+      if (response.usage?.totalTokens) {
+        setLastCostTokens(response.usage.totalTokens);
+      }
       setMsgs(m => m.map(msg => msg.id === rafiqMsgId ? { ...msg, text: response.text } : msg));
+      void loadBalance();
+      void loadConversations();
     } catch (err: any) {
+      if (err instanceof InsufficientBalanceError) {
+        setMsgs(m => m.filter(msg => msg.id !== rafiqMsgId));
+        setShowUpgrade(true);
+        setError("Not enough tokens. Top up your wallet to keep chatting with Rafiq.");
+        return;
+      }
       const offline = rafiqOfflineAnswer(text.trim());
       const errMsg: RafiqMsg = {
         id: `r_${Date.now()}`,
@@ -164,8 +350,54 @@ export default function RafiqPage() {
     }
   };
 
+  const sendVoiceReply = async (audio: Blob, mimeType: string, transcript: string) => {
+    setLoading(true);
+    setError(null);
+    setShowUpgrade(false);
+    const rafiqMsgId = `r_${Date.now()}`;
+    setMsgs(m => [...m, { id: rafiqMsgId, role: "rafiq", text: "", ts: "Just now" }]);
+    try {
+      const result = await chatService.voice(audio, mimeType, {
+        lat: lat ?? undefined,
+        lon: lon ?? undefined,
+        conversationId,
+        persona,
+        title: !conversationId ? titleForContext || undefined : undefined,
+        transcript: transcript || undefined,
+        rafiqContext: contextRef.current?.context,
+      });
+      if (result.conversation_id) {
+        setConversationId(result.conversation_id);
+      }
+      if (result.usage?.totalTokens) {
+        setLastCostTokens(result.usage.totalTokens);
+      }
+      const audioUrl = result.audio_url || (result.audio_response ? result.audio_response : undefined);
+      setMsgs(m => m.map(msg => msg.id === rafiqMsgId ? { ...msg, text: result.text_response || "…", audioUrl } : msg));
+      if (audioUrl) {
+        setTimeout(() => playAudio(audioUrl, rafiqMsgId), 150);
+      }
+      void loadBalance();
+      void loadConversations();
+    } catch (err: any) {
+      setMsgs(m => m.filter(msg => msg.id !== rafiqMsgId));
+      if (err instanceof InsufficientBalanceError) {
+        setShowUpgrade(true);
+        setError("Not enough tokens. Top up your wallet to keep chatting with Rafiq.");
+        return;
+      }
+      setError(err?.message || "Voice chat failed. Please try again.");
+    } finally {
+      setLoading(false);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    }
+  };
+
   const handleVoice = async () => {
     if (listening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch { /* noop */ }
+      }
       mediaRecorderRef.current?.stop();
       return;
     }
@@ -174,31 +406,50 @@ export default function RafiqPage() {
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
+      transcriptRef.current = "";
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         setListening(false);
-        const audio = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        if (audio.size === 0) return;
-        setLoading(true);
-        setError(null);
-        try {
-          const result = await chatService.voice(audio, recorder.mimeType || "audio/webm", {
-            lat: lat ?? undefined,
-            lon: lon ?? undefined,
-            conversationId,
-          });
-          setInput(result.text_response || "");
-        } catch (err: any) {
-          setError(err?.message || "Voice transcription failed. Please try again.");
-        } finally {
-          setLoading(false);
+        if (recognitionRef.current) {
+          try { recognitionRef.current.abort(); } catch { /* noop */ }
         }
+        const audio = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        const transcript = transcriptRef.current.trim();
+        if (audio.size === 0) return;
+        if (transcript) {
+          setMsgs(m => [...m, { id: `uv_${Date.now()}`, role: "user", text: transcript, ts: "Just now" }]);
+        } else {
+          setMsgs(m => [...m, { id: `uv_${Date.now()}`, role: "user", text: "🎤 Voice message", ts: "Just now" }]);
+        }
+        await sendVoiceReply(audio, recorder.mimeType || "audio/webm", transcript);
       };
       recorder.start();
       setListening(true);
+
+      const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognitionCtor) {
+        try {
+          const recognition = new SpeechRecognitionCtor();
+          recognitionRef.current = recognition;
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = "en-US";
+          recognition.onresult = (e: any) => {
+            let full = "";
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+              full += e.results[i][0].transcript;
+            }
+            transcriptRef.current = full.trim();
+          };
+          recognition.onerror = () => { /* fall back to audio-only understanding */ };
+          recognition.start();
+        } catch {
+          recognitionRef.current = null;
+        }
+      }
     } catch (err: any) {
       setError("Microphone access denied.");
     }
@@ -285,12 +536,21 @@ export default function RafiqPage() {
             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "18px", fontWeight: 500, color: C.limestone, lineHeight: 1 }}>Rafiq</div>
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.safeGreen, boxShadow: `0 0 0 2px ${C.safeGreen}35`, animation: "rihlaPulseDot 1.8s ease-in-out infinite" }}/>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 500, color: `${C.limestone}65` }}>Active · {locationLabel} · Core AI</span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 500, color: `${C.limestone}65` }}>Active · {locationLabel} · <span style={{ color: C.solarBright }}>{activeTitle}</span></span>
             </div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, position: "relative", zIndex: 2, animation: "rihlaFadeUp 0.5s ease-out 0.1s both" }}>
-          <button onClick={() => { setMsgs([WELCOME_MSG]); setConversationId(undefined); setError(null); }} style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: `${C.limestone}70`, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "border-color 0.2s, color 0.2s", }}>
+        <div style={{ display: "flex", gap: 8, position: "relative", zIndex: 2, animation: "rihlaFadeUp 0.5s ease-out 0.1s both", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 6, maxWidth: 220 }}>
+            <Zap size={12} color={C.solarBright} strokeWidth={2.2}/>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.solarBright }}>
+              {balance === null ? "— tokens" : `${balance.toLocaleString()} tokens`}
+            </span>
+          </div>
+          <button onClick={() => setShowHistory(v => !v)} title="Conversation history" style={{ background: showHistory ? `${C.faience}22` : `${C.limestone}10`, border: `1px solid ${showHistory ? C.faience : `${C.limestone}20`}`, borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: showHistory ? C.faience : `${C.limestone}70`, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "all 0.2s" }}>
+            <HistoryIcon size={13} strokeWidth={2}/> History
+          </button>
+          <button onClick={handleNewChat} style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 500, color: `${C.limestone}70`, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "border-color 0.2s, color 0.2s", }}>
             <RefreshCw size={13} strokeWidth={2}/> New chat
           </button>
           <div style={{ background: `${C.limestone}10`, border: `1px solid ${C.limestone}20`, borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 6 }}>
@@ -300,9 +560,52 @@ export default function RafiqPage() {
         </div>
       </div>
 
+      {showUpgrade && (
+        <div style={{ background: "linear-gradient(90deg, rgba(232,168,32,0.16), rgba(232,168,32,0.05))", borderBottom: `1px solid ${C.solarBright}30`, padding: "10px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Zap size={16} color={C.solarBright} strokeWidth={2.2}/>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: C.basalt, fontWeight: 500 }}>
+              Your token balance is too low for another message.
+            </span>
+          </div>
+          <button onClick={() => router.push("/app/wallet")} style={{ background: C.solarBright, border: "none", borderRadius: 8, padding: "8px 16px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, color: C.basalt, cursor: "pointer", whiteSpace: "nowrap" }}>
+            Buy tokens →
+          </button>
+        </div>
+      )}
+
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Left: topic pills */}
         <div style={{ width: 220, flexShrink: 0, background: "#FAF7F0", borderRight: "1px solid rgba(27,26,23,0.07)", padding: "20px 14px", display: "flex", flexDirection: "column", gap: 6, overflowY: "auto" }}>
+          {showHistory && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, paddingLeft: 4 }}>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, color: C.copper, letterSpacing: "0.12em", textTransform: "uppercase" }}>History</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880", cursor: "pointer", fontWeight: 600 }}>{conversations.length}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
+                {historyLoading && (
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880", padding: "8px 4px" }}>Loading…</div>
+                )}
+                {!historyLoading && conversations.length === 0 && (
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880", padding: "8px 4px", lineHeight: 1.5 }}>No past conversations yet.</div>
+                )}
+                {conversations.map(conv => (
+                  <div key={conv.id} style={{ display: "flex", alignItems: "center", gap: 4, background: conv.id === conversationId ? `${C.nile}12` : "transparent", border: `1px solid ${conv.id === conversationId ? C.nile : "rgba(27,26,23,0.07)"}`, borderRadius: 9, padding: "7px 9px", cursor: "pointer", transition: "all 0.15s" }} onClick={() => openConversation(conv)}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.nile, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{conv.title}</div>
+                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", color: "#A89880", marginTop: 1 }}>
+                        {conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}{conv.messageCount ? ` · ${conv.messageCount} msgs` : ""}
+                      </div>
+                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteConversation(conv.id); }} title="Delete" style={{ background: "none", border: "none", cursor: "pointer", color: "#B89B6B", display: "flex", padding: 3, borderRadius: 6 }}>
+                      <Trash2 size={12} strokeWidth={2}/>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
           <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 700, color: C.copper, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, paddingLeft: 4 }}>Rafiq Persona</div>
           {PERSONAS.map(p => (
             <button key={p.value} onClick={() => setPersona(p.value)} title={p.blurb} style={{ background: persona === p.value ? C.nile : C.limestone, border: `1.5px solid ${persona === p.value ? C.nile : "rgba(27,26,23,0.08)"}`, borderRadius: 10, padding: "9px 13px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: persona === p.value ? C.limestone : C.nile, cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}>{p.label}</button>
@@ -333,7 +636,7 @@ export default function RafiqPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Messages */}
           <div onClick={handleFollow} style={{ flex: 1, overflowY: "auto", padding: "24px 28px", display: "flex", flexDirection: "column" }}>
-            {msgs.map(m => <RafiqBubble key={m.id} msg={m}/>)}
+            {msgs.map(m => <RafiqBubble key={m.id} msg={m} speaking={speakingId === m.id} onToggleAudio={toggleAudio}/>)}
             {loading && (
               <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 16 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 11, background: `linear-gradient(135deg,${C.nile},${C.nileMid})`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Glyph size={18} light/></div>
@@ -375,7 +678,9 @@ export default function RafiqPage() {
               </div>
             </div>
             <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#A89880", marginTop: 8, textAlign: "center" }}>
-              Rafiq synthesises verified sources · Always cross-check critical decisions · <span style={{ color: C.faience, fontWeight: 600 }}>15 live sources active</span>
+              Rafiq synthesises verified sources · Always cross-check critical decisions
+              {' · '}<span style={{ color: C.faience, fontWeight: 600 }}>Balance: {balance === null ? '—' : balance.toLocaleString()} tokens</span>
+              {lastCostTokens !== null && <> · <span style={{ color: C.faience, fontWeight: 600 }}>Last turn usage: {lastCostTokens.toLocaleString()} tokens</span></>}
             </div>
           </div>
         </div>
