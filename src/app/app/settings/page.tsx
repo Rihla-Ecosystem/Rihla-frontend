@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { BookOpen, LogOut, Check, Loader2 } from "lucide-react";
+import { BookOpen, LogOut, Check, Loader2, Wallet, Coins, CreditCard } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { Geom, Glyph } from "@/app/components/atoms";
 import { TopBar } from "@/app/components/layout/TopBar";
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { userService } from "@/services/userService";
 import { historyService } from "@/services/historyService";
+import { walletApi, type TokenPackage } from "@/lib/api/wallet";
 import { useAppSettings, setAppSettings, syncAppSettingsFromServer, type AppUnits } from "@/lib/settingsStore";
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
@@ -56,11 +57,34 @@ export default function PageSettings() {
   const [savedStatus, setSavedStatus] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Wallet state
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [walletLifetime, setWalletLifetime] = useState<number>(0);
+  const [walletLoading, setWalletLoading] = useState(false);
+
   useEffect(() => {
     if (user) {
       syncAppSettingsFromServer();
+      loadWallet();
     }
   }, [user]);
+
+  const loadWallet = async () => {
+    try {
+      setWalletLoading(true);
+      const [bal] = await Promise.allSettled([
+        walletApi.getBalance(),
+      ]);
+      if (bal.status === "fulfilled") {
+        setWalletBalance(bal.value.balance);
+        setWalletLifetime(bal.value.lifetimeTokens);
+      }
+    } catch (err) {
+      console.warn("Failed to load wallet:", err);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
 
   const flash = useCallback((msg: string) => {
     setSavedStatus(msg);
@@ -232,6 +256,53 @@ export default function PageSettings() {
           <SettingsSection title="Privacy &amp; Data">
             <SettingsRow label="Live Location" sub="Required for scam alerts and nearby sites" right={<Toggle on={settings.privacy.locationLive} onChange={() => togglePrivacy("locationLive")} />} />
             <SettingsRow label="Usage Analytics" sub="Helps us improve the app experience" border={false} right={<Toggle on={settings.privacy.analytics} onChange={() => togglePrivacy("analytics")} />} />
+          </SettingsSection>
+
+          {/* Tokens & Wallet */}
+          <SettingsSection title="Tokens & Wallet">
+            <SettingsRow
+              label="Available Balance"
+              sub={walletLoading ? "Loading..." : `${walletBalance.toLocaleString()} tokens`}
+              right={
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#8B7E60" }}>
+                    Lifetime: {walletLifetime.toLocaleString()}
+                  </div>
+                  <button
+                    onClick={loadWallet}
+                    disabled={walletLoading}
+                    style={{ background: "transparent", border: "none", color: C.faience, fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}
+                  >
+                    <Wallet size={12} /> Sync
+                  </button>
+                </div>
+              }
+            />
+            <SettingsRow
+              label="View Wallet"
+              sub="Purchase tokens, view transactions, manage spending"
+              right={
+                <button
+                  onClick={() => router.push("/app/wallet")}
+                  style={{ background: C.nile, color: C.limestone, border: "none", borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <Wallet size={13} /> Open Wallet
+                </button>
+              }
+            />
+            <SettingsRow
+              label="Token Packages"
+              sub="Browse available token packages for Rafiq"
+              border={false}
+              right={
+                <button
+                  onClick={() => router.push("/app/wallet")}
+                  style={{ background: "transparent", border: `1.5px solid ${C.faience}40`, borderRadius: 8, padding: "7px 14px", fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.faience, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <Coins size={13} strokeWidth={2} /> Browse Packages
+                </button>
+              }
+            />
           </SettingsSection>
 
           {/* Account */}

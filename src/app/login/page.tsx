@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { C } from "@/lib/constants/theme";
-import { WebField, GoogleSVG } from "@/app/components/atoms";
+import { WebField } from "@/app/components/atoms";
 import { AuthShell } from "@/app/components/layout/AuthShell";
 import { AlertTriangle, ArrowRight, ChevronLeft } from "lucide-react";
 
@@ -45,8 +45,6 @@ export default function LoginPage() {
         <button type="submit" disabled={isLoading} style={{ width: "100%", background: C.solar, border: "none", borderRadius: 10, padding: "13px 24px", fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 700, color: C.basalt, cursor: isLoading ? "wait" : "pointer", opacity: isLoading ? 0.7 : 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, boxShadow: `0 4px 18px ${C.solar}40` }}>
           {isLoading ? "Signing in..." : "Sign in to Rihla"} {!isLoading && <ArrowRight size={16} strokeWidth={2.5}/>}
         </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ flex: 1, height: 1, background: "rgba(27,26,23,0.1)" }}/><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", color: "#A89880" }}>or</span><div style={{ flex: 1, height: 1, background: "rgba(27,26,23,0.1)" }}/></div>
-        <button type="button" style={{ width: "100%", background: "#FAF7F0", border: "1.5px solid rgba(27,26,23,0.12)", borderRadius: 10, padding: 13, fontFamily: "'Inter',sans-serif", fontSize: "14px", fontWeight: 600, color: C.basalt, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><GoogleSVG/> Continue with Google</button>
       </form>
       <div style={{ textAlign: "center", marginTop: 24 }}><span style={{ fontFamily: "'Inter',sans-serif", fontSize: "13px", color: "#8B7E6A" }}>New to Rihla? </span><button onClick={() => { clearError(); router.push("/signup"); }} style={{ background: "none", border: "none", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: 700, color: C.faience, cursor: "pointer" }}>Create an account</button></div>
     </AuthShell>

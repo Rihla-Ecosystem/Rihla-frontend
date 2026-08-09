@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
 import type { TripHistoryItem, UserBadgeItem } from '@/services/historyService';
 import type { Journey } from '@/lib/api/journeys';
-import type { WalletTransaction, TokenPackage } from '@/lib/api/wallet';
+import type { TokenPackage } from '@/lib/api/wallet';
 
 // ---------------------------------------------------------------------------
 // Demo Store
@@ -379,11 +379,11 @@ export function demoJourneys(): Journey[] {
 export function demoWallet(): {
   balance: number;
   lifetimeTokens: number;
-  transactions: WalletTransaction[];
+  transactions: { id: string; type: "purchase" | "reward"; amount: number; description: string; timestamp: string }[];
   packages: TokenPackage[];
 } {
   const state = read();
-  const transactions: WalletTransaction[] = [
+  const transactions: { id: string; type: "purchase" | "reward"; amount: number; description: string; timestamp: string }[] = [
     ...state.visits.map((v) => ({
       id: `demo-tx-${v.id}`,
       type: 'reward' as const,

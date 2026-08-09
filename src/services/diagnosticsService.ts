@@ -80,7 +80,7 @@ export const diagnosticsService = {
       const ms = Math.round(performance.now() - start);
       const status = response?.status ?? (error ? 400 : 200);
       if (data) {
-        return result('/users/me', response ?? null, ms, `Authenticated as ${(data as any).displayName || (data as any).email || 'user'}`, true);
+        return result('/users/me', response ?? null, ms, `Authenticated as ${(data as { displayName?: string; email?: string } | null)?.displayName || (data as { displayName?: string; email?: string } | null)?.email || 'user'}`, true);
       }
       const detail = error
         ? (status === 401 ? 'Not authenticated — sign in first' : `HTTP ${status}`)

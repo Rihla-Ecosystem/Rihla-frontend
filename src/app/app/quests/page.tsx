@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { C } from "@/lib/constants/theme";
 import { TopBar } from "@/app/components/layout/TopBar";
 import { journeysApi, type Journey } from "@/lib/api/journeys";
-import { useDemoStore, demoJourneys } from "@/lib/demoStore";
-import { ShieldCheck, Landmark, CheckCircle2, Lock, RefreshCw, WifiOff } from "lucide-react";
+import { useDemoStore } from "@/lib/demoStore";
+import { ShieldCheck, Landmark, CheckCircle2, Lock, RefreshCw, WifiOff, FlaskConical } from "lucide-react";
+import { buildJourneyContext, buildRafiqUrl } from '@/lib/rafiq';
+import { AskRafiqButton } from '@/app/components/rafiq';
 
 const SCAM_SLUGS = [
   "scam-smart-traveler",
@@ -23,144 +25,6 @@ const ARCHAEOLOGY_SLUGS = [
   "coptic-islamic-cairo",
 ];
 
-const OFFLINE_QUESTS: Journey[] = [
-  {
-    id: "offline-scam-smart-traveler",
-    slug: "scam-smart-traveler",
-    title: "The Smart Traveler",
-    description: "Learn to spot the classic bazaar tricks before they spot you.",
-    xpReward: 150,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 5,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-taxi-tricks",
-    slug: "taxi-tricks",
-    title: "Taxi Tricks & Fair Fares",
-    description: "Master the meter, the fare, and the 'friend discount' that never was.",
-    xpReward: 120,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 4,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-street-money-exchange",
-    slug: "street-money-exchange",
-    title: "Street Money Exchange",
-    description: "Why that 'great rate' on the street is the most expensive deal in Cairo.",
-    xpReward: 100,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 3,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-fake-guide-papyrus",
-    slug: "fake-guide-papyrus",
-    title: "The Fake Guide & the Papyrus",
-    description: "The 'official guide' who materialises at your elbow — and how to decline.",
-    xpReward: 100,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 3,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-atm-card-scam",
-    slug: "atm-card-scam",
-    title: "ATM & Card Cloning",
-    description: "Protect your card at Cairo ATMs and in restaurants with card readers.",
-    xpReward: 130,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 4,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-giza-plateau",
-    slug: "giza-plateau",
-    title: "The Giza Plateau",
-    description: "Pyramids, the Sphinx, and the plateau's hidden corners.",
-    xpReward: 200,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 6,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-karnak-luxor",
-    slug: "karnak-luxor",
-    title: "Karnak & Luxor",
-    description: "The great temple complex and the avenue of sphinxes.",
-    xpReward: 180,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 5,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-abu-simbel-nubia",
-    slug: "abu-simbel-nubia",
-    title: "Abu Simbel & Nubia",
-    description: "The relocated temples of Ramesses II — a marvel of ancient and modern engineering.",
-    xpReward: 180,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 4,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-  {
-    id: "offline-coptic-islamic-cairo",
-    slug: "coptic-islamic-cairo",
-    title: "Coptic & Islamic Cairo",
-    description: "Churches, mosques, and a thousand years of layered faith in Old Cairo.",
-    xpReward: 160,
-    isActive: false,
-    steps: [],
-    completedSteps: 0,
-    totalSteps: 5,
-    isCompleted: false,
-    startedAt: null,
-    completedAt: null,
-    nextStep: null,
-  },
-];
-
 export default function QuestsPage() {
   const router = useRouter();
   const demo = useDemoStore();
@@ -174,7 +38,6 @@ export default function QuestsPage() {
     setLoading(true);
     setError(false);
     if (demo.mode === 'on') {
-      setQuests(demoJourneys());
       setError(false);
       setLoading(false);
       return;
@@ -186,7 +49,6 @@ export default function QuestsPage() {
       })
       .catch(() => {
         if (active) {
-          setQuests(OFFLINE_QUESTS);
           setError(true);
         }
       })
@@ -204,6 +66,23 @@ export default function QuestsPage() {
   const archaeologyQuests = ARCHAEOLOGY_SLUGS.map((slug) =>
     quests.find((q) => q.slug === slug)
   ).filter((q): q is Journey => !!q);
+
+  const toggleDemoMode = () => {
+    if (demo.mode === 'on') {
+      localStorage.removeItem('rihla_demo_data');
+    } else {
+      localStorage.setItem('rihla_demo_data', JSON.stringify({
+        mode: 'on',
+        visits: [],
+        xp: 250,
+        badges: ['First Steps', 'Giza Explorer'],
+        quests: { 'scam-smart-traveler': { completedSteps: 2, totalSteps: 5, isCompleted: false } },
+        walletBalance: 1200,
+        lifetimeTokens: 250
+      }));
+    }
+    window.location.reload();
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.bg }}>
@@ -276,6 +155,33 @@ export default function QuestsPage() {
               quests={archaeologyQuests}
               router={router}
             />
+            {/* Test toggle for demo mode */}
+            <div style={{ marginTop: 24, padding: "16px", background: "rgba(27,26,23,0.04)", borderRadius: 12, border: "1px dashed rgba(27,26,23,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <FlaskConical size={16} color={C.copper} />
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.basalt }}>Demo Mode</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#8B7E6A" }}>Use mock data for testing</span>
+              </div>
+              <button
+              onClick={toggleDemoMode}
+                style={{
+                  background: demo.mode === 'on' ? C.signalRed : C.nile,
+                  color: C.limestone,
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "8px 16px",
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {demo.mode === 'on' ? 'Disable Demo' : 'Enable Demo'} <RefreshCw size={13} />
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -330,6 +236,8 @@ function QuestCard({ quest, onClick }: { quest: Journey; onClick: () => void }) 
       ? { label: "In progress", color: C.solar, bg: `${C.solar}14` }
       : { label: "Not started", color: "#8B7E6A", bg: "rgba(27,26,23,0.06)" };
 
+  const ctx = buildJourneyContext(quest, quest.completedSteps);
+
   return (
     <button
       onClick={onClick}
@@ -375,6 +283,14 @@ function QuestCard({ quest, onClick }: { quest: Journey; onClick: () => void }) 
       </div>
       <div style={{ background: "rgba(27,26,23,0.08)", borderRadius: 99, height: 6, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: quest.isCompleted ? C.safeGreen : C.solar, borderRadius: 99 }} />
+      </div>
+      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(27,26,23,0.08)" }}>
+        <AskRafiqButton
+          context={ctx}
+          label="Ask Rafiq about this quest"
+          variant="ghost"
+          size="sm"
+        />
       </div>
     </button>
   );

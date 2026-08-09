@@ -5,6 +5,8 @@ import { AppShell } from '@/app/components/layout/AppShell';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { syncAppSettingsFromServer } from '@/lib/settingsStore';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ToastProvider } from '@/components/ToastProvider';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,6 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (path.startsWith('/app/rafiq')) return 'rafiq';
     if (path.startsWith('/app/safety')) return 'safety';
     if (path.startsWith('/app/history')) return 'history';
+    if (path.startsWith('/app/saved')) return 'history';
     if (path.startsWith('/app/monuments')) return 'monuments';
     if (path.startsWith('/app/currency')) return 'currency';
     if (path.startsWith('/app/quests')) return 'quests';
@@ -57,8 +60,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppShell activePage={activePage} setPage={setPage} go={go}>
-      {children}
-    </AppShell>
+    <ToastProvider>
+      <ErrorBoundary>
+        <AppShell activePage={activePage} setPage={setPage} go={go}>
+          {children}
+        </AppShell>
+      </ErrorBoundary>
+    </ToastProvider>
   );
 }

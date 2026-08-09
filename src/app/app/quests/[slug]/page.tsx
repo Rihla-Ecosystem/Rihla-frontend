@@ -18,6 +18,8 @@ import {
   ChevronLeft,
   Sparkles,
 } from "lucide-react";
+import { buildJourneyContext, buildRafiqUrl } from '@/lib/rafiq';
+import { AskRafiqButton } from '@/app/components/rafiq';
 
 const SCAM_SLUGS = [
   "scam-smart-traveler",
@@ -144,6 +146,7 @@ export default function QuestDetailPage() {
             const isCurrent = idx === quest.completedSteps && !quest.isCompleted;
             const isLocked = idx > quest.completedSteps;
             const isFinal = step.stepNumber === quest.totalSteps;
+            const stepCtx = buildJourneyContext(quest, idx);
             return (
               <div
                 key={step.id}
@@ -217,6 +220,16 @@ export default function QuestDetailPage() {
                   {isLocked && (
                     <div style={{ marginTop: 6, fontFamily: "'Inter',sans-serif", fontSize: "11px", fontStyle: "italic", color: "#8B7E6A" }}>
                       Complete the previous step to reveal this one.
+                    </div>
+                  )}
+                  {!isLocked && (
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(27,26,23,0.08)" }}>
+                      <AskRafiqButton
+                        context={stepCtx}
+                        label="Ask Rafiq about this step"
+                        variant="ghost"
+                        size="sm"
+                      />
                     </div>
                   )}
                 </div>

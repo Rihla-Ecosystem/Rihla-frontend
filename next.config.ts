@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   experimental: {
     optimizePackageImports: ["lucide-react", "@mui/material", "@mui/icons-material", "recharts"],
+    turbo: {
+      resolveAlias: {
+        canvas: "./empty-module.ts",
+      },
+    },
   },
   async redirects() {
     return [

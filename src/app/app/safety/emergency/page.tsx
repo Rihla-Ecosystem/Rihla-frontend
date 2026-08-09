@@ -36,11 +36,10 @@ export default function EmergencyPage() {
       <EmergencyHeader goBack={goBack} locShared={locShared} setLocShared={setLocShared} />
 
       <div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1fr_340px]"
         style={{
           flex: 1,
           padding: '28px 32px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 340px',
           gap: 20,
           maxWidth: 1200,
           margin: '0 auto',

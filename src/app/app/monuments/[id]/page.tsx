@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { C } from '@/lib/constants/theme';
 import { Glyph } from '@/app/components/atoms';
 import { ChevronLeft, Star } from 'lucide-react';
@@ -13,7 +13,9 @@ import { monumentsService, type Monument } from '@/services/monumentsService';
 import { buildMonumentSite } from '@/app/data/monument-catalog';
 import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
 import { geoApi, googleMapsDirectionsUrl } from '@/lib/api/geo';
+import { placesApi } from '@/lib/api/places';
 import { useLocation } from '@/providers/LocationProvider';
+import { buildExploreContext, buildRafiqUrl } from '@/lib/rafiq';
 
 export default function MonumentDetailPage() {
   const router = useRouter();
@@ -51,6 +53,54 @@ export default function MonumentDetailPage() {
       .then(setMonuments)
       .catch(() => setMonuments([]));
   }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    let active = true;
+    placesApi
+      .isFavorited(id)
+      .then((fav) => {
+        if (active) setSaved(fav);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const toggleSave = useMemo(
+    () => () => {
+      const m = monument;
+      if (!m) return;
+      const next = !saved;
+      setSaved(next);
+      if (next) {
+        placesApi.addFavorite({
+          placeId: m.id,
+          placeName: m.title,
+          category: m.category,
+          governorate: m.governorate ?? undefined,
+          lat: m.latitude,
+          lon: m.longitude,
+          img: m.images[0] ?? undefined,
+        }).catch(() => {});
+        placesApi.recordEvent({ event: 'place_saved', siteId: m.id, siteName: m.title });
+      } else {
+        placesApi.removeFavorite(m.id).catch(() => {});
+        placesApi.recordEvent({ event: 'place_unsaved', siteId: m.id, siteName: m.title });
+      }
+    },
+    [monument, saved]
+  );
+
+  const askRafiq = useCallback(() => {
+    const m = monument;
+    const s = site;
+    const name = m?.title || s?.name || 'this place';
+    const ctx = buildExploreContext(s!, null); // distance not needed here
+    const url = buildRafiqUrl(ctx);
+    router.push(url);
+  }, [monument, site, router]);
 
   useEffect(() => {
     if (!monument) return;
@@ -136,7 +186,7 @@ export default function MonumentDetailPage() {
         </button>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
-            onClick={() => setSaved((v) => !v)}
+            onClick={toggleSave}
             style={{
               background: saved ? `${C.terracotta}12` : '#FAF7F0',
               border: `1.5px solid ${saved ? C.terracotta : 'rgba(27,26,23,0.1)'}`,
@@ -156,7 +206,7 @@ export default function MonumentDetailPage() {
             {saved ? 'Saved' : 'Save'}
           </button>
           <button
-            onClick={() => router.push('/app/rafiq')}
+            onClick={askRafiq}
             style={{
               background: C.nile,
               border: 'none',
@@ -181,12 +231,12 @@ export default function MonumentDetailPage() {
         <SiteHero site={site} />
 
         <div
+          className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
           style={{
+            width: '100%',
             maxWidth: 1100,
             margin: '0 auto',
-            padding: '36px 40px',
-            display: 'grid',
-            gridTemplateColumns: '1fr 320px',
+            padding: '28px 20px',
             gap: 36,
           }}
         >
@@ -194,8 +244,8 @@ export default function MonumentDetailPage() {
           <SiteRightSidebar
             site={site}
             saved={saved}
-            setSaved={setSaved}
-            setRafiq={() => router.push('/app/rafiq')}
+            setSaved={toggleSave}
+            setRafiq={askRafiq}
             onDirections={openDirections}
           />
         </div>

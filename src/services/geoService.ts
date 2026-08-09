@@ -19,9 +19,9 @@ export const geoService = {
     if (error) throw formatApiError(error, 'Failed to search places from server');
     return data;
   },
-  getSitesByGovernorate: async (governorateName: string, category?: string) => {
+getSitesByGovernorate: async (governorateName: string, category?: string) => {
     try {
-      const { data, error } = await apiClient.GET('/geo/sites-by-governorate' as any, {
+      const { data, error } = await (apiClient as any).GET('/geo/sites-by-governorate', {
         params: {
           query: { governorate_name: governorateName, category },
         },
@@ -32,6 +32,21 @@ export const geoService = {
     }
     return geoService.searchPlaces(governorateName);
   },
+
+  getGovernorates: async () => {
+    const { data, error } = await (apiClient as any).GET('/geo/governorates', {
+      params: { query: {} },
+    });
+    if (error) throw formatApiError(error, 'Failed to fetch governorates');
+    return data;
+  },
+
+  getSite: async (id: string) => {
+    const { data, error } = await (apiClient as any).GET(`/geo/sites/${id}`);
+    if (error) throw formatApiError(error, 'Failed to fetch site details');
+    return data;
+  },
+
   fetchPoisProgressive: async (
     lat: number,
     lon: number,

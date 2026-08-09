@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle, Star, MapPin, Clock, Shield, Globe, Edit3, X, Loader2, AlertCircle, Award } from "lucide-react";
+import { CheckCircle, Star, MapPin, Clock, Shield, Globe, Edit3, X, Loader2, AlertCircle, Award, FlaskConical, RefreshCw, Wallet, Coins, CreditCard } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { Geom, Glyph } from "@/app/components/atoms";
 import { TopBar } from "@/app/components/layout/TopBar";
@@ -9,8 +9,11 @@ import { useAuth } from "@/lib/auth";
 import { userService } from "@/services/userService";
 import { historyService, TripHistoryItem, UserBadgeItem } from "@/services/historyService";
 import { journeysApi, type Journey } from "@/lib/api/journeys";
+import { walletApi, type TokenPackage } from "@/lib/api/wallet";
 import { useRouter } from "next/navigation";
-import { useDemoStore, demoProfile, demoTrips, demoBadges, demoJourneys } from "@/lib/demoStore";
+import { useDemoStore } from "@/lib/demoStore";
+import { buildProfileContext, buildRafiqUrl } from '@/lib/rafiq';
+import { AskRafiqButton } from '@/app/components/rafiq';
 
 const LEVEL_MAP = [
   { level: 1, title: "Newcomer",   xpNeeded: 0,    color: "#C4B89A" },
@@ -50,6 +53,11 @@ export default function PageProfile() {
   const [badgeCat, setBadgeCat] = useState("All");
   const [tab, setTab]           = useState<"badges" | "stats" | "impact" | "journeys">("badges");
 
+  // Wallet state
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [walletLifetime, setWalletLifetime] = useState<number>(0);
+  const [walletLoading, setWalletLoading] = useState(false);
+
   // Edit Profile Modal State
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editName, setEditName]     = useState("");
@@ -63,15 +71,6 @@ export default function PageProfile() {
     try {
       setLoading(true);
       setError(null);
-
-      if (demo.mode === 'on') {
-        setProfileData(demoProfile());
-        setUserBadges(demoBadges());
-        setTrips(demoTrips());
-        setJourneys(demoJourneys());
-        setLoading(false);
-        return;
-      }
 
       const profile = await userService.getProfile();
       setProfileData(profile);
@@ -102,10 +101,44 @@ export default function PageProfile() {
     }
   };
 
+  const loadWallet = async () => {
+    try {
+      setWalletLoading(true);
+      const [bal] = await Promise.allSettled([
+        walletApi.getBalance(),
+      ]);
+      if (bal.status === "fulfilled") {
+        setWalletBalance(bal.value.balance);
+        setWalletLifetime(bal.value.lifetimeTokens);
+      }
+    } catch (err) {
+      console.warn("Failed to load wallet:", err);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demo.mode]);
+    loadWallet();
+  }, []);
+
+  const toggleDemoMode = () => {
+    if (demo.mode === 'on') {
+      localStorage.removeItem('rihla_demo_data');
+    } else {
+      localStorage.setItem('rihla_demo_data', JSON.stringify({
+        mode: 'on',
+        visits: [],
+        xp: 250,
+        badges: ['First Steps', 'Giza Explorer'],
+        quests: { 'scam-smart-traveler': { completedSteps: 2, totalSteps: 5, isCompleted: false } },
+        walletBalance: 1200,
+        lifetimeTokens: 250
+      }));
+    }
+    window.location.reload();
+  };
 
   const handleOpenEdit = () => {
     const activeUser = profileData || user;
@@ -281,6 +314,22 @@ export default function PageProfile() {
             </div>
           </div>
 
+          {/* Ask Rafiq CTA */}
+          <div style={{ marginTop: 20 }}>
+            {profileData && (
+              <AskRafiqButton
+                context={buildProfileContext(
+                  { travelStyle, interests: activeUser?.interests, xp: currentXP, level: currentLevel.level },
+                  trips,
+                  journeys.filter(j => j.isCompleted)
+                )}
+                label="Ask Rafiq to plan my visit"
+                variant="primary"
+                size="md"
+              />
+            )}
+          </div>
+
           {/* Level road */}
           <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 0 }}>
             {LEVEL_MAP.map((lv, i) => {
@@ -304,7 +353,7 @@ export default function PageProfile() {
         </div>
       </div>
 
-      <div style={{ flex: 1, padding: "24px 32px", maxWidth: 1100, margin: "0 auto", width: "100%", boxSizing: "border-box", display: "grid", gridTemplateColumns: "1fr 300px", gap: 24 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px]" style={{ flex: 1, padding: "24px 32px", maxWidth: 1100, margin: "0 auto", width: "100%", boxSizing: "border-box", gap: 24 }}>
 
         {/* Left: tabs */}
         <div>
@@ -313,6 +362,34 @@ export default function PageProfile() {
             {(["badges", "stats", "journeys", "impact"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{ background: tab === t ? C.limestone : "transparent", border: "none", borderRadius: 9, padding: "8px 20px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: tab === t ? 700 : 400, color: tab === t ? C.nile : "#8B7E6A", cursor: "pointer", transition: "all 0.18s", textTransform: "capitalize", boxShadow: tab === t ? "0 1px 6px rgba(27,26,23,0.08)" : "none" }}>{t === "impact" ? "Journey Impact" : t.charAt(0).toUpperCase() + t.slice(1)}</button>
             ))}
+          </div>
+
+          {/* Test toggle for demo mode */}
+          <div style={{ marginTop: 16, padding: "16px", background: "rgba(27,26,23,0.04)", borderRadius: 12, border: "1px dashed rgba(27,26,23,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <FlaskConical size={16} color={C.copper} />
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.basalt }}>Demo Mode</span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#8B7E6A" }}>Use mock data for testing</span>
+            </div>
+            <button
+              onClick={toggleDemoMode}
+              style={{
+                background: demo.mode === 'on' ? C.signalRed : C.nile,
+                color: C.limestone,
+                border: "none",
+                borderRadius: 8,
+                padding: "8px 16px",
+                fontFamily: "'Inter',sans-serif",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              {demo.mode === 'on' ? 'Disable Demo' : 'Enable Demo'} <RefreshCw size={13} />
+            </button>
           </div>
 
           {tab === "badges" && (
@@ -368,6 +445,49 @@ export default function PageProfile() {
                   </div>
                 ))}
               </div>
+
+              {/* Wallet Balance Card */}
+              <div style={{ background: "linear-gradient(135deg,#0F3D3E,#1A5253)", borderRadius: 14, padding: "20px", border: "1px solid rgba(27,26,23,0.07)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: `${C.limestone}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Wallet size={22} color={C.sand} />
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: `${C.limestone}60`, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+                        Available Balance
+                      </div>
+                      <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "30px", lineHeight: 1.05, color: C.limestone }}>
+                        {walletLoading ? "—" : walletBalance.toLocaleString()} <span style={{ fontSize: "18px", color: C.sand }}>tokens</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: `${C.limestone}60` }}>
+                    Lifetime: <strong style={{ color: C.limestone }}>{walletLifetime.toLocaleString()}</strong>
+                  </div>
+                  <button
+                    onClick={() => router.push("/app/wallet")}
+                    disabled={walletLoading}
+                    style={{
+                      background: `${C.limestone}15`,
+                      border: `1px solid ${C.limestone}25`,
+                      color: C.limestone,
+                      borderRadius: 99,
+                      padding: "8px 16px",
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Wallet size={13} /> View Wallet
+                  </button>
+                </div>
+              </div>
+
               <div style={{ background: C.limestone, borderRadius: 14, padding: "20px", border: "1px solid rgba(27,26,23,0.07)" }}>
                 <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: "#A89880", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>Travel Style Preferences</div>
                 <div style={{ display: "flex", gap: 10 }}>
@@ -392,12 +512,26 @@ export default function PageProfile() {
                 <div style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", fontWeight: 600, color: "#A89880", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   Your Quests
                 </div>
-                <button
-                  onClick={() => router.push("/app/quests")}
-                  style={{ background: "none", border: "none", color: C.nile, fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
-                >
-                  Browse all quests →
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button
+                    onClick={() => router.push("/app/quests")}
+                    style={{ background: "none", border: "none", color: C.nile, fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                  >
+                    Browse all quests →
+                  </button>
+                  {journeys.some(j => j.isCompleted) && (
+                    <AskRafiqButton
+                      context={buildProfileContext(
+                        { travelStyle, interests: activeUser?.interests, xp: currentXP, level: currentLevel.level },
+                        trips,
+                        journeys.filter(j => j.isCompleted)
+                      )}
+                      label="Ask Rafiq about my journeys"
+                      variant="ghost"
+                      size="sm"
+                    />
+                  )}
+                </div>
               </div>
               {journeys.length === 0 ? (
                 <div style={{ padding: "40px 24px", textAlign: "center", background: C.limestone, borderRadius: 16, border: "1px solid rgba(27,26,23,0.07)" }}>

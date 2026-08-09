@@ -285,7 +285,7 @@ export default function MonumentsPage() {
           </span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 460px", gap: 20, alignItems: "start" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px]" style={{ gap: 20, alignItems: "start" }}>
           {/* Cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 14 }}>
             {monuments === null ? (

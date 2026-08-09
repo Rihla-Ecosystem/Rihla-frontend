@@ -115,7 +115,7 @@ export default function HistoryPage() {
         <TopBar location="Your Journey · Egypt" />
         <div style={{ padding: '40px 32px', maxWidth: 1100, margin: '0 auto', width: '100%' }}>
           <div style={{ height: 160, background: `${C.limestoneDark}50`, borderRadius: 16, marginBottom: 24, animation: 'pulse 1.5s infinite ease-in-out' }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24 }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px]" style={{ gap: 24 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[1, 2, 3].map((i) => (
                 <div key={i} style={{ height: 90, background: `${C.limestoneDark}40`, borderRadius: 14, animation: 'pulse 1.5s infinite ease-in-out' }} />
@@ -356,15 +356,14 @@ export default function HistoryPage() {
       </div>
 
       <div
+        className="grid grid-cols-1 lg:grid-cols-[1fr_300px]"
         style={{
           flex: 1,
-          padding: '28px 32px 40px',
+          padding: '24px 18px 40px',
           maxWidth: 1100,
           margin: '0 auto',
           width: '100%',
           boxSizing: 'border-box',
-          display: 'grid',
-          gridTemplateColumns: '1fr 300px',
           gap: 24,
         }}
       >

@@ -7,6 +7,7 @@ import { useLocation, useLocationLabel } from "@/providers/LocationProvider";
 import { useAuth } from "@/lib/auth";
 import { Glyph, PyramidSkyline } from "@/app/components/atoms";
 import { NotificationBell } from "@/app/components/ui/NotificationBell";
+import { useShellNav } from "./shell-nav";
 
 const PARTICLES = [
   { left: '6%',  top: '42%', delay: '0s',    dur: '11s', size: 3 },
@@ -27,6 +28,7 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
   const liveLocation = useLocationLabel();
   const { user } = useAuth();
   const initial = (user?.displayName || "Traveler").charAt(0).toUpperCase();
+  const shellNav = useShellNav();
 
   const pageTitle = locationProp || 'Rihla';
 
@@ -78,6 +80,11 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
         @keyframes rihlaPulse {
           0%, 100% { opacity: 1; }
           50%      { opacity: 0.35; }
+        }
+        @media (max-width: 640px) {
+          .rihla-top-search { display: none !important; }
+          .rihla-top-content { padding: 0 14px !important; }
+          .rihla-top-title { display: none !important; }
         }
       `}</style>
 
@@ -172,10 +179,21 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
             justifyContent: 'space-between',
             gap: 16,
             animation: 'rihlaFadeUp 0.6s ease-out both',
+            flexWrap: 'nowrap',
+            overflow: 'visible',
           }}
+          className="rihla-top-content"
         >
           {/* Brand + page title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+            <button
+              className="lg:hidden"
+              onClick={() => shellNav.toggle()}
+              aria-label="Open navigation menu"
+              style={{ background: 'rgba(245,239,224,0.08)', border: '1px solid rgba(245,239,224,0.18)', color: C.limestone, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, borderRadius: 10, flexShrink: 0 }}
+            >
+              <Menu size={18} strokeWidth={2}/>
+            </button>
             <button
               onClick={() => router.push('/app')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, padding: 0, flexShrink: 0 }}
@@ -187,7 +205,8 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
               </span>
             </button>
             <span style={{ width: 1, height: 22, background: `${C.limestone}18`, flexShrink: 0 }} />
-            <span
+<span
+              className="rihla-top-title"
               style={{
                 fontFamily: "'Cormorant Garamond',serif",
                 fontSize: '16px',
@@ -235,6 +254,7 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
           {/* Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div
+              className="rihla-top-search"
               style={{
                 background: 'rgba(245,239,224,0.07)',
                 border: '1px solid rgba(245,239,224,0.16)',

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { RefreshCw, ChevronDown, ChevronUp, Sparkles, AlertCircle } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { C } from '@/lib/constants/theme';
+import { UI, IconTile } from '@/app/components/ui/primitives';
 import { chatService } from '@/services/chatService';
 
 interface SafetyGuideProps {
@@ -22,7 +23,7 @@ function buildPrompt(opts: {
   alerts: { title: string; severity: string }[];
   nationality?: string | null;
 }): string {
-  const { gov, riskLevel, score, alerts, nationality } = opts;
+  const { gov, riskLevel, alerts, nationality } = opts;
   const eventLines = alerts
     .slice(0, 5)
     .map((a) => `- [${a.severity}] ${a.title}`)
@@ -30,7 +31,7 @@ function buildPrompt(opts: {
   return [
     'You are a travel safety expert for visitors to Egypt.',
     `A traveler from ${nationality || 'a foreign country'} is visiting ${gov}, Egypt.`,
-    `Current local risk level for ${gov}: ${riskLevel || 'Low'} (score ${score ?? '—'}).`,
+    `Current local risk level for ${gov}: ${riskLevel || 'Low'}.`,
     'Recent local alerts:',
     eventLines || '- No active alerts.',
     'Give a concise safety briefing (under 220 words) using exactly these section headers:',
@@ -50,8 +51,8 @@ function renderText(text: string) {
         <div
           key={i}
           style={{
-            fontFamily: "'Cormorant Garamond',serif",
-            fontSize: '15px',
+            fontFamily: UI.font.serif,
+            fontSize: 15,
             fontWeight: 700,
             color: C.nile,
             margin: '8px 0 2px',
@@ -68,9 +69,9 @@ function renderText(text: string) {
           style={{
             display: 'flex',
             gap: 6,
-            fontFamily: "'Inter',sans-serif",
-            fontSize: '12px',
-            color: '#5C5346',
+            fontFamily: UI.font.sans,
+            fontSize: 12,
+            color: UI.text.body,
             lineHeight: 1.5,
           }}
         >
@@ -81,7 +82,7 @@ function renderText(text: string) {
     }
     if (!trimmed) return null;
     return (
-      <div key={i} style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#5C5346', lineHeight: 1.55 }}>
+      <div key={i} style={{ fontFamily: UI.font.sans, fontSize: 12, color: UI.text.body, lineHeight: 1.55 }}>
         {trimmed}
       </div>
     );
@@ -105,7 +106,7 @@ export function SafetyGuide({ gov, riskLevel, score, alerts, nationality, static
       setError(null);
       if (!auto) setText('');
       try {
-        const prompt = buildPrompt({ gov, riskLevel, score, alerts: [], nationality });
+        const prompt = buildPrompt({ gov, riskLevel, score: null, alerts: [], nationality });
         const full = await chatService.streamMessage(prompt, 'safety_guru', (token) => {
           setText((t) => t + token);
         });
@@ -134,15 +135,15 @@ export function SafetyGuide({ gov, riskLevel, score, alerts, nationality, static
     <div style={{ background: 'linear-gradient(145deg,#FAF3E4,#F0E8D0)', borderRadius: 16, border: `1px solid ${C.sand}25`, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '14px 16px', borderBottom: '1px solid rgba(27,26,23,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: `${C.solar}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.solar, flexShrink: 0 }}>
+          <IconTile color={C.solar} size={32} radius={9}>
             <Sparkles size={16} />
-          </div>
+          </IconTile>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '13px', fontWeight: 700, color: C.nile }}>◈ AI Safety Guide</div>
+              <div style={{ fontFamily: UI.font.sans, fontSize: 13, fontWeight: 700, color: C.nile }}>◈ AI Safety Guide</div>
               {loading && <RefreshCw size={12} className="spin" color={C.solar} />}
             </div>
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: '#A89880', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontFamily: UI.font.sans, fontSize: 11, color: UI.text.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {usedLive ? `Generated for ${gov}` : error ? 'Offline · built-in tips' : `Briefing for ${gov}`}
             </div>
           </div>
@@ -152,13 +153,13 @@ export function SafetyGuide({ gov, riskLevel, score, alerts, nationality, static
             onClick={() => { setGenKey((k) => k + 1); }}
             disabled={loading}
             title="Regenerate"
-            style={{ background: 'none', border: 'none', color: '#8B7E6A', cursor: 'pointer', padding: 7, borderRadius: 8 }}>
+            style={{ background: 'none', border: 'none', color: UI.text.soft, cursor: 'pointer', padding: 7, borderRadius: 8 }}>
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
           </button>
           <button
             onClick={() => setOpen((o) => !o)}
             title={open ? 'Collapse' : 'Expand'}
-            style={{ background: 'none', border: 'none', color: '#8B7E6A', cursor: 'pointer', padding: 7, borderRadius: 8 }}>
+            style={{ background: 'none', border: 'none', color: UI.text.soft, cursor: 'pointer', padding: 7, borderRadius: 8 }}>
             {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         </div>
@@ -166,7 +167,7 @@ export function SafetyGuide({ gov, riskLevel, score, alerts, nationality, static
       {open && (
         <div style={{ padding: '14px 16px' }}>
           {loading && !text ? (
-            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', color: '#A89880', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontFamily: UI.font.sans, fontSize: 12, color: UI.text.muted, display: 'flex', alignItems: 'center', gap: 8 }}>
               <RefreshCw size={13} className="spin" color={C.solar} /> Preparing your safety briefing…
             </div>
           ) : (
@@ -175,7 +176,7 @@ export function SafetyGuide({ gov, riskLevel, score, alerts, nationality, static
             </div>
           )}
           {usedLive && !error && (
-            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(27,26,23,0.08)', fontFamily: "'Inter',sans-serif", fontSize: '10px', color: '#A89880' }}>
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(27,26,23,0.08)', fontFamily: UI.font.sans, fontSize: 10, color: UI.text.muted }}>
               AI-generated · verify with local officials for time-sensitive matters
             </div>
           )}

@@ -24,6 +24,22 @@ export const C = {
   safeGreen:     "#2E7A54",
   alertAmber:    "#D98E2C",
   signalRed:     "#B23A2E",
+  // Typography
+  font: {
+    sans: "'Inter',sans-serif" as const,
+    serif: "'Cormorant Garamond',serif" as const,
+  },
+  // Muted text steps on light surfaces (dark khaki ramp)
+  text: {
+    muted: "#A89880" as const,
+    soft: "#8B7E6A" as const,
+    body: "#5C5346" as const,
+  },
+  // Radius
+  radius: { card: 16, tile: 9, pill: 99 } as const,
+  border: "rgba(27,26,23,0.07)" as const,
+  borderStrong: "rgba(27,26,23,0.12)" as const,
+  surface: { card: "#F5EFE0", raised: "#FFFFFF", flat: "#FAF7F0" } as const,
 };
 
 const hour = new Date().getHours();

@@ -2,6 +2,7 @@
 
 import { CheckCircle2, AlertTriangle, XCircle, Info } from 'lucide-react';
 import { C } from '@/lib/constants/theme';
+import { UI, RihlaCard, CardLabel } from '@/app/components/ui/primitives';
 
 export interface DataSourceStatus {
   name: string;
@@ -18,10 +19,8 @@ const STATUS_CONFIG = {
 
 export function SourceHealth({ sources }: { sources: DataSourceStatus[] }) {
   return (
-    <div style={{ background: C.limestone, borderRadius: 16, padding: '18px', border: '1px solid rgba(27,26,23,0.07)' }}>
-      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, color: '#A89880', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>
-        Data Source Health
-      </div>
+    <RihlaCard>
+      <CardLabel>Data Source Health</CardLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {sources.map((s) => {
           const cfg = STATUS_CONFIG[s.status];
@@ -30,14 +29,14 @@ export function SourceHealth({ sources }: { sources: DataSourceStatus[] }) {
             <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: cfg.bg }}>
               <Icon size={16} color={cfg.color} style={{ flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 700, color: C.nile }}>{s.name}</div>
-                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', color: '#A89880', lineHeight: 1.4 }}>{s.detail}</div>
+                <div style={{ fontFamily: UI.font.sans, fontSize: 12, fontWeight: 700, color: C.nile }}>{s.name}</div>
+                <div style={{ fontFamily: UI.font.sans, fontSize: 10, color: UI.text.muted, lineHeight: 1.4 }}>{s.detail}</div>
               </div>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: cfg.color, flexShrink: 0 }}>{s.status}</span>
+              <span style={{ fontFamily: UI.font.sans, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: cfg.color, flexShrink: 0 }}>{s.status}</span>
             </div>
           );
         })}
       </div>
-    </div>
+    </RihlaCard>
   );
 }

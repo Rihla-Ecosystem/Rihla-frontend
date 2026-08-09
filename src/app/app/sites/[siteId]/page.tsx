@@ -189,12 +189,12 @@ export default function SiteDetailPage() {
 
         {/* Body */}
         <div
+          className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
           style={{
+            width: '100%',
             maxWidth: 1100,
             margin: '0 auto',
-            padding: '36px 40px',
-            display: 'grid',
-            gridTemplateColumns: '1fr 320px',
+            padding: '28px 20px',
             gap: 36,
           }}
         >

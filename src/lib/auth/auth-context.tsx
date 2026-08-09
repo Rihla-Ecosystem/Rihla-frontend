@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { tokenManager } from '../api';
+import { tokenManager, apiClient, API_CONFIG } from '../api';
 import { authService } from './auth-service';
 import { AuthState, LoginPayload, RegisterPayload, User } from './types';
 
@@ -11,6 +11,8 @@ interface AuthContextType extends AuthState {
   logout: () => Promise<void>;
   fetchCurrentUser: () => Promise<User | null>;
   updateProfile: (payload: Partial<RegisterPayload> & Record<string, unknown>) => Promise<User>;
+  verifyEmail: (token: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -50,6 +52,28 @@ const extractAuthError = (err: unknown, fallback: string): string => {
   return fallback;
 };
 
+/**
+ * Restores the access token when storage is empty (e.g. after a server
+ * restart dropped an expired token or a failed refresh cleared it), using
+ * the httpOnly refresh cookie. Returns the active token or null.
+ */
+async function restoreSession(): Promise<string | null> {
+  const stored = tokenManager.getAccessToken();
+  if (stored) return stored;
+
+  try {
+    const { data } = await apiClient.post(API_CONFIG.refreshEndpoint);
+    const next = (data as { accessToken?: string } | undefined)?.accessToken;
+    if (next) {
+      tokenManager.setAccessToken(next);
+      return next;
+    }
+  } catch {
+    // No valid refresh cookie — user is genuinely signed out.
+  }
+  return null;
+}
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -67,8 +91,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const fetchCurrentUser = useCallback(async (): Promise<User | null> => {
-    const token = tokenManager.getAccessToken();
-    if (!token) {
+    const sessionToken = await restoreSession();
+    if (!sessionToken) {
       handleLogoutState();
       return null;
     }
@@ -169,6 +193,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     [handleLogoutState]
   );
 
+  const verifyEmail = useCallback(async (token: string): Promise<void> => {
+    try {
+      await authService.verifyEmail(token);
+    } catch (err: unknown) {
+      throw new Error(extractAuthError(err, 'Verification failed. The link may be invalid or expired.'));
+    }
+  }, []);
+
+  const resendVerification = useCallback(async (email: string): Promise<void> => {
+    try {
+      await authService.resendVerification(email);
+    } catch (err: unknown) {
+      throw new Error(extractAuthError(err, 'Could not resend the verification email.'));
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -182,6 +222,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         fetchCurrentUser,
         updateProfile,
+        verifyEmail,
+        resendVerification,
         clearError,
       }}
     >
