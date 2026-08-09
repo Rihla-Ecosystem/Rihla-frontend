@@ -14,14 +14,14 @@ import { ShellNavProvider, useShellNav } from "./shell-nav";
 export const NAV_ITEMS = [
   { id: "home",    label: "Home",    icon: (a: boolean) => <Home     size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "explore", label: "Explore", icon: (a: boolean) => <Compass  size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "monuments", label: "Monuments", icon: (a: boolean) => <Landmark size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "rafiq",   label: "Rafiq",   icon: (a: boolean) => <Glyph    size={18}/>,                              special: true },
   { id: "safety",  label: "Safety",  icon: (a: boolean) => <Shield   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
-  { id: "history", label: "History", icon: (a: boolean) => <Clock    size={18} strokeWidth={a ? 2.2 : 1.7}/> },
-  { id: "monuments", label: "Monuments", icon: (a: boolean) => <Landmark size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "currency", label: "Currency", icon: (a: boolean) => <Banknote size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "quests",  label: "Quests",  icon: (a: boolean) => <Trophy   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "wallet",  label: "Wallet",  icon: (a: boolean) => <Wallet   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "profile", label: "Profile", icon: (a: boolean) => <User     size={18} strokeWidth={a ? 2.2 : 1.7}/> },
+  { id: "history", label: "History", icon: (a: boolean) => <Clock    size={18} strokeWidth={a ? 2.2 : 1.7}/> },
 { id: "settings",label: "Settings",icon: (a: boolean) => <Settings size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "admin",   label: "Admin",   icon: (a: boolean) => <BarChart2 size={18} strokeWidth={a ? 2.2 : 1.7}/>, adminOnly: true },
 ];
