@@ -17,6 +17,8 @@ interface ExploreSearchBarProps {
   onSearchChange: (value: string) => void;
   governorates: ExploreGovernorateOption[];
   governorate: string;
+  liveGovernorate?: string;
+  liveLocationLabel?: string;
   onGovernorateChange: (value: string) => void;
   category: string;
   onCategoryChange: (value: string) => void;
@@ -24,44 +26,17 @@ interface ExploreSearchBarProps {
 
 const chipLabel = (c: string) => (c === 'All' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1));
 
-const GOV_NAME_COLORS = [
-  '#DC2626',
-  '#EA580C',
-  '#D97706',
-  '#65A30D',
-  '#16A34A',
-  '#0D9488',
-  '#0891B2',
-  '#2563EB',
-  '#4F46E5',
-  '#7C3AED',
-  '#C026D3',
-  '#DB2777',
-  '#E11D48',
-  '#F59E0B',
-  '#10B981',
-  '#06B6D4',
-  '#3B82F6',
-  '#8B5CF6',
-  '#A855F7',
-  '#EC4899',
-  '#84CC16',
-  '#14B8A6',
-  '#0EA5E9',
-  '#6366F1',
-  '#D946EF',
-  '#F97316',
-  '#9333EA',
-];
+const GOV_NAME_COLORS = ['#DC2626', '#EA580C', '#D97706', '#16A34A', '#0891B2', '#2563EB', '#7C3AED', '#C026D3'];
 
-export const govNameColor = (name: string, index: number) =>
-  GOV_NAME_COLORS[index % GOV_NAME_COLORS.length];
+export const govNameColor = (_name: string, index: number) => GOV_NAME_COLORS[index % GOV_NAME_COLORS.length];
 
 export function ExploreSearchBar({
   search,
   onSearchChange,
   governorates,
   governorate,
+  liveGovernorate,
+  liveLocationLabel,
   onGovernorateChange,
   category,
   onCategoryChange,
@@ -129,7 +104,8 @@ export function ExploreSearchBar({
           style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
         />
         <select
-          value={governorate}
+           aria-label="Choose a governorate"
+           value={governorate}
           onChange={(e) => onGovernorateChange(e.target.value)}
           style={{
             width: '100%',
@@ -140,19 +116,31 @@ export function ExploreSearchBar({
             background: '#FFFFFF',
             fontFamily: "'Inter',sans-serif",
             fontSize: '13px',
-            color: C.nile,
-            cursor: 'pointer',
+             color: C.nile,
+             colorScheme: 'light',
+             cursor: 'pointer',
             outline: 'none',
           }}
         >
-          <option value="">My location</option>
-          <option value={ALL_EGYPT_VALUE}>All Egypt</option>
-          {governorates.map((g, i) => (
-            <option key={g.name} value={g.name} style={{ color: govNameColor(g.name, i) }}>
-              {g.name}
+           <option value="" style={{ color: C.basalt, background: '#FFFFFF' }}>My location</option>
+           <option value={ALL_EGYPT_VALUE} style={{ color: C.basalt, background: '#FFFFFF' }}>All Egypt</option>
+           {governorates.map((g) => (
+             <option key={g.name} value={g.name} style={{ color: C.basalt, background: '#FFFFFF' }}>
+               {g.name}
             </option>
           ))}
         </select>
+        <div style={{ marginTop: 5, paddingLeft: 4, color: '#8B7E6A', fontFamily: "'Inter',sans-serif", fontSize: 10 }}>
+          {governorate === ALL_EGYPT_VALUE
+            ? 'Showing all Egypt'
+            : governorate
+              ? `Selected: ${governorate}`
+              : liveGovernorate
+                ? `Live location: ${liveGovernorate}`
+                : liveLocationLabel
+                  ? `Live location: ${liveLocationLabel}`
+                  : 'Choose a governorate or use your location'}
+        </div>
       </div>
 
       {/* Category chips */}

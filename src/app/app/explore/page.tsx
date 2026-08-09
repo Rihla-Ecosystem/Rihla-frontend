@@ -16,6 +16,9 @@ import {
   Loader2,
   ChevronDown,
   Layers,
+  ShoppingBag,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { TopBar } from '@/app/components/layout/TopBar';
 import { geoService } from '@/services/geoService';
@@ -34,7 +37,11 @@ import {
 } from '@/services/monumentsService';
 import { ALL_EGYPT_VALUE, ExploreSearchBar, type ExploreGovernorateOption } from '@/app/app/explore/components/ExploreSearchBar';
 import { SitePopup } from '@/app/app/explore/components/SitePopup';
+import { SafetyInsight } from '@/app/app/explore/components/SafetyInsight';
+import { placesApi, type Favorite } from '@/lib/api/places';
+import { safetyService, type SafetyData } from '@/services/safetyService';
 import type { MapTripStop, MapTicketMarker } from '@/app/components/ui/InteractiveMap';
+import { buildExploreContext, buildRafiqUrl } from '@/lib/rafiq';
 
 const InteractiveMap = dynamic(
   () => import('@/app/components/ui/InteractiveMap').then((mod) => mod.InteractiveMap),
@@ -60,7 +67,7 @@ const InteractiveMap = dynamic(
   }
 );
 
-const RADIUS_OPTIONS = [1000, 2000, 5000, 10000, 25000] as const;
+const RADIUS_OPTIONS = [1000, 5000, 10000, 25000] as const;
 const DEFAULT_LOCATION = { lat: 30.0444, lon: 31.2357 };
 const MAX_TRIP_STOPS = 12;
 
@@ -166,6 +173,7 @@ function useIsDesktop() {
     mq.addEventListener('change', update);
     return () => mq.removeEventListener('change', update);
   }, []);
+
   return isDesktop;
 }
 
@@ -184,6 +192,7 @@ export default function ExplorePage() {
     lat: userLat,
     lon: userLon,
     status: locStatus,
+    governorate: liveGovernorate,
     requestLocation,
   } = useLocation();
   const locationLabel = useLocationLabel();
@@ -210,6 +219,11 @@ export default function ExplorePage() {
   const [selectedMonument, setSelectedMonument] = useState<Monument | null>(null);
   const [filterCollapsed, setFilterCollapsed] = useState(false);
   const [clusterPins, setClusterPins] = useState(false);
+  const [favorites, setFavorites] = useState<Record<string, Favorite>>({});
+  const [safetyData, setSafetyData] = useState<SafetyData | null>(null);
+  const [safetySource, setSafetySource] = useState<'live' | 'offline' | null>(null);
+  const [showAllRecommendations, setShowAllRecommendations] = useState(false);
+  const safetyViewedRef = useRef<string | null>(null);
 
   // Selection / routing
   const [selectedSite, setSelectedSite] = useState<RihlaSite | null>(null);
@@ -267,15 +281,58 @@ export default function ExplorePage() {
     monumentsService.getMonuments().then((ms) => {
       if (active) setMonuments(ms);
     }).catch(() => {});
+    placesApi.listFavorites().then((fs) => {
+      if (!active) return;
+      setFavorites(
+        fs.reduce<Record<string, Favorite>>((acc, f) => {
+          acc[f.placeId] = f;
+          return acc;
+        }, {})
+      );
+    }).catch(() => {});
     return () => {
       active = false;
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    setSafetyData(null);
+    setSafetySource(null);
+    safetyService.getSafetySnapshot(searchOrigin.lat, searchOrigin.lon, governorate || undefined)
+      .then((snapshot) => {
+        if (!active) return;
+        setSafetyData(snapshot.data);
+        setSafetySource(snapshot.source);
+        const key = `${governorate || 'location'}:${Math.round(searchOrigin.lat * 100)}:${Math.round(searchOrigin.lon * 100)}`;
+        if (snapshot.source === 'live' && safetyViewedRef.current !== key) {
+          safetyViewedRef.current = key;
+          placesApi.recordEvent({ event: 'safety_info_viewed', metadata: { governorate: governorate || null, radiusKm: radius / 1000 } });
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSafetyData(null);
+          setSafetySource('offline');
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [governorate, radius, searchOrigin.lat, searchOrigin.lon]);
+
   // Deep link: ?city=
   useEffect(() => {
-    const city = new URLSearchParams(window.location.search).get('city');
-    if (city) {
+    const params = new URLSearchParams(window.location.search);
+    const city = params.get('city');
+    const focus = params.get('focus');
+    if (focus) {
+      const [fl, fg] = focus.split(',').map((v) => parseFloat(v));
+      if (!Number.isNaN(fl) && !Number.isNaN(fg)) {
+        setPin({ lat: fl, lon: fg });
+        setFocus((prev) => ({ lat: fl, lon: fg, zoom: 13, key: (prev?.key ?? 0) + 1 }));
+      }
+    } else if (city) {
       const gov = CITY_TO_GOVERNORATE[city.toLowerCase()];
       if (gov) {
         setGovernorate(gov);
@@ -471,7 +528,10 @@ export default function ExplorePage() {
           { latitude: searchOrigin.lat, longitude: searchOrigin.lon },
           { latitude: toLat, longitude: toLon }
         );
-        if (res) setRoute({ ...res, origin: { lat: searchOrigin.lat, lon: searchOrigin.lon }, dest: { lat: toLat, lon: toLon } });
+        if (res) {
+          setRoute({ ...res, origin: { lat: searchOrigin.lat, lon: searchOrigin.lon }, dest: { lat: toLat, lon: toLon } });
+          placesApi.recordEvent({ event: 'route_planned', siteId: String(site.id), siteName: site.name, metadata: { distanceKm: Math.round(res.distanceMeters / 1000) } });
+        }
       } catch {
         // silent
       } finally {
@@ -488,6 +548,7 @@ export default function ExplorePage() {
       const sLon = site.lon ?? searchOrigin.lon;
       setFocus((prev) => ({ lat: sLat, lon: sLon, zoom: 13, key: (prev?.key ?? 0) + 1 }));
       computeRoute(site);
+      placesApi.recordEvent({ event: 'place_opened', siteId: String(site.id), siteName: site.name, metadata: { gov: site.gov, cat: site.cat } });
     },
     [searchOrigin.lat, searchOrigin.lon, computeRoute]
   );
@@ -519,8 +580,83 @@ export default function ExplorePage() {
 
   const handlePopupTickets = useCallback(() => {
     const m = selectedSite ? monumentForSite[selectedSite.id] ?? selectedMonument : selectedMonument;
-    if (m?.url) window.open(m.url, '_blank', 'noopener');
+    if (!m?.url) return;
+    placesApi.recordEvent({ event: 'ticket_cta', siteId: String(selectedSite?.id ?? m.id), siteName: m.title, metadata: { priceForeignAdult: m.prices?.foreigner?.adult ?? null } });
+    try {
+      const u = new URL(m.url);
+      u.searchParams.set('utm_source', 'rihla');
+      u.searchParams.set('utm_medium', 'explore');
+      u.searchParams.set('utm_campaign', 'tickets');
+      u.searchParams.set('rihla_site', encodeURIComponent(selectedSite?.name ?? m.title));
+      window.open(u.toString(), '_blank', 'noopener');
+    } catch {
+      window.open(m.url, '_blank', 'noopener');
+    }
   }, [selectedSite, monumentForSite, selectedMonument]);
+
+  const handleToggleSave = useCallback(() => {
+    const site = selectedSite;
+    if (!site) return;
+    const placeId = String(site.id);
+    const existing = favorites[placeId];
+    if (existing) {
+      placesApi.removeFavorite(placeId).then(() => {
+        setFavorites((prev) => {
+          const next = { ...prev };
+          delete next[placeId];
+          return next;
+        });
+      }).catch(() => {});
+      placesApi.recordEvent({ event: 'place_unsaved', siteId: placeId, siteName: site.name });
+    } else {
+      placesApi.addFavorite({
+        placeId,
+        placeName: site.name,
+        category: site.cat,
+        governorate: site.gov,
+        lat: site.lat ?? undefined,
+        lon: site.lon ?? undefined,
+        img: site.img ?? undefined,
+      }).then((f) => {
+        setFavorites((prev) => ({ ...prev, [placeId]: f }));
+      }).catch(() => {});
+      placesApi.recordEvent({ event: 'place_saved', siteId: placeId, siteName: site.name });
+    }
+  }, [selectedSite, favorites]);
+
+  const selectedDistance = useMemo(() => {
+    if (!selectedSite || selectedSite.lat == null || selectedSite.lon == null) return null;
+    return calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, selectedSite.lat, selectedSite.lon);
+  }, [selectedSite, searchOrigin.lat, searchOrigin.lon]);
+
+  const recommendedSites = useMemo(() => {
+    const statusWeight = safetyData?.status === 'safe' ? 3 : safetyData?.status === 'caution' ? 2 : safetyData?.status ? 1 : 0;
+    return [...sites]
+      .sort((a, b) => {
+        const aDistance = a.lat != null && a.lon != null ? calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, a.lat, a.lon) : 999;
+        const bDistance = b.lat != null && b.lon != null ? calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, b.lat, b.lon) : 999;
+        const aScore = (a.rating > 0 ? Math.min(a.rating, 5) * 2 : 0) + statusWeight + (a.tips?.length ? 1 : 0) - Math.min(aDistance, 25) / 25;
+        const bScore = (b.rating > 0 ? Math.min(b.rating, 5) * 2 : 0) + statusWeight + (b.tips?.length ? 1 : 0) - Math.min(bDistance, 25) / 25;
+        return bScore - aScore;
+      });
+  }, [sites, safetyData?.status, searchOrigin.lat, searchOrigin.lon]);
+
+  const radiusGuidance = radius <= 5000
+    ? { title: 'Explore nearby safely', description: 'Nearby places, area safety status, and things to know before visiting.' }
+    : { title: 'Plan safer exploration', description: 'Explore a wider area with safety insights and tourist-friendly recommendations.' };
+
+  const handleRafiq = useCallback(() => {
+    const site = selectedSite;
+    if (!site) return;
+    const ctx = buildExploreContext({
+      ...site,
+      safetyStatus: safetyData?.status ?? undefined,
+      activeAlerts: safetyData?.events.slice(0, 3).map((event) => event.headline),
+    }, selectedDistance);
+    const url = buildRafiqUrl(ctx);
+    placesApi.recordEvent({ event: 'ask_rafiq_from_explore', siteId: String(site.id), siteName: site.name, metadata: { safetyStatus: safetyData?.status ?? null } });
+    router.push(url);
+  }, [selectedSite, selectedDistance, router, safetyData]);
 
   const handlePopupDetails = useCallback(() => {
     const m = selectedSite ? monumentForSite[selectedSite.id] ?? selectedMonument : selectedMonument;
@@ -531,11 +667,6 @@ export default function ExplorePage() {
     if (!selectedSite) return selectedMonument;
     return monumentForSite[selectedSite.id] ?? selectedMonument;
   }, [selectedSite, monumentForSite, selectedMonument]);
-
-  const selectedDistance = useMemo(() => {
-    if (!selectedSite || selectedSite.lat == null || selectedSite.lon == null) return null;
-    return calculateDistanceKm(searchOrigin.lat, searchOrigin.lon, selectedSite.lat, selectedSite.lon);
-  }, [selectedSite, searchOrigin.lat, searchOrigin.lon]);
 
   const toggleTripSelect = useCallback((site: RihlaSite) => {
     setTripSelection((prev) => {
@@ -576,7 +707,10 @@ export default function ExplorePage() {
         { latitude: searchOrigin.lat, longitude: searchOrigin.lon },
         geoSites
       );
-      if (plan) setTripPlan(plan);
+      if (plan) {
+        setTripPlan(plan);
+        placesApi.recordEvent({ event: 'trip_planned', siteName: selectedTripSites.map((s) => s.name).join(', '), metadata: { stops: plan.orderedStops.length, distanceKm: Math.round(plan.distanceMeters / 1000) } });
+      }
     } catch {
       // silent
     } finally {
@@ -626,7 +760,6 @@ export default function ExplorePage() {
   const loadingNote = routeLoading ? 'Calculating route…' : tripLoading ? 'Optimizing trip…' : null;
 
   const radiusPills = (() => {
-    if (governorate) return null;
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '12px', fontWeight: 600, color: '#A89880' }}>
@@ -637,7 +770,10 @@ export default function ExplorePage() {
           return (
             <button
               key={r}
-              onClick={() => setRadius(r)}
+              onClick={() => {
+                setRadius(r);
+                placesApi.recordEvent({ event: 'radius_changed', metadata: { radiusKm: r / 1000, governorate: governorate || null } });
+              }}
               style={{
                 background: active ? C.solar : 'transparent',
                 border: `1px solid ${active ? C.solar : 'rgba(27,26,23,0.13)'}`,
@@ -810,6 +946,8 @@ export default function ExplorePage() {
             onSearchChange={setSearch}
             governorates={governorates}
             governorate={governorate}
+            liveGovernorate={liveGovernorate}
+            liveLocationLabel={locationLabel}
             onGovernorateChange={(v) => {
               setGovernorate(v);
               setSearch('');
@@ -938,6 +1076,12 @@ export default function ExplorePage() {
 
           {originHint}
           {radiusPills}
+          <div style={{ borderRadius: 10, background: '#F0FDF4', border: '1px solid #BBF7D0', padding: '9px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#166534', fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 800 }}>
+              <ShieldCheck size={13} /> {radiusGuidance.title}
+            </div>
+            <div style={{ color: '#4B6350', fontFamily: "'Inter',sans-serif", fontSize: 10, lineHeight: 1.35, marginTop: 3 }}>{radiusGuidance.description}</div>
+          </div>
         </div>
       )}
     </div>
@@ -1118,6 +1262,139 @@ export default function ExplorePage() {
 
       {filterCard}
 
+      <button
+        onClick={() => router.push('/app/saved')}
+        aria-label={`Saved places (${Object.keys(favorites).length})`}
+        title="View saved places"
+        style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          zIndex: 950,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '7px 15px 7px 7px',
+          borderRadius: 99,
+          background: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(15,61,62,0.14)',
+          boxShadow: '0 10px 28px rgba(20,16,8,0.18)',
+          cursor: 'pointer',
+          transition: 'transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+          fontFamily: "'Inter',sans-serif",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 14px 34px rgba(20,16,8,0.24)';
+          e.currentTarget.style.borderColor = 'rgba(200,131,26,0.55)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'none';
+          e.currentTarget.style.boxShadow = '0 10px 28px rgba(20,16,8,0.18)';
+          e.currentTarget.style.borderColor = 'rgba(15,61,62,0.14)';
+        }}
+      >
+        <span
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 11,
+            background: `linear-gradient(140deg, ${C.solar}, ${C.terracotta})`,
+            color: '#FFFFFF',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 6px 14px rgba(200,131,42,0.4)',
+            flexShrink: 0,
+          }}
+        >
+          <ShoppingBag size={17} strokeWidth={2.2} />
+        </span>
+        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.1 }}>
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 700, color: C.nile }}>
+            Saved
+          </span>
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 500, color: '#8B7E6A' }}>
+            {Object.keys(favorites).length === 0 ? 'Your places' : `${Object.keys(favorites).length} place${Object.keys(favorites).length === 1 ? '' : 's'}`}
+          </span>
+        </span>
+        {Object.keys(favorites).length > 0 && (
+          <span
+            style={{
+              minWidth: 20,
+              height: 20,
+              padding: '0 6px',
+              borderRadius: 99,
+              background: C.solar,
+              color: '#FFFFFF',
+              fontFamily: "'Inter',sans-serif",
+              fontSize: 11,
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px solid rgba(200,131,42,0.35)',
+              flexShrink: 0,
+            }}
+          >
+            {Object.keys(favorites).length}
+          </span>
+        )}
+      </button>
+
+      {recommendedSites.length > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 78,
+            right: 12,
+            zIndex: 940,
+            width: 'min(310px, calc(100% - 24px))',
+            maxHeight: 'min(410px, calc(100% - 110px))',
+            overflowY: 'auto',
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(15,61,62,0.13)',
+            borderRadius: 16,
+            boxShadow: '0 10px 28px rgba(20,16,8,0.16)',
+            padding: 12,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.nile, fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 800 }}>
+                <Sparkles size={13} color={C.solar} /> Recommended nearby
+              </div>
+              <div style={{ color: '#8B7E6A', fontFamily: "'Inter',sans-serif", fontSize: 10, marginTop: 2 }}>Prioritized for relevance, data quality, and distance.</div>
+            </div>
+            <button
+              onClick={() => setShowAllRecommendations((value) => !value)}
+              style={{ border: 'none', background: 'transparent', color: C.copper, fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              {showAllRecommendations ? 'Recommended' : 'Show all places'}
+            </button>
+          </div>
+          {(showAllRecommendations ? recommendedSites : recommendedSites.slice(0, 3)).map((site) => (
+            <button
+              key={site.id}
+              onClick={() => selectSite(site)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', padding: '8px 7px', border: 'none', borderTop: '1px solid rgba(27,26,23,0.07)', background: 'transparent', cursor: 'pointer' }}
+            >
+              <div style={{ width: 34, height: 34, borderRadius: 9, overflow: 'hidden', background: C.limestoneDark, flexShrink: 0 }}>
+                {site.img ? <img src={site.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <MapPin size={16} color={C.copper} style={{ margin: 9 }} />}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ color: C.nile, fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{site.name}</div>
+                <div style={{ color: '#8B7E6A', fontFamily: "'Inter',sans-serif", fontSize: 10, marginTop: 2 }}>{site.cat} · {site.gov || 'Egypt'}</div>
+              </div>
+              {site.rating > 0 && <span style={{ color: C.copper, fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 800 }}>★ {site.rating.toFixed(1)}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+
       {bannerStack && (
         <div
           style={{
@@ -1142,11 +1419,16 @@ export default function ExplorePage() {
           site={selectedSite}
           monument={selectedPopupMonument}
           distanceKm={selectedDistance}
+          saved={Boolean(favorites[String(selectedSite.id)])}
           onClose={deselectSite}
           onDirections={handlePopupDirections}
           onTickets={handlePopupTickets}
           onDetails={handlePopupDetails}
-          bottomOffset={bannerStack ? 100 : 16}
+           onToggleSave={handleToggleSave}
+           onRafiq={handleRafiq}
+           safetyData={safetyData}
+           safetySource={safetySource}
+           bottomOffset={bannerStack ? 100 : 16}
         />
       )}
     </div>
