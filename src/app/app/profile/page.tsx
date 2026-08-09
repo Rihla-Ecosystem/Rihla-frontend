@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle, Star, MapPin, Clock, Shield, Globe, Edit3, X, Loader2, AlertCircle, Award, FlaskConical, RefreshCw, Wallet, Coins, CreditCard } from "lucide-react";
+import { CheckCircle, Star, MapPin, Clock, Shield, Globe, Edit3, X, Loader2, AlertCircle, Award, Wallet, Coins, CreditCard } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { Geom, Glyph } from "@/app/components/atoms";
 import { TopBar } from "@/app/components/layout/TopBar";
@@ -122,23 +122,6 @@ export default function PageProfile() {
     loadProfile();
     loadWallet();
   }, []);
-
-  const toggleDemoMode = () => {
-    if (demo.mode === 'on') {
-      localStorage.removeItem('rihla_demo_data');
-    } else {
-      localStorage.setItem('rihla_demo_data', JSON.stringify({
-        mode: 'on',
-        visits: [],
-        xp: 250,
-        badges: ['First Steps', 'Giza Explorer'],
-        quests: { 'scam-smart-traveler': { completedSteps: 2, totalSteps: 5, isCompleted: false } },
-        walletBalance: 500,
-        lifetimeTokens: 500
-      }));
-    }
-    window.location.reload();
-  };
 
   const handleOpenEdit = () => {
     const activeUser = profileData || user;
@@ -362,34 +345,6 @@ export default function PageProfile() {
             {(["badges", "stats", "journeys", "impact"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{ background: tab === t ? C.limestone : "transparent", border: "none", borderRadius: 9, padding: "8px 20px", fontFamily: "'Inter',sans-serif", fontSize: "13px", fontWeight: tab === t ? 700 : 400, color: tab === t ? C.nile : "#8B7E6A", cursor: "pointer", transition: "all 0.18s", textTransform: "capitalize", boxShadow: tab === t ? "0 1px 6px rgba(27,26,23,0.08)" : "none" }}>{t === "impact" ? "Journey Impact" : t.charAt(0).toUpperCase() + t.slice(1)}</button>
             ))}
-          </div>
-
-          {/* Test toggle for demo mode */}
-          <div style={{ marginTop: 16, padding: "16px", background: "rgba(27,26,23,0.04)", borderRadius: 12, border: "1px dashed rgba(27,26,23,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <FlaskConical size={16} color={C.copper} />
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px", fontWeight: 600, color: C.basalt }}>Demo Mode</span>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "11px", color: "#8B7E6A" }}>Use mock data for testing</span>
-            </div>
-            <button
-              onClick={toggleDemoMode}
-              style={{
-                background: demo.mode === 'on' ? C.signalRed : C.nile,
-                color: C.limestone,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 16px",
-                fontFamily: "'Inter',sans-serif",
-                fontSize: "12px",
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              {demo.mode === 'on' ? 'Disable Demo' : 'Enable Demo'} <RefreshCw size={13} />
-            </button>
           </div>
 
           {tab === "badges" && (
