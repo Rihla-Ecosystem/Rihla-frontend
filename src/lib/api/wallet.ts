@@ -1,27 +1,12 @@
 import { apiClient } from './client';
 
-export interface WalletTransaction {
-  id: string;
-  type: "purchase" | "spend" | "reward";
-  amount: number;
-  description: string;
-  timestamp: string;
-}
-
 export interface TokenPackage {
   id: string;
   name: string;
   tokens: number;
   price: number;
+  currency?: string;
   popular?: boolean;
-}
-
-interface BackendTx {
-  id: string;
-  type?: string | null;
-  source?: string | null;
-  tokens?: number | null;
-  createdAt?: string | null;
 }
 
 interface BackendPackage {
@@ -29,28 +14,15 @@ interface BackendPackage {
   name: string;
   code?: string | null;
   price: string;
+  currency?: string;
   tokens: number;
 }
 
-function mapTx(tx: BackendTx): WalletTransaction {
-  const rawType = String(tx.type || "").toLowerCase();
-  let type: WalletTransaction["type"] = "spend";
-  if (rawType === "grant" || rawType === "bonus" || rawType === "refund") {
-    type = "reward";
-  } else if (rawType === "adjustment") {
-    type = (tx.tokens ?? 0) >= 0 ? "reward" : "spend";
-  } else if (rawType === "consume") {
-    type = "spend";
+export class InsufficientBalanceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InsufficientBalanceError";
   }
-  const rawSource = String(tx.source || "token").toLowerCase();
-  const description = rawSource === "purchase" ? "Package purchase" : `Used for ${rawSource}`;
-  return {
-    id: tx.id,
-    type,
-    amount: Math.abs(tx.tokens ?? 0),
-    description,
-    timestamp: tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "",
-  };
 }
 
 export const walletApi = {
@@ -65,14 +37,6 @@ export const walletApi = {
     };
   },
 
-  getTransactions: async (): Promise<WalletTransaction[]> => {
-    const { data } = await apiClient.get<{
-      success: boolean;
-      data: { items?: BackendTx[] };
-    }>("/tokens/transactions", { params: { page: 1, limit: 20 } });
-    return (data?.data?.items || []).map(mapTx);
-  },
-
   getPackages: async (): Promise<TokenPackage[]> => {
     const { data } = await apiClient.get<{
       success: boolean;
@@ -83,6 +47,7 @@ export const walletApi = {
       name: p.name,
       tokens: p.tokens,
       price: Number(p.price),
+      currency: p.currency || 'USD',
       popular: String(p.code || "").toLowerCase().includes("explorer"),
     }));
   },
@@ -114,3 +79,11 @@ export const walletApi = {
     };
   },
 };
+
+interface BackendPackage {
+  id: number;
+  name: string;
+  code?: string | null;
+  price: string;
+  tokens: number;
+}
