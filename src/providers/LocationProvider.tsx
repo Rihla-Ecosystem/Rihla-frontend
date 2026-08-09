@@ -7,6 +7,7 @@ import React, {
   useEffect,
   ReactNode,
   useCallback,
+  useRef,
 } from 'react';
 
 export type LocationStatus =
@@ -126,6 +127,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [locationName, setLocationName] = useState<string | null>(null);
   const [governorate, setGovernorate] = useState<string>('');
+  const watchIdRef = useRef<number | null>(null);
+  const lastGeocodedRef = useRef<{ lat: number; lon: number } | null>(null);
+  const coordsRef = useRef<{ lat: number; lon: number } | null>(null);
 
   const reverseGeocode = async (latitude: number, longitude: number) => {
     try {
@@ -177,43 +181,55 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     setStatus('requesting');
     setErrorMessage(null);
 
-    const timeoutId = setTimeout(() => {
-      setStatus((current) => (current === 'requesting' ? 'loading' : current));
-    }, 500);
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        clearTimeout(timeoutId);
-        const { latitude, longitude, accuracy: acc } = position.coords;
-        setLat(latitude);
-        setLon(longitude);
-        setAccuracy(acc);
-        setStatus('success');
-        setErrorMessage(null);
-        reverseGeocode(latitude, longitude);
-      },
-      (error) => {
-        clearTimeout(timeoutId);
-        if (error.code === error.PERMISSION_DENIED) {
-          setStatus('permission_denied');
-          setErrorMessage('Location permission was denied.');
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          setStatus('location_unavailable');
-          setErrorMessage('Location information unavailable.');
-        } else if (error.code === error.TIMEOUT) {
-          setStatus('location_unavailable');
-          setErrorMessage('Location request timed out.');
-        } else {
-          setStatus('location_unavailable');
-          setErrorMessage(error.message || 'An unknown error occurred while retrieving location.');
-        }
-      },
+    const handlePosition = (position: GeolocationPosition) => {
+      const { latitude, longitude, accuracy: acc } = position.coords;
+      setLat(latitude);
+      setLon(longitude);
+      coordsRef.current = { lat: latitude, lon: longitude };
+      setAccuracy(acc);
+      setStatus('success');
+      setErrorMessage(null);
+
+      const previous = lastGeocodedRef.current;
+      const moved = !previous || Math.abs(previous.lat - latitude) > 0.002 || Math.abs(previous.lon - longitude) > 0.002;
+      if (moved) {
+        lastGeocodedRef.current = { lat: latitude, lon: longitude };
+        void reverseGeocode(latitude, longitude);
+      }
+    };
+
+    const handleError = (error: GeolocationPositionError) => {
+      if (error.code === error.PERMISSION_DENIED) {
+        setStatus('permission_denied');
+        setErrorMessage('Location permission was denied. Enable it for this site and try again.');
+      } else if (!coordsRef.current) {
+        setStatus('location_unavailable');
+        setErrorMessage(error.code === error.TIMEOUT ? 'Location request timed out. Try again near a window.' : 'Location information unavailable.');
+      }
+    };
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handlePosition,
+      handleError,
       {
         enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
+        timeout: 30000,
+        maximumAge: 60000,
       }
     );
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null && typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -224,6 +240,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     (newLat: number, newLon: number, name: string, gov: string) => {
       setLat(newLat);
       setLon(newLon);
+      coordsRef.current = { lat: newLat, lon: newLon };
       setLocationName(name);
       setGovernorate(gov);
       setStatus('success');

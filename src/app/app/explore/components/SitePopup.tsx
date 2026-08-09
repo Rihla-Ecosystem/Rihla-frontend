@@ -2,19 +2,26 @@
 
 import React from 'react';
 import { C } from '@/lib/constants/theme';
-import { Navigation, Ticket, ExternalLink, Star, X, AlertTriangle, MapPin, Compass } from 'lucide-react';
+import { Navigation, Ticket, ExternalLink, Star, X, AlertTriangle, MapPin, Compass, Sparkles } from 'lucide-react';
 import type { RihlaSite } from '@/app/data/rihla-data';
 import type { Monument } from '@/services/monumentsService';
+import type { SafetyData } from '@/services/safetyService';
+import { SafetyInsight } from './SafetyInsight';
 
 interface SitePopupProps {
   site: RihlaSite;
   monument: Monument | null;
   distanceKm?: number | null;
   bottomOffset?: number;
+  saved?: boolean;
   onClose: () => void;
   onDirections: () => void;
   onTickets: () => void;
   onDetails: () => void;
+  onToggleSave?: () => void;
+  onRafiq?: () => void;
+  safetyData?: SafetyData | null;
+  safetySource?: 'live' | 'offline' | null;
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -31,10 +38,15 @@ export function SitePopup({
   monument,
   distanceKm,
   bottomOffset = 16,
+  saved = false,
   onClose,
   onDirections,
   onTickets,
   onDetails,
+  onToggleSave,
+  onRafiq,
+  safetyData = null,
+  safetySource = null,
 }: SitePopupProps) {
   const rating = site.rating > 0 ? site.rating : null;
   const hasTickets = !!monument?.url;
@@ -45,6 +57,15 @@ export function SitePopup({
         ? `${Math.round(distanceKm * 1000)} m`
         : `${distanceKm.toFixed(1)} km`
       : null;
+
+  const prices = monument?.prices;
+  const hasPriceGrid = Boolean(
+    prices &&
+      (prices.foreigner?.adult != null ||
+        prices.foreigner?.student != null ||
+        prices.egyptian?.adult != null ||
+        prices.egyptian?.student != null)
+  );
 
   return (
     <div
@@ -91,7 +112,7 @@ export function SitePopup({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '19px', fontWeight: 600, color: C.nile, lineHeight: 1.15 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '19px', fontWeight: 600, color: C.nile, lineHeight: 1.15, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {site.name}
               </div>
               <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', color: '#8B7E6A', marginTop: 2 }}>
@@ -130,15 +151,43 @@ export function SitePopup({
               </span>
             )}
           </div>
+
+          {/* Price grid */}
+          {hasPriceGrid && (
+            <div
+              style={{
+                marginTop: 10,
+                border: '1px solid rgba(15,61,62,0.14)',
+                borderRadius: 10,
+                overflow: 'hidden',
+                background: '#FBFAF6',
+              }}
+            >
+              <PriceGridRow
+                label="Foreigner"
+                adult={prices!.foreigner?.adult ?? null}
+                student={prices!.foreigner?.student ?? null}
+              />
+              <PriceGridRow
+                label="Egyptian"
+                adult={prices!.egyptian?.adult ?? null}
+                student={prices!.egyptian?.student ?? null}
+              />
+            </div>
+          )}
         </div>
       </div>
 
+      <SafetyInsight
+        data={safetyData}
+        source={safetySource}
+        bestTime={site.bestTime}
+        tips={site.tips}
+      />
+
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px' }}>
-        <button
-          onClick={onDirections}
-          style={actionStyle(C.nile, '#FFFFFF')}
-        >
+        <button onClick={onDirections} style={actionStyle(C.nile, '#FFFFFF')}>
           <Navigation size={14} strokeWidth={2.4} /> Directions
         </button>
         {hasTickets && (
@@ -158,6 +207,63 @@ export function SitePopup({
           <ExternalLink size={11} style={{ opacity: 0.7 }} />
         </button>
       </div>
+
+      {/* Secondary row: Rafiq + Save */}
+      {(onRafiq || onToggleSave) && (
+        <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px' }}>
+          {onRafiq && (
+            <button
+              onClick={onRafiq}
+              style={{
+                ...actionStyle('transparent', C.nile),
+                border: `1.5px solid rgba(15,61,62,0.25)`,
+              }}
+            >
+              <Sparkles size={14} strokeWidth={2.2} /> Ask Rafiq
+            </button>
+          )}
+          {onToggleSave && (
+            <button
+              onClick={onToggleSave}
+              style={{
+                flex: 1,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                background: saved ? `${C.solar}14` : 'transparent',
+                color: saved ? '#B23A2E' : '#6B6354',
+                border: `1.5px solid ${saved ? C.solar : 'rgba(27,26,23,0.18)'}`,
+                borderRadius: 10,
+                padding: '9px 12px',
+                fontFamily: "'Inter',sans-serif",
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Star size={14} fill={saved ? C.solar : 'none'} strokeWidth={2} /> {saved ? 'Saved' : 'Save'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PriceGridRow({ label, adult, student }: { label: string; adult: number | null; student: number | null }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '5px 10px' }}>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, color: '#8B7E6A' }}>{label}</span>
+      <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        {adult != null && (
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', color: '#4A4438' }}>Adult <b>LE {adult}</b></span>
+        )}
+        {student != null && (
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', color: '#4A4438' }}>Student <b>LE {student}</b></span>
+        )}
+      </span>
     </div>
   );
 }
