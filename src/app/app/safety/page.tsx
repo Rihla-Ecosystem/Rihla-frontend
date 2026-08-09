@@ -256,10 +256,14 @@ export default function PageSafety() {
     const aqi = airQuality?.aqi ?? airQuality?.index ?? 42;
     const aqiText = aqi <= 50 ? 'Good' : aqi <= 100 ? 'Moderate' : 'Unhealthy';
     const vis = weather?.visibility ? `${weather.visibility} km` : 'Clear';
+    const tempR = Number.isFinite(temp) ? Math.round(temp) : 32;
+    const feelsR = Number.isFinite(feels) ? Math.round(feels) : tempR;
+    const uviR = Number.isFinite(uvi) ? Math.round(uvi * 10) / 10 : 7;
+    const aqiR = Number.isFinite(aqi) ? Math.round(aqi) : 42;
     return [
-      { icon: <Thermometer size={15} strokeWidth={1.8} />, label: 'Temperature', val: `${temp}°C`, sub: `Feels like ${feels}°C`, col: C.terracotta },
-      { icon: <Sun size={15} strokeWidth={1.8} />, label: 'UV Index', val: `${uvi}`, sub: uvi >= 8 ? 'Very High · SPF 50+' : 'Moderate', col: C.alertAmber },
-      { icon: <Wind size={15} strokeWidth={1.8} />, label: 'Air Quality', val: aqiText, sub: `AQI ${aqi}`, col: C.safeGreen },
+      { icon: <Thermometer size={15} strokeWidth={1.8} />, label: 'Temperature', val: `${tempR}°C`, sub: `Feels like ${feelsR}°C`, col: C.terracotta },
+      { icon: <Sun size={15} strokeWidth={1.8} />, label: 'UV Index', val: `${uviR}`, sub: uviR >= 8 ? 'Very High · SPF 50+' : 'Moderate', col: C.alertAmber },
+      { icon: <Wind size={15} strokeWidth={1.8} />, label: 'Air Quality', val: aqiText, sub: `AQI ${aqiR}`, col: C.safeGreen },
       { icon: <Globe size={15} strokeWidth={1.8} />, label: 'Visibility', val: vis, sub: 'Local area', col: C.faience },
     ];
   }, [envData]);

@@ -98,8 +98,8 @@ export function WeatherWidget() {
   const condition = weather?.condition ?? weather?.summary ?? null;
 
   const live = env?.source === 'live';
-  const uv = uvi != null ? uvLevel(uvi) : null;
-  const air = aqi != null ? aqiInfo(aqi) : null;
+  const uv = uvi != null && Number.isFinite(uvi) ? uvLevel(Math.round(uvi * 10) / 10) : null;
+  const air = aqi != null && Number.isFinite(aqi) ? aqiInfo(Math.round(aqi)) : null;
   const tip = temp != null || uvi != null || aqi != null || condition != null ? touristTip(temp, feels, uvi, aqi, condition) : null;
 
   const windDisplay =
@@ -214,9 +214,9 @@ export function WeatherWidget() {
         {uv != null &&
           tile(
             <Sun size={14} color={uv.color} strokeWidth={2.2} />,
-            `UV ${uvi}`,
+            `UV ${Math.round(uvi * 10) / 10}`,
             'Sun',
-            `${uv.word} · ${uvAdvice(uvi)}`,
+            `${uv.word} · ${uvAdvice(Math.round(uvi * 10) / 10)}`,
             uv.color
           )}
         {air != null &&
@@ -224,7 +224,7 @@ export function WeatherWidget() {
             <span style={{ fontSize: 13 }}>🌫️</span>,
             air.word,
             'Air quality',
-            aqi != null ? `AQI ${aqi}` : null,
+            aqi != null ? `AQI ${Math.round(aqi)}` : null,
             air.color
           )}
         {humidity != null &&

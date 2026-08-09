@@ -73,7 +73,7 @@ export function WhyStatus({ events, gov, weather }: WhyStatusProps) {
   if (uviNote) {
     factors.push({
       icon: <Sun size={14} />,
-      title: `UV index ${weather!.uvi}`,
+      title: `UV index ${weather!.uvi != null ? Math.round(weather!.uvi * 10) / 10 : '—'}`,
       detail: uviNote,
       color: C.alertAmber,
     });
