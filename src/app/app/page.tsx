@@ -37,20 +37,20 @@ const CARDS = [
     href: '/app/explore',
   },
   {
-    icon: <ShieldCheck size={20} strokeWidth={2} />,
-    color: C.safeGreen,
-    title: 'Safety',
-    tag: 'Live advisories',
-    body: 'Scam alerts and emergency help, monitored from live sources.',
-    href: '/app/safety',
-  },
-  {
     icon: <Landmark size={20} strokeWidth={2} />,
     color: C.copper,
     title: 'Monuments',
     tag: 'Stories & tickets',
     body: 'Prices, opening hours, stories and scam tips for 92 historic sites.',
     href: '/app/monuments',
+  },
+  {
+    icon: <ShieldCheck size={20} strokeWidth={2} />,
+    color: C.safeGreen,
+    title: 'Safety',
+    tag: 'Live advisories',
+    body: 'Scam alerts and emergency help, monitored from live sources.',
+    href: '/app/safety',
   },
   {
     icon: <Banknote size={20} strokeWidth={2} />,
@@ -69,20 +69,20 @@ const CARDS = [
     href: '/app/quests',
   },
   {
-    icon: <Clock size={20} strokeWidth={2} />,
-    color: C.nile,
-    title: 'History',
-    tag: 'Your journey',
-    body: 'Revisit past trips, favorites and your activity log.',
-    href: '/app/history',
-  },
-  {
     icon: <Wallet size={20} strokeWidth={2} />,
     color: C.brass,
     title: 'Wallet',
     tag: 'Payments & balance',
     body: 'Manage balance and bookings in one secure place.',
     href: '/app/wallet',
+  },
+  {
+    icon: <Clock size={20} strokeWidth={2} />,
+    color: C.nile,
+    title: 'History',
+    tag: 'Your journey',
+    body: 'Revisit past trips, favorites and your activity log.',
+    href: '/app/history',
   },
 ];
 

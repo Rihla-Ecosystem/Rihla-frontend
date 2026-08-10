@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, MapPin, X } from 'lucide-react';
+import { Search, MapPin, X, ChevronDown } from 'lucide-react';
 import { C } from '@/lib/constants/theme';
 
 export interface ExploreGovernorateOption {
@@ -110,7 +110,7 @@ export function ExploreSearchBar({
           style={{
             width: '100%',
             appearance: 'none',
-            padding: '11px 36px',
+            padding: '11px 38px 11px 36px',
             borderRadius: 12,
             border: '1.5px solid rgba(27,26,23,0.13)',
             background: '#FFFFFF',
@@ -130,6 +130,12 @@ export function ExploreSearchBar({
             </option>
           ))}
         </select>
+        <ChevronDown
+          size={15}
+          color="#8B7E6A"
+          strokeWidth={2.2}
+          style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+        />
         <div style={{ marginTop: 5, paddingLeft: 4, color: '#8B7E6A', fontFamily: "'Inter',sans-serif", fontSize: 10 }}>
           {governorate === ALL_EGYPT_VALUE
             ? 'Showing all Egypt'

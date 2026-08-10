@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { MapPin, FlaskConical, Wifi, Activity, Coins, Trash2, X, ExternalLink, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { C } from '@/lib/constants/theme';
 import { useLocation } from '@/providers/LocationProvider';
-import { useDemoStore, getDemoStore, setDemoMode, recordVisit, addTokens, resetDemo, VISITABLE_SITES } from '@/lib/demoStore';
+import { useDemoStore, setDemoMode, addTokens, resetDemo } from '@/lib/demoStore';
 import { diagnosticsService, type DiagResult } from '@/services/diagnosticsService';
 
 const GOVS = ['Cairo', 'Giza', 'Luxor', 'Aswan', 'Alexandria', 'Red Sea'];
@@ -22,7 +22,7 @@ const PAGES = [
   { label: 'Settings', href: '/app/settings' },
 ];
 
-type Tab = 'demo' | 'visit' | 'diag';
+type Tab = 'demo' | 'diag';
 
 const DFLT_GOV_COORDS: Record<string, { lat: number; lon: number }> = {
   Cairo: { lat: 30.0444, lon: 31.2357 },
@@ -66,21 +66,6 @@ export function TestHub() {
       notify(`Teleported to ${name}`);
     },
     [setLocationOverride, notify]
-  );
-
-  const onVisit = useCallback(
-    (siteId: number) => {
-      const site = VISITABLE_SITES.find((s) => s.id === siteId);
-      if (!site) return;
-      const { lat: slat, lon: slon, name, gov } = site;
-      const c = slat != null && slon != null ? { lat: slat, lon: slon } : DFLT_GOV_COORDS[site.gov] || { lat: 30.0444, lon: 31.2357 };
-      setLocationOverride(c.lat, c.lon, name, site.gov);
-      const next = recordVisit(site);
-      const v = next.visits[next.visits.length - 1];
-      notify(v?.badge ? `Visited ${name} · +${v.xp} XP · 🏅 ${v.badge}` : `Visited ${name} · +${v.xp} XP`);
-      router.push('/app/history');
-    },
-    [setLocationOverride, notify, router]
   );
 
   const runDiagnostics = useCallback(async () => {
@@ -140,7 +125,6 @@ export function TestHub() {
             {(
               [
                 { id: 'demo', label: 'Demo' },
-                { id: 'visit', label: 'Visit' },
                 { id: 'diag', label: 'Backend' },
               ] as const
             ).map((t) => (
@@ -229,26 +213,6 @@ export function TestHub() {
                       <Activity size={11} /> My GPS
                     </button>
                   </div>
-                </div>
-              </>
-            )}
-
-            {tab === 'visit' && (
-              <>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#A89880', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Visit a site — teleports you, records the visit, awards XP &amp; badges
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {VISITABLE_SITES.map((site) => (
-                    <button key={site.id} onClick={() => onVisit(site.id)} style={{ ...siteBtn }}>
-                      <MapPin size={13} color={C.terracotta} style={{ flexShrink: 0 }} />
-                      <div style={{ flex: 1, textAlign: 'left' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: C.nile }}>{site.name}</div>
-                        <div style={{ fontSize: 10, color: '#8B7E6A' }}>{site.gov} · {site.cat}</div>
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: C.copper }}>+{Math.round((site.rating ?? 4.5) * 40)} XP</span>
-                    </button>
-                  ))}
                 </div>
               </>
             )}
@@ -370,17 +334,6 @@ const chipBtn: React.CSSProperties = {
   fontWeight: 600,
   background: '#FAF7F0',
   border: '1px solid',
-  cursor: 'pointer',
-};
-
-const siteBtn: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '9px 11px',
-  background: '#FAF7F0',
-  border: '1px solid rgba(27,26,23,0.08)',
-  borderRadius: 10,
   cursor: 'pointer',
 };
 
