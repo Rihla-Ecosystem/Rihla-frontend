@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { C } from '@/lib/constants/theme';
 import { EMERGENCY_NUMBERS } from '@/app/data/safety-data';
+import { useLocation } from '@/providers/LocationProvider';
+import { incidentReportService } from '@/services/incidentReportService';
 
 export default function EmergencyContacts({
   called,
@@ -11,6 +13,42 @@ export default function EmergencyContacts({
   called: string | null;
   setCalled: (s: string | null) => void;
 }) {
+  const { lat, lon } = useLocation();
+  const [sosStatus, setSosStatus] = useState<'idle' | 'calling' | 'sent'>('idle');
+  const [sosError, setSosError] = useState<string | null>(null);
+
+  const dial = useCallback((label: string, num: string) => {
+    setCalled(`${label} · ${num}`);
+    setSosStatus('idle');
+    setSosError(null);
+    if (typeof window !== 'undefined') {
+      window.location.href = `tel:${num}`;
+    }
+  }, [setCalled]);
+
+  const pressSos = useCallback(async () => {
+    setCalled('Tourist Police · 126');
+    setSosStatus('calling');
+    setSosError(null);
+    if (typeof window !== 'undefined') {
+      window.location.href = 'tel:126';
+    }
+    try {
+      await incidentReportService.create({
+        type: 'SAFETY',
+        severity: 'CRITICAL',
+        description: 'SOS activated from the emergency page — user requested tourist police assistance.',
+        lat: lat ?? undefined,
+        lng: lon ?? undefined,
+        relatedSiteName: undefined,
+      });
+      setSosStatus('sent');
+    } catch (err: any) {
+      console.warn('SOS report submission failed:', err);
+      setSosStatus('idle');
+      setSosError('Could not log your SOS report. Call Tourist Police directly on 126.');
+    }
+  }, [lat, lon, setCalled]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div
@@ -36,7 +74,7 @@ export default function EmergencyContacts({
           Emergency SOS
         </div>
         <button
-          onClick={() => setCalled('Tourist Police · 126')}
+          onClick={pressSos}
           style={{
             width: 120,
             height: 120,
@@ -74,11 +112,11 @@ export default function EmergencyContacts({
                 fontFamily: "'Inter',sans-serif",
                 fontSize: '14px',
                 fontWeight: 700,
-                color: '#4caf50',
+                color: sosStatus === 'sent' ? '#4caf50' : '#4caf50',
                 marginBottom: 4,
               }}
             >
-              Calling {called}
+              {sosStatus === 'sent' ? 'SOS logged & calling 126' : `Calling ${called}`}
             </div>
             <div
               style={{
@@ -87,8 +125,22 @@ export default function EmergencyContacts({
                 color: `${C.limestone}40`,
               }}
             >
-              Your location has been shared automatically
+              {sosStatus === 'sent'
+                ? 'Your critical report was logged and your location shared automatically'
+                : 'Your location has been shared automatically'}
             </div>
+            {sosError && (
+              <div
+                style={{
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: '11px',
+                  color: '#ffb300',
+                  marginTop: 6,
+                }}
+              >
+                {sosError}
+              </div>
+            )}
           </div>
         ) : (
           <div>
@@ -141,7 +193,7 @@ export default function EmergencyContacts({
         {EMERGENCY_NUMBERS.map((e, i) => (
           <button
             key={e.label}
-            onClick={() => setCalled(`${e.label} · ${e.num}`)}
+            onClick={() => dial(e.label, e.num)}
             style={{
               display: 'grid',
               gridTemplateColumns: '40px 1fr auto',

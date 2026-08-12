@@ -19,7 +19,8 @@ export default function LoginPage() {
     clearError();
     try {
       await login({ email, password: pw });
-      router.push("/app");
+      const next = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
+      router.push(next && next.startsWith("/") ? next : "/app");
     } catch {
       // Error is stored in AuthContext and displayed
     }

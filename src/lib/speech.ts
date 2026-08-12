@@ -182,16 +182,15 @@ export function speak(text: string, options: SpeakOptions = {}): { cancel: () =>
 
   let controller: { cancel: () => void };
 
-  if ('speechSynthesis' in window) {
-    // Prefer synthesis when a real voice exists; otherwise jump to Google TTS.
-    const hasVoice = voicesFor(lang, window.speechSynthesis).length > 0;
-    if (hasVoice) {
-      controller = speakViaSynthesis(trimmed, lang, { rate, ...callbacks });
-    } else {
-      controller = speakViaGoogle(trimmed, lang, callbacks);
-    }
-  } else {
+  if (!('speechSynthesis' in window) || !window.speechSynthesis) {
     controller = speakViaGoogle(trimmed, lang, callbacks);
+  } else {
+    // Always use the Web Speech API when available. Voices load asynchronously,
+    // so a synchronous `getVoices()` check at call time is unreliable (empty on
+    // first click in Chrome) and would wrongly send us to the now-blocked
+    // Google Translate TTS endpoint (ERR_BLOCKED_BY_ORB). speakViaSynthesis
+    // picks a voice lazily via the 'voiceschanged' listener.
+    controller = speakViaSynthesis(trimmed, lang, { rate, ...callbacks });
   }
 
   currentController = controller;

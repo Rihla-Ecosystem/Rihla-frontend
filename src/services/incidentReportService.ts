@@ -24,32 +24,31 @@ export interface CreateIncidentReport {
   relatedSiteName?: string;
 }
 
+function unwrap<T>(res: any): T {
+  const body = res?.data ?? res;
+  if (body && body.success === true) return body.data as T;
+  return body as T;
+}
+
 export const incidentReportService = {
   async create(payload: CreateIncidentReport): Promise<IncidentReport> {
-    const { data, error } = await (apiClient as any).POST('/reports', { body: payload });
-    if (error) throw error;
-    return data?.data ?? data;
+    const res = await apiClient.post('/reports', payload);
+    return unwrap<IncidentReport>(res);
   },
 
   async list(): Promise<IncidentReport[]> {
-    const { data, error } = await (apiClient as any).GET('/reports');
-    if (error) throw error;
-    const payload = data?.data ?? data;
-    return Array.isArray(payload) ? payload : payload?.reports ?? payload?.items ?? [];
+    const res = await apiClient.get('/reports');
+    const body = unwrap<any>(res);
+    if (Array.isArray(body)) return body;
+    return body?.reports ?? body?.items ?? body?.rows ?? [];
   },
 
   async get(id: string): Promise<IncidentReport> {
-    const { data, error } = await (apiClient as any).GET('/reports/{id}', {
-      params: { path: { id } },
-    });
-    if (error) throw error;
-    return data?.data ?? data;
+    const res = await apiClient.get(`/reports/${id}`);
+    return unwrap<IncidentReport>(res);
   },
 
   async remove(id: string): Promise<void> {
-    const { error } = await (apiClient as any).DELETE('/reports/{id}', {
-      params: { path: { id } },
-    });
-    if (error) throw error;
+    await apiClient.delete(`/reports/${id}`);
   },
 };

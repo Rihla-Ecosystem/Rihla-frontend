@@ -244,7 +244,10 @@ export const chatService = {
     if (context?.transcript) formData.append("transcript", context.transcript);
     if (context?.rafiqContext) formData.append("context", JSON.stringify(context.rafiqContext));
 
-    const requestHeaders = new Headers(authHeaders());
+    const requestHeaders = new Headers({
+      ...authHeaders(),
+      "Idempotency-Key": crypto.randomUUID(),
+    });
     requestHeaders.delete("Content-Type");
     const response = await fetch(`${CORE_API_URL}/voice`, {
       method: "POST",

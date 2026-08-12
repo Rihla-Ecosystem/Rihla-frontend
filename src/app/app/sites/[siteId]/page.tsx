@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname, useParams } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { C } from '@/lib/constants/theme';
 import { Glyph, GlyphFull, Geom } from '@/app/components/atoms';
@@ -57,9 +57,12 @@ import {
   applyMonumentToSite,
   type Monument,
 } from '@/services/monumentsService';
+import { buildExploreContext } from '@/lib/rafiq';
+import { useRafiq } from '@/app/components/rafiq/RafiqProvider';
 
 export default function SiteDetailPage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const params = useParams();
   const siteIdParam = params?.siteId as string;
   const numericSiteId = siteIdParam ? parseInt(siteIdParam, 10) : NaN;
@@ -68,6 +71,12 @@ export default function SiteDetailPage() {
   );
   const [saved, setSaved] = useState(false);
   const [monument, setMonument] = useState<Monument | null>(null);
+
+  const handleRafiq = useCallback(() => {
+    if (!site) return;
+    const ctx = buildExploreContext(site, null);
+    openRafiq({ context: ctx });
+  }, [site, openRafiq]);
 
   useEffect(() => {
     let active = true;
@@ -163,7 +172,7 @@ export default function SiteDetailPage() {
             {saved ? 'Saved' : 'Save site'}
           </button>
           <button
-            onClick={() => router.push('/app/rafiq')}
+            onClick={() => handleRafiq()}
             style={{
               background: C.nile,
               border: 'none',
@@ -199,7 +208,7 @@ export default function SiteDetailPage() {
           }}
         >
           <SiteBodyLeft site={site} nearby={nearby} monument={monument} />
-          <SiteRightSidebar site={site} saved={saved} setSaved={setSaved} setRafiq={() => router.push('/app/rafiq')} />
+          <SiteRightSidebar site={site} saved={saved} setSaved={setSaved} setRafiq={handleRafiq} />
         </div>
       </div>
     </div>

@@ -7,17 +7,24 @@ import { useAuth } from '@/lib/auth';
 import { syncAppSettingsFromServer } from '@/lib/settingsStore';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ToastProvider } from '@/components/ToastProvider';
+import RafiqProvider from '@/app/components/rafiq/RafiqProvider';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthenticated, isInitialized, isLoading } = useAuth();
 
   useEffect(() => {
     if (user) {
       syncAppSettingsFromServer();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (isInitialized && !isLoading && !isAuthenticated) {
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    }
+  }, [isInitialized, isLoading, isAuthenticated, pathname, router]);
 
   const getPageFromPath = (path: string): string => {
     if (path === '/app' || path === '/app/' || path.startsWith('/app/home')) return 'home';
@@ -32,7 +39,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (path.startsWith('/app/wallet')) return 'wallet';
     if (path.startsWith('/app/profile')) return 'profile';
     if (path.startsWith('/app/settings')) return 'settings';
-    if (path.startsWith('/app/admin')) return 'admin';
     return 'home';
   };
 
@@ -62,9 +68,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
       <ErrorBoundary>
-        <AppShell activePage={activePage} setPage={setPage} go={go}>
-          {children}
-        </AppShell>
+        <RafiqProvider>
+          <AppShell activePage={activePage} setPage={setPage} go={go}>
+            {children}
+          </AppShell>
+        </RafiqProvider>
       </ErrorBoundary>
     </ToastProvider>
   );

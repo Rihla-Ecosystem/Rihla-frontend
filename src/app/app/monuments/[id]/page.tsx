@@ -15,10 +15,12 @@ import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
 import { geoApi, googleMapsDirectionsUrl } from '@/lib/api/geo';
 import { placesApi } from '@/lib/api/places';
 import { useLocation } from '@/providers/LocationProvider';
-import { buildExploreContext, buildRafiqUrl } from '@/lib/rafiq';
+import { buildExploreContext } from '@/lib/rafiq';
+import { useRafiq } from '@/app/components/rafiq/RafiqProvider';
 
 export default function MonumentDetailPage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const params = useParams();
   const id = params?.id as string;
   const { lat, lon } = useLocation();
@@ -98,9 +100,8 @@ export default function MonumentDetailPage() {
     const s = site;
     const name = m?.title || s?.name || 'this place';
     const ctx = buildExploreContext(s!, null); // distance not needed here
-    const url = buildRafiqUrl(ctx);
-    router.push(url);
-  }, [monument, site, router]);
+    openRafiq({ context: ctx });
+  }, [monument, site, openRafiq]);
 
   useEffect(() => {
     if (!monument) return;
@@ -147,7 +148,7 @@ export default function MonumentDetailPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar location="Monument Details" onRafiq={() => router.push('/app/rafiq')} />
+      <TopBar location="Monument Details" onRafiq={() => openRafiq()} />
 
       {/* Sticky detail nav */}
       <div

@@ -7,6 +7,7 @@ import { Glyph, Geom } from "@/app/components/atoms";
 import { TopBar } from "@/app/components/layout/TopBar";
 import { currencyApi, fallbackRatesNow, type EgyptianCurrency, type ExchangeRates, type CurrencyInfo } from "@/lib/api/currency";
 import { Coins, Banknote, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useRafiq } from "@/app/components/rafiq/RafiqProvider";
 
 const TARGET_CURRENCIES = ["USD", "EUR", "GBP", "SAR", "AED"] as const;
 
@@ -53,6 +54,7 @@ function Skeleton() {
 
 export default function CurrencyPage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const [catalog, setCatalog] = useState<EgyptianCurrency | null>(null);
   const [info, setInfo] = useState<CurrencyInfo | null>(null);
   const [rates, setRates] = useState<ExchangeRates | null>(null);
@@ -115,7 +117,7 @@ export default function CurrencyPage() {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.bg }}>
-      <TopBar location="Currency & Money" onRafiq={() => router.push("/app/rafiq")} />
+      <TopBar location="Currency & Money" onRafiq={() => openRafiq()} />
 
       <div style={{ maxWidth: 1040, width: "100%", margin: "0 auto", padding: "28px 32px", boxSizing: "border-box" }}>
         <div

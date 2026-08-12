@@ -10,6 +10,7 @@ import { placesApi, type Favorite } from '@/lib/api/places';
 import { monumentsService, buildMonumentLookup, normalizeName, type Monument } from '@/services/monumentsService';
 import { useLocation } from '@/providers/LocationProvider';
 import { calculateDistanceKm } from '@/lib/poiMapping';
+import { useRafiq } from '@/app/components/rafiq/RafiqProvider';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   archaeological: '🏛️',
@@ -35,6 +36,7 @@ function fmtDistance(km: number): string {
 
 export default function SavedPage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const { lat, lon } = useLocation();
 
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -140,7 +142,7 @@ export default function SavedPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: C.limestone }}>
-      <TopBar location="Saved Places" onRafiq={() => router.push('/app/rafiq')} />
+      <TopBar location="Saved Places" onRafiq={() => openRafiq()} />
 
       {/* Cart hero */}
       <div

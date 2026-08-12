@@ -41,7 +41,8 @@ import { SafetyInsight } from '@/app/app/explore/components/SafetyInsight';
 import { placesApi, type Favorite } from '@/lib/api/places';
 import { safetyService, type SafetyData } from '@/services/safetyService';
 import type { MapTripStop, MapTicketMarker } from '@/app/components/ui/InteractiveMap';
-import { buildExploreContext, buildRafiqUrl } from '@/lib/rafiq';
+import { buildExploreContext } from '@/lib/rafiq';
+import { useRafiq } from '@/app/components/rafiq/RafiqProvider';
 
 const InteractiveMap = dynamic(
   () => import('@/app/components/ui/InteractiveMap').then((mod) => mod.InteractiveMap),
@@ -187,6 +188,7 @@ function formatDuration(seconds: number): string {
 
 export default function ExplorePage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const { user } = useAuth();
   const {
     lat: userLat,
@@ -660,10 +662,9 @@ export default function ExplorePage() {
       safetyStatus: safetyData?.status ?? undefined,
       activeAlerts: safetyData?.events.slice(0, 3).map((event) => event.headline),
     }, selectedDistance);
-    const url = buildRafiqUrl(ctx);
     placesApi.recordEvent({ event: 'ask_rafiq_from_explore', siteId: String(site.id), siteName: site.name, metadata: { safetyStatus: safetyData?.status ?? null } });
-    router.push(url);
-  }, [selectedSite, selectedDistance, router, safetyData]);
+    openRafiq({ context: ctx });
+  }, [selectedSite, selectedDistance, openRafiq, safetyData]);
 
   const handlePopupDetails = useCallback(() => {
     const m = selectedSite ? monumentForSite[selectedSite.id] ?? selectedMonument : selectedMonument;
@@ -1456,7 +1457,7 @@ export default function ExplorePage() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <TopBar
         location={isAllEgypt ? 'Explore Egypt' : governorate ? `${governorate} Governorate` : 'Around My Location'}
-        onRafiq={() => router.push('/app/rafiq')}
+        onRafiq={() => openRafiq()}
       />
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#FAF7F0' }}>{mapLayer}</div>
     </div>

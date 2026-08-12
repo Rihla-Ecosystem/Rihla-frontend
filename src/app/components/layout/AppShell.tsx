@@ -7,7 +7,7 @@ import { Glyph, GlyphFull, Geom } from "@/app/components/atoms";
 import {
   MapPin, Bell, Navigation, Wind, Thermometer, Sun, Shield, Search, Map, User, AlertTriangle, Star, Clock, Camera,
   ArrowRight, Globe, Phone, CreditCard, Wifi, CheckCircle, X, ChevronLeft, ChevronRight, Menu,
-  Home, Compass, Settings, BarChart2, Wallet, LogOut, Zap, Filter, SlidersHorizontal, BookOpen, Send, Mic, ChevronDown, RefreshCw, Ticket, Banknote, Landmark, Trophy
+  Home, Compass, Settings, Wallet, LogOut, Zap, Filter, SlidersHorizontal, BookOpen, Send, Mic, ChevronDown, RefreshCw, Ticket, Banknote, Landmark, Trophy
 } from "lucide-react";
 import { ShellNavProvider, useShellNav } from "./shell-nav";
 
@@ -22,8 +22,7 @@ export const NAV_ITEMS = [
   { id: "wallet",  label: "Wallet",  icon: (a: boolean) => <Wallet   size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "profile", label: "Profile", icon: (a: boolean) => <User     size={18} strokeWidth={a ? 2.2 : 1.7}/> },
   { id: "history", label: "History", icon: (a: boolean) => <Clock    size={18} strokeWidth={a ? 2.2 : 1.7}/> },
-{ id: "settings",label: "Settings",icon: (a: boolean) => <Settings size={18} strokeWidth={a ? 2.2 : 1.7}/> },
-  { id: "admin",   label: "Admin",   icon: (a: boolean) => <BarChart2 size={18} strokeWidth={a ? 2.2 : 1.7}/>, adminOnly: true },
+  { id: "settings",label: "Settings",icon: (a: boolean) => <Settings size={18} strokeWidth={a ? 2.2 : 1.7}/> },
 ];
 
 interface ShellContentProps {
@@ -40,7 +39,7 @@ interface ShellContentProps {
 }
 
 function ShellContent({
-  collapsed, activePage, isAdmin, displayName, initial, userLevel, userXp, onNavigate, onLogout, onToggleCollapse,
+  collapsed, activePage, displayName, initial, userLevel, userXp, onNavigate, onLogout, onToggleCollapse,
 }: ShellContentProps) {
   return (
     <>
@@ -49,8 +48,7 @@ function ShellContent({
         {!collapsed && <div><div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "22px", fontWeight: 500, color: C.limestone, lineHeight: 1 }}>رحلة Rihla</div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: `${C.sand}80`, marginTop: 3 }}>AI Companion</div></div>}
       </div>
       <nav style={{ flex: 1, padding: "12px 8px", display: "flex", flexDirection: "column", gap: 2, overflowY: "auto" }}>
-        {NAV_ITEMS.map(({ id, label, icon, adminOnly }) => {
-          if (adminOnly && !isAdmin) return null;
+        {NAV_ITEMS.map(({ id, label, icon }) => {
           const a = activePage === id;
           return (
             <button key={id} onClick={() => onNavigate(id)} style={{ display: "flex", alignItems: "center", gap: collapsed ? 0 : 10, padding: collapsed ? "11px 0" : "10px 13px", borderRadius: 10, border: "none", background: (id as any).special || id === "rafiq" ? (a ? `${C.faience}25` : `${C.faience}10`) : a ? `${C.limestone}12` : "transparent", color: id === "rafiq" ? (a ? C.faience : `${C.faience}70`) : a ? C.limestone : `${C.limestone}45`, cursor: "pointer", transition: "all 0.15s", width: "100%", justifyContent: collapsed ? "center" : "flex-start", whiteSpace: "nowrap" }}>

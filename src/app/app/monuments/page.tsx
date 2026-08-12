@@ -11,6 +11,7 @@ import { useLocation } from "@/providers/LocationProvider";
 import { buildMonumentSite, isScamSite } from "@/app/data/monument-catalog";
 import { govNameColor } from "@/app/app/explore/components/ExploreSearchBar";
 import { ALL_SITES, type RihlaSite } from "@/app/data/rihla-data";
+import { useRafiq } from "@/app/components/rafiq/RafiqProvider";
 import {
   Ticket,
   MapPin,
@@ -48,6 +49,7 @@ interface RouteInfo {
 
 export default function MonumentsPage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const { lat, lon } = useLocation();
 
   const [monuments, setMonuments] = useState<Monument[] | null>(null);
@@ -185,7 +187,7 @@ export default function MonumentsPage() {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.bg }}>
-      <TopBar location="Monuments of Egypt" onRafiq={() => router.push("/app/rafiq")} />
+      <TopBar location="Monuments of Egypt" onRafiq={() => openRafiq()} />
 
       {/* Hero header */}
       <div

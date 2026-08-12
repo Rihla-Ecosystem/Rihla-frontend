@@ -7,8 +7,8 @@ import { TopBar } from "@/app/components/layout/TopBar";
 import { journeysApi, type Journey } from "@/lib/api/journeys";
 import { useDemoStore } from "@/lib/demoStore";
 import { ShieldCheck, Landmark, CheckCircle2, Lock, RefreshCw, WifiOff } from "lucide-react";
-import { buildJourneyContext, buildRafiqUrl } from '@/lib/rafiq';
-import { AskRafiqButton } from '@/app/components/rafiq';
+import { buildJourneyContext } from '@/lib/rafiq';
+import { AskRafiqButton, useRafiq } from '@/app/components/rafiq';
 
 const SCAM_SLUGS = [
   "scam-smart-traveler",
@@ -27,6 +27,7 @@ const ARCHAEOLOGY_SLUGS = [
 
 export default function QuestsPage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const demo = useDemoStore();
   const [quests, setQuests] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +70,7 @@ export default function QuestsPage() {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.bg }}>
-      <TopBar location="Quests & Journeys" onRafiq={() => router.push("/app/rafiq")} />
+      <TopBar location="Quests & Journeys" onRafiq={() => openRafiq()} />
 
       <div
         style={{

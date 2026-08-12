@@ -22,26 +22,26 @@ export interface Favorite extends Required<Pick<FavoriteInput, 'placeId' | 'plac
 
 export const placesApi = {
   listFavorites: async (): Promise<Favorite[]> => {
-    const res = await apiClient.get<Favorite[]>('/places/favorites');
-    return Array.isArray(res.data) ? res.data : [];
+    const res = await apiClient.get<{ success: boolean; data: Favorite[] }>('/places/favorites');
+    return Array.isArray(res.data?.data) ? res.data.data : [];
   },
 
   isFavorited: async (placeId: string): Promise<boolean> => {
-    const res = await apiClient.get<{ favorited: boolean }>(`/places/favorites/${encodeURIComponent(placeId)}`);
-    return Boolean(res.data?.favorited);
+    const res = await apiClient.get<{ success: boolean; data: { favorited: boolean } }>(`/places/favorites/${encodeURIComponent(placeId)}`);
+    return Boolean(res.data?.data?.favorited);
   },
 
   addFavorite: async (input: FavoriteInput): Promise<Favorite> => {
-    const res = await apiClient.post<Favorite>('/places/favorites', {
-      place_id: input.placeId,
-      place_name: input.placeName,
+    const res = await apiClient.post<{ success: boolean; data: Favorite }>('/places/favorites', {
+      placeId: input.placeId,
+      placeName: input.placeName,
       category: input.category,
       governorate: input.governorate,
       lat: input.lat,
       lon: input.lon,
       img: input.img,
     });
-    return res.data;
+    return res.data?.data as Favorite;
   },
 
   removeFavorite: async (placeId: string): Promise<void> => {

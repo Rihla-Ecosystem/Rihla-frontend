@@ -39,9 +39,11 @@ import {
   PhoneCall,
   CheckCircle2,
   ListChecks,
+  Flag,
 } from 'lucide-react';
-import { buildSafetyContext, buildRafiqUrl } from '@/lib/rafiq';
-import { AskRafiqButton } from '@/app/components/rafiq';
+import { buildSafetyContext } from '@/lib/rafiq';
+import { AskRafiqButton, useRafiq } from '@/app/components/rafiq';
+import ReportIssueModal from '@/app/components/safety/ReportIssueModal';
 
 const SAFETY_POLL_MS = 60000;
 
@@ -62,6 +64,7 @@ type Tab = 'here' | 'nearby' | 'plan';
 
 export default function PageSafety() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const { user, isInitialized } = useAuth();
   const { lat, lon, locationName, governorate: providerGov } = useLocation();
   const locationLabel = useLocationLabel();
@@ -80,6 +83,7 @@ export default function PageSafety() {
   const inFlightRef = React.useRef(false);
   const prevStatusRef = React.useRef<string | null>(null);
   const [riskNotice, setRiskNotice] = useState<{ title: string; body: string } | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     if (isInitialized && !user) router.push('/login');
@@ -265,9 +269,8 @@ export default function PageSafety() {
 
   const askRafiq = useCallback((headline: string) => {
     const ctx = buildSafetyContext(safetyData!, activeGov);
-    const url = buildRafiqUrl(ctx);
-    router.push(url);
-  }, [safetyData, activeGov, router]);
+    openRafiq({ context: ctx, initialQuery: headline });
+  }, [safetyData, activeGov, openRafiq]);
 
   const contacts = React.useMemo(() => {
     const fallback = [
@@ -301,7 +304,7 @@ export default function PageSafety() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <TopBar onRafiq={() => router.push('/app/rafiq')} />
+      <TopBar onRafiq={() => openRafiq()} />
 
       {/* Government security notice for the current location */}
       <div style={{ padding: '10px 32px 0' }}>
@@ -447,7 +450,28 @@ export default function PageSafety() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
                     <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '19px', fontWeight: 500, color: C.nile, margin: 0 }}>Active Alerts</h2>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: UI.text.muted }}>{activeGov} · live feed</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <button
+                        onClick={() => setReportOpen(true)}
+                        style={{
+                          background: 'none',
+                          border: `1px solid ${C.signalRed}40`,
+                          color: C.signalRed,
+                          borderRadius: 999,
+                          padding: '5px 12px',
+                          fontFamily: "'Inter',sans-serif",
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                        }}
+                      >
+                        <Flag size={12} /> Report a travel issue
+                      </button>
+                      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', color: UI.text.muted }}>{activeGov} · live feed</span>
+                    </div>
                   </div>
                   {isLoading ? (
                     <div style={{ background: C.limestone, borderRadius: 14, padding: '32px', textAlign: 'center', color: UI.text.muted, fontFamily: "'Inter',sans-serif", fontSize: '13px' }}>
@@ -644,6 +668,8 @@ export default function PageSafety() {
       >
         <Siren size={24} strokeWidth={2.4} />
       </button>
+
+      <ReportIssueModal open={reportOpen} onClose={() => setReportOpen(false)} />
     </div>
   );
 }

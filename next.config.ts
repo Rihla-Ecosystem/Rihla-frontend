@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async rewrites() {
+    const coreApi = process.env.CORE_API_URL || "http://88.222.220.235:3005";
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${coreApi}/api/:path*`,
+      },
+    ];
+  },
   async redirects() {
     return [
       {

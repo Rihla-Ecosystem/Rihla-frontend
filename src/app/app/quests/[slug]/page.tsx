@@ -18,7 +18,7 @@ import {
   ChevronLeft,
   Sparkles,
 } from "lucide-react";
-import { buildJourneyContext, buildRafiqUrl } from '@/lib/rafiq';
+import { buildJourneyContext } from '@/lib/rafiq';
 import { AskRafiqButton } from '@/app/components/rafiq';
 
 const SCAM_SLUGS = [

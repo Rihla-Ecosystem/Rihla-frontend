@@ -1,10 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Glyph } from '@/app/components/atoms';
 import { C } from '@/lib/constants/theme';
 import { Sparkles } from 'lucide-react';
-import { buildRafiqUrl, contextualLabel, type RafiqContext } from '@/lib/rafiq';
+import { contextualLabel, type RafiqContext } from '@/lib/rafiq';
+import { useRafiq } from '@/app/components/rafiq/RafiqProvider';
 
 type Variant = 'primary' | 'ghost' | 'card';
 type Size = 'sm' | 'md';
@@ -30,14 +30,13 @@ export function AskRafiqButton({
   style = {},
   onOpen,
 }: AskRafiqButtonProps) {
-  const router = useRouter();
+  const { openRafiq } = useRafiq();
   const buttonLabel = label ?? contextualLabel(context);
-  const url = buildRafiqUrl(context);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onOpen?.();
-    router.push(url);
+    openRafiq({ context });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

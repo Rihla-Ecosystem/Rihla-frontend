@@ -82,13 +82,14 @@ export function TestHub() {
   const backends = diag ? diag.filter((d) => d.ok && d.source === 'backend').length : null;
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, left: 92, zIndex: 9999, fontFamily: "'Inter',sans-serif" }}>
+    <div style={{ position: 'fixed', bottom: 96, right: 24, zIndex: 9999, fontFamily: "'Inter',sans-serif" }}>
       {isOpen && (
         <div
           style={{
             position: 'absolute',
             bottom: '100%',
-            left: 0,
+            left: 'auto',
+            right: 0,
             marginBottom: 12,
             background: '#FAF7F0',
             border: '1px solid rgba(27,26,23,0.12)',

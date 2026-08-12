@@ -54,7 +54,8 @@ export const adminService = {
   getUsers: async (): Promise<User[]> => {
     const { data, error } = await apiClient.GET('/admin/users');
     if (error) throw formatApiError(error, 'Failed to load users');
-    return data ?? [];
+    const wrapped = data as unknown as { users?: User[]; pagination?: unknown };
+    return Array.isArray(data) ? data : (wrapped?.users ?? []);
   },
 
   changeRole: async (userId: string, roleId: number): Promise<void> => {
@@ -75,7 +76,8 @@ export const adminService = {
   getAuditLogs: async (): Promise<AuditLog[]> => {
     const { data, error } = await apiClient.GET('/admin/audit-logs');
     if (error) throw formatApiError(error, 'Failed to load audit logs');
-    return data ?? [];
+    const wrapped = data as unknown as { logs?: AuditLog[] };
+    return Array.isArray(data) ? data : (wrapped?.logs ?? []);
   },
 
   getTokenPackages: async (): Promise<TokenPackage[]> => {

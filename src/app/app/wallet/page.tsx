@@ -14,9 +14,11 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
+import { useRafiq } from "@/app/components/rafiq/RafiqProvider";
 
 export default function WalletPage() {
   const router = useRouter();
+  const { openRafiq } = useRafiq();
   const { user, isInitialized } = useAuth();
 
   const [balance, setBalance] = useState<number>(0);
@@ -71,7 +73,7 @@ export default function WalletPage() {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: C.bg }}>
-      <TopBar location="Wallet & Tokens" onRafiq={() => router.push("/app/rafiq")} />
+      <TopBar location="Wallet & Tokens" onRafiq={() => openRafiq()} />
 
       <div
         style={{

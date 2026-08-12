@@ -971,6 +971,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/billing-recovery/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the AI billing recovery queue (admin)
+         * @description Returns unresolved AI billing token reservations with pagination and aggregate totals.
+         *     Reservations in PENDING status are the primary recovery candidates and are classified by
+         *     metadata status (METADATA_MISSING, METADATA_INVALID, or PENDING_REVIEW). Expired
+         *     reservations are flagged with isExpired. COMPLETED and RELEASED reservations are included
+         *     when explicitly filtered and are reported as RESOLVED in the queue listing; use the
+         *     inspect endpoint for per-reservation integrity assessment.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: "PENDING" | "COMPLETED" | "RELEASED";
+                    feature?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated recovery queue with aggregate token totals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/token-wallets": {
         parameters: {
             query?: never;
@@ -1114,7 +1182,7 @@ export interface paths {
                     page?: number;
                     limit?: number;
                     type?: "GRANT" | "CONSUME" | "REFUND" | "BONUS" | "ADJUSTMENT";
-                    source?: "CHAT" | "IMAGE" | "FILE_UPLOAD" | "OCR" | "VOICE" | "PURCHASE" | "ADMIN";
+                    source?: "CHAT" | "IMAGE" | "FILE_UPLOAD" | "OCR" | "VOICE" | "ITINERARY" | "PURCHASE" | "ADMIN";
                     dateFrom?: string;
                     dateTo?: string;
                     sortOrder?: "asc" | "desc";
@@ -1858,6 +1926,658 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/admin/rate-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List provider rate-card snapshots (admin only) */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: "DRAFT" | "ACTIVE" | "RETIRED";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated snapshot list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one provider rate-card snapshot by immutable version (admin only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Snapshot detail with engine-domain entries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Snapshot not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an empty DRAFT rate-card snapshot (admin only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        version: string;
+                        source: string;
+                        /** Format: date */
+                        generatedAt: string;
+                        /** Format: date */
+                        effectiveFrom?: string;
+                        /** Format: date */
+                        effectiveTo?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Draft created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Version already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/drafts/{version}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import engine-domain entries into a DRAFT snapshot (admin only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        source: string;
+                        /** Format: date */
+                        generatedAt: string;
+                        entries: Record<string, never>[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Entries imported */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Draft not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Snapshot is not a DRAFT (immutable) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/drafts/{version}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a single entry in a DRAFT snapshot (admin only)
+         * @description Validates the entry through the pure engine validator (strict Zod at
+         *     the boundary, unknown fields rejected; money as non-negative integer
+         *     strings converted to exact bigint), then creates one entry row in the
+         *     DRAFT snapshot. A duplicate (provider, model, tier) identity returns
+         *     400 RATE_CARD_ADMIN_DUPLICATE_IDENTITY. ACTIVE and RETIRED snapshots
+         *     are immutable (409).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Entry created; returns the snapshot metadata with entryCount */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error or duplicate identity */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Draft not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Snapshot is not a DRAFT (immutable) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/drafts/{version}/entries/{entryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a single entry from a DRAFT snapshot (admin only)
+         * @description Removes one entry row from the DRAFT snapshot. ACTIVE and RETIRED
+         *     snapshots are immutable (409). The entry must belong to the DRAFT
+         *     snapshot (404 otherwise).
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                    entryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Entry deleted; returns the snapshot metadata */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Draft or entry not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Snapshot is not a DRAFT (immutable) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Update a single entry in a DRAFT snapshot (admin only)
+         * @description Partial update (PATCH): only provided fields change. Scalar fields
+         *     replace; sub-objects (tokenRates, modalityRates, tts) replace wholesale
+         *     when provided; explicit null clears optional values. The merged entry
+         *     is re-validated through the pure engine validator. Changing the entry
+         *     to collide with another (provider, model, tier) identity in the same
+         *     DRAFT returns 400 RATE_CARD_ADMIN_DUPLICATE_IDENTITY.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                    entryId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Entry updated; returns the snapshot metadata */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error or duplicate identity */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Draft or entry not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Snapshot is not a DRAFT (immutable) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/admin/rate-cards/drafts/{version}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate a DRAFT snapshot against the pure engine mapper (admin only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Draft is publishable */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Draft is not publishable */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/{version}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish a DRAFT snapshot (transactional, overlap-checked; admin only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        effectiveFrom?: string;
+                        /** Format: date */
+                        effectiveTo?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Snapshot published (ACTIVE) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not a DRAFT or overlaps an ACTIVE snapshot */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/{version}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retire an ACTIVE snapshot (transactional; admin only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: date-time */
+                        retiredAt?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Snapshot retired (RETIRED) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not ACTIVE */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/rate-cards/{version}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clone a snapshot's pricing into a new DRAFT (atomic; admin only)
+         * @description Copies ALL pricing entries of the source snapshot into a brand-new
+         *     DRAFT under `newVersion`. Snapshot creation + entry copying happen in
+         *     ONE database transaction, so a failed copy rolls back completely. The
+         *     source is never modified, never retired, and its ACTIVE/RETIRED
+         *     lifecycle state is never copied. `newVersion` must differ from
+         *     `:version`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    version: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        newVersion: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Clone created as a DRAFT */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description newVersion equals the source version */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Source snapshot not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description newVersion already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/admin/payments": {
@@ -3455,6 +4175,11 @@ export interface components {
             criteriaType?: string;
             criteriaValue?: number | null;
         };
+        Role: {
+            id?: number;
+            name?: string;
+            permissions?: string[];
+        };
         AuditLog: {
             /** Format: uuid */
             id?: string;
@@ -3502,12 +4227,6 @@ export interface components {
             geocode?: {
                 [key: string]: unknown;
             } | null;
-        };
-        Role: {
-            id?: number;
-            name?: string;
-            /** Format: date-time */
-            createdAt?: string;
         };
     };
     responses: never;

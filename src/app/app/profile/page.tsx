@@ -12,7 +12,7 @@ import { journeysApi, type Journey } from "@/lib/api/journeys";
 import { walletApi, type TokenPackage } from "@/lib/api/wallet";
 import { useRouter } from "next/navigation";
 import { useDemoStore } from "@/lib/demoStore";
-import { buildProfileContext, buildRafiqUrl } from '@/lib/rafiq';
+import { buildProfileContext } from '@/lib/rafiq';
 import { AskRafiqButton } from '@/app/components/rafiq';
 
 const LEVEL_MAP = [
