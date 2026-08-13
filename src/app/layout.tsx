@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: "Rihla - AI Travel Companion",
   description:
     "Rihla is an AI-powered travel companion designed for international tourists in Egypt, offering personalized itineraries and local insights to enhance exploration and ensure a luxurious experience.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
