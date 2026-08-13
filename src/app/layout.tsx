@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth";
 import { LocationProvider } from "@/providers/LocationProvider";
 import { LocationMocker } from '@/app/components/ui/LocationMocker';
 import { TestHub } from '@/app/components/ui/TestHub';
+import RegisterSW from '@/app/components/ui/RegisterSW';
 
 export const metadata: Metadata = {
   title: "Rihla - AI Travel Companion",
@@ -32,6 +33,7 @@ export default function RootLayout({
             {children}
             {process.env.NODE_ENV === 'development' && <LocationMocker />}
             {process.env.NODE_ENV === 'development' && <TestHub />}
+            <RegisterSW />
           </LocationProvider>
         </AuthProvider>
       </body>
