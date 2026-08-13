@@ -1,7 +1,9 @@
 {
   "name": "Rihla - AI Travel Companion",
   "short_name": "Rihla",
+  "id": "/",
   "start_url": "/",
+  "lang": "en",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#C19A6B",
