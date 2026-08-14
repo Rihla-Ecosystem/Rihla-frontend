@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { C } from "@/lib/constants/theme";
 import { Glyph, GlyphFull, Geom } from "@/app/components/atoms";
 import {
   MapPin, Bell, Navigation, Wind, Thermometer, Sun, Shield, Search, Map, User, AlertTriangle, Star, Clock, Camera,
-  ArrowRight, Globe, Phone, CreditCard, Wifi, CheckCircle, X, ChevronLeft, ChevronRight, Menu,
+  ArrowRight, Globe, Phone, CreditCard, Wifi, CheckCircle, X, ChevronLeft, ChevronRight,
   Home, Compass, Settings, Wallet, LogOut, Zap, Filter, SlidersHorizontal, BookOpen, Send, Mic, ChevronDown, RefreshCw, Ticket, Banknote, Landmark, Trophy
 } from "lucide-react";
 import { ShellNavProvider, useShellNav } from "./shell-nav";
@@ -68,8 +67,14 @@ function ShellContent({
           </div>
         )}
         {onToggleCollapse && (
-          <button onClick={onToggleCollapse} style={{ background: "none", border: "none", color: `${C.limestone}40`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 6, padding: "8px 10px", borderRadius: 8 }}>
-            <Menu size={16} strokeWidth={2}/>{!collapsed && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px" }}>Collapse</span>}
+          <button
+            onClick={onToggleCollapse}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            style={{ background: "none", border: "none", color: `${C.limestone}55`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 8, padding: "8px 10px", borderRadius: 8, width: "100%", transition: "color 0.15s" }}
+          >
+            {collapsed ? <ChevronRight size={16} strokeWidth={2}/> : <ChevronLeft size={16} strokeWidth={2}/>}
+            {!collapsed && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "12px" }}>Collapse</span>}
           </button>
         )}
         <button onClick={onLogout} style={{ background: "none", border: "none", color: `${C.limestone}35`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 6, padding: "8px 10px", borderRadius: 8 }}>
@@ -89,8 +94,7 @@ export function AppShell({ activePage, setPage, go, children }: { activePage: st
 }
 
 function AppShellInner({ activePage, setPage, go, children }: { activePage: string; setPage: (s: string) => void; go: (s: string) => void; children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const { open, setOpen } = useShellNav();
+  const { open, setOpen, collapsed, toggleCollapsed } = useShellNav();
   const { user, logout } = useAuth();
 
   const isAdmin = user?.role?.name?.toLowerCase() === "admin" || user?.roleId === 2;
@@ -116,16 +120,16 @@ function AppShellInner({ activePage, setPage, go, children }: { activePage: stri
   return (
     <div style={{ display: "flex", height: "100vh", background: C.bg, overflow: "hidden" }}>
       <aside className="hidden lg:flex" style={{ width: collapsed ? 64 : 220, background: "#111009", flexDirection: "column", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
-        <ShellContent {...contentProps} collapsed={collapsed} onToggleCollapse={() => setCollapsed(c => !c)} />
+        <ShellContent {...contentProps} collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
       </aside>
 
       {open && (
-        <div onClick={() => setOpen(false)} className="lg:hidden" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 40, backdropFilter: "blur(2px)" }} />
+        <div onClick={() => setOpen(false)} className="lg:hidden" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9998, backdropFilter: "blur(2px)" }} />
       )}
 
       <aside
         className="lg:hidden"
-        style={{ position: "fixed", top: 0, bottom: 0, left: 0, width: 240, background: "#111009", zIndex: 45, flexDirection: "column", transition: "translate 0.25s ease", translate: open ? "0" : "-100%", willChange: "translate", boxShadow: "4px 0 24px rgba(0,0,0,0.4)" }}
+        style={{ position: "fixed", top: 0, bottom: 0, left: 0, width: 240, background: "#111009", zIndex: 10000, flexDirection: "column", transition: "translate 0.25s ease", translate: open ? "0" : "-100%", willChange: "translate", boxShadow: "4px 0 24px rgba(0,0,0,0.4)" }}
       >
         <button onClick={() => setOpen(false)} style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", color: `${C.limestone}45`, cursor: "pointer", zIndex: 2 }} aria-label="Close menu">
           <X size={18} strokeWidth={2}/>

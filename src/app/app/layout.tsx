@@ -8,6 +8,7 @@ import { syncAppSettingsFromServer } from '@/lib/settingsStore';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ToastProvider } from '@/components/ToastProvider';
 import RafiqProvider from '@/app/components/rafiq/RafiqProvider';
+import { SensitiveAreaNotice } from '@/app/components/safety/SensitiveAreaNotice';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -69,6 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <ToastProvider>
       <ErrorBoundary>
         <RafiqProvider>
+          <SensitiveAreaNotice />
           <AppShell activePage={activePage} setPage={setPage} go={go}>
             {children}
           </AppShell>

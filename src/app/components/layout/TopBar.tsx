@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Search, RefreshCw, Menu } from "lucide-react";
+import { MapPin, Search, RefreshCw, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { C } from "@/lib/constants/theme";
 import { useRouter } from 'next/navigation';
 import { useLocation, useLocationLabel } from "@/providers/LocationProvider";
@@ -85,6 +85,10 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
           .rihla-top-search { display: none !important; }
           .rihla-top-content { padding: 0 14px !important; }
           .rihla-top-title { display: none !important; }
+          .rihla-top-divider { display: none !important; }
+          .rihla-top-loc { display: none !important; }
+          .rihla-top-brand-sub { display: none !important; }
+          .rihla-top-brand-glyph { transform: scale(0.72); transform-origin: left center; margin-right: -12px; }
         }
       `}</style>
 
@@ -187,24 +191,34 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
           {/* Brand + page title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
             <button
-              className="lg:hidden"
+              className="hidden lg:flex"
+              onClick={shellNav.toggleCollapsed}
+              aria-label={shellNav.collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={shellNav.collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              style={{ background: 'rgba(245,239,224,0.08)', border: '1px solid rgba(245,239,224,0.18)', color: C.limestone, cursor: 'pointer', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, borderRadius: 10, flexShrink: 0, transition: 'transform 0.2s ease' }}
+            >
+              {shellNav.collapsed ? <ChevronRight size={18} strokeWidth={2}/> : <ChevronLeft size={18} strokeWidth={2}/>}
+            </button>
+            <button
+              className="flex lg:hidden"
               onClick={() => shellNav.toggle()}
               aria-label="Open navigation menu"
-              style={{ background: 'rgba(245,239,224,0.08)', border: '1px solid rgba(245,239,224,0.18)', color: C.limestone, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, borderRadius: 10, flexShrink: 0 }}
+              style={{ background: 'rgba(245,239,224,0.08)', border: '1px solid rgba(245,239,224,0.18)', color: C.limestone, cursor: 'pointer', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, borderRadius: 10, flexShrink: 0 }}
             >
               <Menu size={18} strokeWidth={2}/>
             </button>
             <button
+              className="rihla-top-brand"
               onClick={() => router.push('/app')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, padding: 0, flexShrink: 0 }}
             >
-              <Glyph size={54} light />
+              <span className="rihla-top-brand-glyph"><Glyph size={54} light /></span>
               <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
                 <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fontWeight: 500, color: C.limestone, letterSpacing: '0.02em' }}>رحلة Rihla</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: `${C.sand}90`, marginTop: 3 }}>AI Travel Companion</span>
+                <span className="rihla-top-brand-sub" style={{ fontFamily: "'Inter',sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: `${C.sand}90`, marginTop: 3 }}>AI Travel Companion</span>
               </span>
             </button>
-            <span style={{ width: 1, height: 22, background: `${C.limestone}18`, flexShrink: 0 }} />
+            <span className="rihla-top-divider" style={{ width: 1, height: 22, background: `${C.limestone}18`, flexShrink: 0 }} />
 <span
               className="rihla-top-title"
               style={{
@@ -223,6 +237,7 @@ export function TopBar({ location: locationProp, onRafiq }: { location?: string;
 
           {/* Location chip */}
           <span
+            className="rihla-top-loc"
             title={liveLocation}
             style={{
               display: 'inline-flex',

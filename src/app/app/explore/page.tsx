@@ -23,7 +23,7 @@ import {
 import { TopBar } from '@/app/components/layout/TopBar';
 import { geoService } from '@/services/geoService';
 import { geoApi, googleMapsDirectionsUrl, googleMapsTripUrl, HERITAGE_CATEGORIES } from '@/lib/api/geo';
-import type { GeoJsonGeometry, Site as GeoSite } from '@/lib/api/geo-types';
+import type { GeoJsonGeometry, Site as GeoSite, ZonePolygon, LegalGuide } from '@/lib/api/geo-types';
 import { useLocation, useLocationLabel, formatCoords } from '@/providers/LocationProvider';
 import { ALL_SITES, type RihlaSite } from '@/app/data/rihla-data';
 import { monumentToSite } from '@/app/data/monument-catalog';
@@ -71,6 +71,24 @@ const InteractiveMap = dynamic(
 const RADIUS_OPTIONS = [1000, 5000, 10000, 25000] as const;
 const DEFAULT_LOCATION = { lat: 30.0444, lon: 31.2357 };
 const MAX_TRIP_STOPS = 12;
+
+// GeoContext's merged multi-category POI response can carry colliding numeric
+// ids (each category query yields its own 1,2,3…), which broke React keys like
+// `key={site.id}`. Renumber duplicate ids so every site stays unique.
+function ensureUniqueSiteIds(sites: RihlaSite[]): RihlaSite[] {
+  const seen = new Set<number>();
+  return sites.map((s, i) => {
+    const id = typeof s.id === 'number' ? s.id : i + 1;
+    if (seen.has(id)) {
+      let next = Math.max(...seen, 0) + 1;
+      while (seen.has(next)) next += 1;
+      seen.add(next);
+      return { ...s, id: next };
+    }
+    seen.add(id);
+    return s;
+  });
+}
 
 // Approximate centroid per governorate — used to make the static fallback
 // location-aware (distances, radius filtering, map markers) when the backend
@@ -227,6 +245,9 @@ export default function ExplorePage() {
   const [showAllRecommendations, setShowAllRecommendations] = useState(false);
   const [recommendationsCollapsed, setRecommendationsCollapsed] = useState(false);
   const safetyViewedRef = useRef<string | null>(null);
+  const [zonePolygons, setZonePolygons] = useState<ZonePolygon[]>([]);
+  const [selectedZoneGuide, setSelectedZoneGuide] = useState<LegalGuide | null>(null);
+  const [zoneGuideLoading, setZoneGuideLoading] = useState(false);
 
   // Selection / routing
   const [selectedSite, setSelectedSite] = useState<RihlaSite | null>(null);
@@ -297,6 +318,22 @@ export default function ExplorePage() {
       active = false;
     };
   }, []);
+
+  // Load anonymous sensitive-zone polygons around the search origin (1 km).
+  useEffect(() => {
+    let active = true;
+    geoApi
+      .getZonePolygons(searchOrigin.lat, searchOrigin.lon, 1000)
+      .then((res) => {
+        if (active) setZonePolygons(res.zones || []);
+      })
+      .catch(() => {
+        if (active) setZonePolygons([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [searchOrigin.lat, searchOrigin.lon]);
 
   useEffect(() => {
     let active = true;
@@ -430,12 +467,12 @@ export default function ExplorePage() {
         const mapped = rawPois.map((p: any, idx: number) =>
           mapApiPoiToRihlaSite(p, searchOrigin.lat, searchOrigin.lon, idx)
         );
-        setSites(enrichSites(mapped));
+        setSites(enrichSites(ensureUniqueSiteIds(mapped)));
       } else if (searchActive) {
         setSites([]);
       } else {
         const fallback = localizeFallback(monuments, searchOrigin, isAllEgypt ? '' : governorate, category, radius, isAllEgypt ? false : hasExplicitOrigin);
-        setSites(enrichSites(fallback));
+        setSites(enrichSites(ensureUniqueSiteIds(fallback)));
       }
     } catch (err: any) {
       console.warn('Explore page data fetch notice:', err?.message || err);
@@ -443,7 +480,7 @@ export default function ExplorePage() {
         setSites([]);
       } else {
         const fallback = localizeFallback(monuments, searchOrigin, isAllEgypt ? '' : governorate, category, radius, isAllEgypt ? false : hasExplicitOrigin);
-        setSites(enrichSites(fallback));
+        setSites(enrichSites(ensureUniqueSiteIds(fallback)));
       }
     } finally {
       setLoading(false);
@@ -562,6 +599,16 @@ export default function ExplorePage() {
   }, []);
 
   // Unify monument (🎫) markers into the same selection/popup flow
+  const handleZoneClick = useCallback((zone: ZonePolygon) => {
+    setZoneGuideLoading(true);
+    setSelectedZoneGuide(null);
+    geoApi
+      .getZoneLaw(zone.zone_type, true)
+      .then((g) => setSelectedZoneGuide(g))
+      .catch(() => setSelectedZoneGuide(null))
+      .finally(() => setZoneGuideLoading(false));
+  }, []);
+
   const handleTicketSelect = useCallback(
     (t: MapTicketMarker) => {
       const m =
@@ -1266,6 +1313,8 @@ export default function ExplorePage() {
         onClusteredChange={setClusterPins}
         onSelectTicket={handleTicketSelect}
         governorateFocusPoints={governorateFocusPoints}
+        zonePolygons={zonePolygons}
+        onZoneClick={handleZoneClick}
       />
 
       {filterCard}
@@ -1450,6 +1499,17 @@ export default function ExplorePage() {
            bottomOffset={bannerStack ? 100 : 16}
         />
       )}
+
+      {(selectedZoneGuide || zoneGuideLoading) && (
+        <ZoneLawPopup
+          guide={selectedZoneGuide}
+          loading={zoneGuideLoading}
+          onClose={() => {
+            setSelectedZoneGuide(null);
+            setZoneGuideLoading(false);
+          }}
+        />
+      )}
     </div>
   );
 
@@ -1460,6 +1520,84 @@ export default function ExplorePage() {
         onRafiq={() => openRafiq()}
       />
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#FAF7F0' }}>{mapLayer}</div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Zone law & guidance popup — shown when a sensitive-area polygon is tapped.
+// Zone identity is never revealed; only generic guidance + RAG/AI legal rules.
+// ---------------------------------------------------------------------------
+function ZoneLawPopup({ guide, loading, onClose }: {
+  guide: LegalGuide | null;
+  loading: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(17,16,9,0.6)',
+        backdropFilter: 'blur(2px)',
+        zIndex: 1200,
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        padding: 16,
+        fontFamily: "'Inter',sans-serif",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: C.surface.card,
+          borderRadius: 16,
+          maxWidth: 460,
+          width: '100%',
+          maxHeight: '70vh',
+          overflowY: 'auto',
+          padding: '18px 20px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          borderTop: `4px solid ${C.signalRed}`,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: C.nile }}>
+            {loading ? 'Loading guidance…' : (guide?.title || 'Area guidance')}
+          </h3>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', color: '#8B7E6A', cursor: 'pointer' }}>
+            <X size={18} strokeWidth={2.2} />
+          </button>
+        </div>
+
+        {!loading && guide?.advice && (
+          <div style={{ background: `${C.signalRed}10`, borderLeft: `3px solid ${C.signalRed}`, borderRadius: 8, padding: '10px 12px', fontSize: 12.5, color: '#5C5346', marginBottom: 12 }}>
+            {guide.advice}
+          </div>
+        )}
+
+        {!loading &&
+          guide?.rules?.map((rule, i) => (
+            <div key={i} style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: C.copper, marginBottom: 4 }}>{rule.heading}</div>
+              {rule.points.map((p, j) => (
+                <p key={j} style={{ margin: '0 0 5px', fontSize: 12, lineHeight: 1.5, color: '#5C5346' }}>• {p}</p>
+              ))}
+            </div>
+          ))}
+
+        {!loading && !!guide?.citations?.length && (
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(27,26,23,0.12)', fontSize: 11, color: '#8B7E6A' }}>
+            Sources: {guide.citations.join(', ')}
+          </div>
+        )}
+
+        <p style={{ marginTop: 10, fontSize: 10.5, color: '#8B7E6A', fontStyle: 'italic' }}>
+          For your safety, the specific zone is not identified. Rules may vary — follow onsite authority.
+        </p>
+      </div>
     </div>
   );
 }

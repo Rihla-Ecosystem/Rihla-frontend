@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from '@/providers/LocationProvider';
 import type { RihlaSite } from '@/app/data/rihla-data';
-import type { GeoJsonGeometry } from '@/lib/api/geo-types';
+import type { GeoJsonGeometry, ZonePolygon } from '@/lib/api/geo-types';
 import { C } from '@/lib/constants/theme';
 import { MapPin, Navigation, RefreshCw, AlertTriangle, Compass, Layers, Star, LocateFixed } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
@@ -73,6 +73,8 @@ interface InteractiveMapProps {
   clustered?: boolean;
   onClusteredChange?: (v: boolean) => void;
   governorateFocusPoints?: { lat: number; lon: number }[] | null;
+  zonePolygons?: ZonePolygon[];
+  onZoneClick?: (zone: ZonePolygon) => void;
 }
 
 export function InteractiveMap({
@@ -103,6 +105,8 @@ export function InteractiveMap({
   clustered,
   onClusteredChange,
   governorateFocusPoints = null,
+  zonePolygons = [],
+  onZoneClick,
 }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapInstance = useRef<any>(null);
@@ -114,6 +118,7 @@ export function InteractiveMap({
   const boundaryLayerRef = useRef<any>(null);
   const tripLayerRef = useRef<any>(null);
   const ticketLayerRef = useRef<any>(null);
+  const zoneLayerRef = useRef<any>(null);
 
   const { lat: userLat, lon: userLon, status: locStatus, requestLocation } = useLocation();
   const [isClustered, setIsClustered] = useState(false);
@@ -195,6 +200,9 @@ export function InteractiveMap({
 
       const ticketLayer = L.layerGroup().addTo(map);
       ticketLayerRef.current = ticketLayer;
+
+      const zoneLayer = L.layerGroup().addTo(map);
+      zoneLayerRef.current = zoneLayer;
 
       setMapReady(true);
     }
@@ -709,6 +717,53 @@ export function InteractiveMap({
       cancelled = true;
     };
   }, [mapReady, ticketMarkers, onSelectTicket]);
+
+  // Render anonymous sensitive-zone polygons (red/amber/teal by severity) —
+  // identity of each zone is deliberately never shown.
+  const ZONE_STYLE: Record<string, { fill: string; weight: number }> = {
+    critical: { fill: '#B23A2E', weight: 2 },
+    warning: { fill: '#D98E2C', weight: 1.5 },
+    info: { fill: '#2E9C93', weight: 1.5 },
+  };
+
+  const clickHandlerRef = useRef(onZoneClick);
+  clickHandlerRef.current = onZoneClick;
+
+  useEffect(() => {
+    const map = leafletMapInstance.current;
+    if (!mapReady || !map || !zoneLayerRef.current) return;
+    let cancelled = false;
+    (async () => {
+      const L = (await import('leaflet')).default;
+      if (cancelled) return;
+      const layer = zoneLayerRef.current;
+      layer.clearLayers();
+
+      if (zonePolygons.length === 0) return;
+
+      // Draw fill zones (interactive — these cover the polygon area and catch
+      // clicks) first, then a thin dashed outline purely as a visual edge.
+      zonePolygons.forEach((zone) => {
+        const style = ZONE_STYLE[zone.severity] ?? ZONE_STYLE.warning;
+        const fillLayer = L.geoJSON(zone.geometry as any, {
+          style: { color: style.fill, weight: style.weight, fillColor: style.fill, fillOpacity: 0.28, dashArray: '6 5' },
+        });
+        fillLayer.on('click', (e: any) => {
+          if (clickHandlerRef.current) clickHandlerRef.current(zone);
+          else map.panTo(e.latlng, { animate: true });
+        });
+        fillLayer.addTo(layer);
+        L.geoJSON(zone.geometry as any, {
+          style: { color: style.fill, weight: style.weight + 1, fill: false, dashArray: '6 5' },
+          interactive: false,
+        }).addTo(layer);
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady, zonePolygons]);
 
   return (
     <div

@@ -16,3 +16,35 @@
 .spin {
   animation: spin 1s linear infinite;
 }
+
+/* ---------------------------------------------------------------------------
+ * Custom scrollbar — Rihla palette (nile track stitch with copper thumb).
+ * --------------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(200, 131, 26, 0.55) rgba(15, 61, 62, 0.08);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(15, 61, 62, 0.06);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(200, 131, 26, 0.65), rgba(178, 58, 46, 0.55));
+  border-radius: 999px;
+  border: 2px solid rgba(245, 239, 224, 0.5);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #C8831A, #B23A2E);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

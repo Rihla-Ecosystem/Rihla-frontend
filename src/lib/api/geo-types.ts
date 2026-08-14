@@ -56,3 +56,46 @@ export interface GeoRoute {
   distanceMeters: number;
   durationSeconds: number;
 }
+
+export type ZoneClass = 'restricted' | 'caution' | 'protected';
+export type ZoneSeverity = 'critical' | 'warning' | 'info';
+
+/** Anonymous area notice — identity of the zone is deliberately never exposed. */
+export interface AreaNotice {
+  active: boolean;
+  class?: ZoneClass;
+  severity?: ZoneSeverity;
+  distance_meters?: number;
+  guide_key: string;
+  legal_keys?: Array<'drone' | 'photography' | 'entry' | 'safety'>;
+}
+
+/** Anonymous polygon for the map overlay — class + severity + geometry only. */
+export interface ZonePolygon {
+  zone_type: ZoneClass;
+  severity: ZoneSeverity;
+  geometry: GeoJsonGeometry;
+}
+
+export interface ZonesResult {
+  lat: number;
+  lon: number;
+  radius_meters: number;
+  zones: ZonePolygon[];
+}
+
+export interface LegalRule {
+  heading: string;
+  points: string[];
+}
+
+/** Egyptian laws/guides for a zone class (RAG context + optional AI advice). */
+export interface LegalGuide {
+  source: 'rag' | 'ai';
+  class_name: ZoneClass;
+  title: string;
+  summary: string;
+  rules: LegalRule[];
+  citations: string[];
+  advice?: string | null;
+}

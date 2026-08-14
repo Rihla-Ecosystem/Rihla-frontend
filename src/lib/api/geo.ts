@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api";
-import type { GeoGovernorate, GeoPoi, Site } from "./geo-types";
+import type { GeoGovernorate, GeoPoi, Site, AreaNotice, ZonesResult, LegalGuide, ZoneClass } from "./geo-types";
 
 export const HERITAGE_CATEGORIES = [
   "archaeological",
@@ -236,6 +236,49 @@ categories: categories?.join(",") || HERITAGE_CATEGORIES.join(","),
       },
     });
     return ((data || {}).pois || []).map(toSite);
+  },
+
+  /** Anonymous area notice for the current position (class + severity only). */
+  getAreaNotice: async (
+    lat: number,
+    lon: number,
+    radius?: number
+  ): Promise<AreaNotice> => {
+    const { data } = await apiClient.get<AreaNotice>("/geo/notice", {
+      params: { lat, lon, radius },
+    });
+    return (
+      data || { active: false, guide_key: "" }
+    );
+  },
+
+  /** Anonymous zone polygons within radius for the map overlay. */
+  getZonePolygons: async (
+    lat: number,
+    lon: number,
+    radius?: number
+  ): Promise<ZonesResult> => {
+    const { data } = await apiClient.get<ZonesResult>("/geo/zones", {
+      params: { lat, lon, radius },
+    });
+    return (
+      data || { lat, lon, radius_meters: radius ?? 0, zones: [] }
+    );
+  },
+
+  /** Egyptian laws/guides for a zone class (RAG + optional AI advice). */
+  getZoneLaw: async (
+    zoneClass: ZoneClass,
+    synthesize = false
+  ): Promise<LegalGuide | null> => {
+    try {
+      const { data } = await apiClient.get<LegalGuide>("/geo/law", {
+        params: { class: zoneClass, synthesize: synthesize ? "1" : "0" },
+      });
+      return data;
+    } catch {
+      return null;
+    }
   },
 };
 
