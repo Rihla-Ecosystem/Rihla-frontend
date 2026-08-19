@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { C } from '@/lib/constants/theme';
 import { Glyph } from '@/app/components/atoms';
-import { Send, Mic, Image as ImageIcon, Square, Volume2, VolumeX, X, Sparkles, AlertTriangle } from 'lucide-react';
+import { Send, Mic, Image as ImageIcon, Square, Volume2, VolumeX, X, Sparkles, AlertTriangle, MapPin } from 'lucide-react';
 import { useLocation } from '@/providers/LocationProvider';
 import { chatService, type Persona } from '@/services/chatService';
 import { rafiqOfflineAnswer } from '@/app/data/rafiq-offline';
@@ -14,6 +14,12 @@ import {
 } from '@/lib/rafiq';
 import type { RafiqContext } from '@/lib/rafiq';
 import { walletApi, InsufficientBalanceError } from '@/lib/api/wallet';
+import {
+  itineraryApi,
+  stripStructuredComment,
+  type ItineraryStructured,
+} from '@/lib/api/itinerary';
+import { ItineraryMapCard } from '@/app/components/rafiq/ItineraryMapCard';
 
 type RafiqMsg = {
   id: string;
@@ -23,6 +29,7 @@ type RafiqMsg = {
   follow?: string[];
   alert?: { level: 'info' | 'warn' | 'danger'; text: string };
   audioUrl?: string;
+  structured?: ItineraryStructured | null;
   ts: string;
 };
 
@@ -88,6 +95,9 @@ function Bubble({ msg, speaking, onToggleAudio }: { msg: RafiqMsg; speaking: boo
         <div style={{ background: 'linear-gradient(145deg,#FAF7F0,#F5EDD8)', border: `1px solid ${C.sand}22`, borderRadius: '4px 14px 14px 14px', padding: '12px 14px' }}>
           <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '9px', fontWeight: 700, color: C.copper, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>◈ Rafiq · {msg.ts}</div>
           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '14px', color: C.nile, lineHeight: 1.7, margin: 0, wordBreak: 'break-word' }}>{rendered}</p>
+          {msg.structured?.places?.length ? (
+            <ItineraryMapCard places={msg.structured.places} />
+          ) : null}
           {msg.audioUrl && (
             <div style={{ marginTop: 9, paddingTop: 9, borderTop: '1px solid rgba(27,26,23,0.07)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <button onClick={() => onToggleAudio(msg)} title={speaking ? 'Stop' : 'Play reply'} style={{ background: speaking ? `${C.alertAmber}18` : C.nile, border: 'none', borderRadius: 99, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -138,6 +148,12 @@ export default function RafiqModal({ open, onClose, context: contextProp, initia
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showTripForm, setShowTripForm] = useState(false);
+  const [tripInterests, setTripInterests] = useState('');
+  const [tripDays, setTripDays] = useState(3);
+  const [tripBudget, setTripBudget] = useState<'budget' | 'mid' | 'luxury'>('mid');
+  const [tripCities, setTripCities] = useState('');
+  const [tripLoading, setTripLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -354,6 +370,77 @@ export default function RafiqModal({ open, onClose, context: contextProp, initia
     if (q) send(q);
   };
 
+  const handlePlanTrip = async () => {
+    const interests = tripInterests
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const cities = tripCities
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (interests.length === 0 || loading || tripLoading) return;
+    const ctxInterests = contextRef.current?.source === 'profile' ? contextRef.current.interests ?? [] : [];
+    const ctxStyle = contextRef.current?.source === 'profile' ? contextRef.current.travelStyle ?? 'cultural' : 'cultural';
+    const requestInterests = [...new Set([...interests, ...ctxInterests])].slice(0, 8);
+    const userMsg: RafiqMsg = {
+      id: `u_${Date.now()}`,
+      role: 'user',
+      text: `✈️ Plan my trip — interests: ${requestInterests.join(', ')}, ${tripDays} day${tripDays > 1 ? 's' : ''}, ${tripBudget}${cities.length ? `, cities: ${cities.join(', ')}` : ''}`,
+      ts: 'Just now',
+    };
+    setMsgs((m) => [...m, userMsg]);
+    setShowTripForm(false);
+    setLoading(true);
+    setTripLoading(true);
+    setError(null);
+    setShowUpgrade(false);
+    const rafiqMsgId = `r_${Date.now()}`;
+    setMsgs((m) => [...m, { id: rafiqMsgId, role: 'rafiq', text: '', ts: 'Just now' }]);
+    try {
+      const result = await itineraryApi.generate({
+        interests: requestInterests,
+        days: tripDays,
+        budget: tripBudget,
+        style: ctxStyle,
+        cities: cities.length ? cities : undefined,
+        base_currency: 'EGP',
+      });
+      setMsgs((m) =>
+        m.map((msg) =>
+          msg.id === rafiqMsgId
+            ? {
+                ...msg,
+                text: stripStructuredComment(result.itinerary),
+                structured: result.structured ?? null,
+              }
+            : msg
+        )
+      );
+      void loadBalance();
+    } catch (err: any) {
+      setMsgs((m) => m.filter((msg) => msg.id !== rafiqMsgId));
+      if (err instanceof InsufficientBalanceError) {
+        setShowUpgrade(true);
+        setError('Not enough tokens. Top up your wallet to plan your trip.');
+        return;
+      }
+      const errMsg: RafiqMsg = {
+        id: `r_${Date.now()}`,
+        role: 'rafiq',
+        text: `I couldn't plan that itinerary just now — ${err?.message || 'try again in a moment.'}`,
+        alert: { level: 'warn', text: 'Itinerary planning failed' },
+        ts: 'Just now',
+      };
+      setMsgs((m) => [...m, errMsg]);
+      setError(err?.message || 'Failed to plan trip');
+    } finally {
+      setLoading(false);
+      setTripLoading(false);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    }
+  };
+
   if (!open) return null;
 
   const label = contextProp ? contextualLabel(contextProp) : 'Ask Rafiq';
@@ -450,7 +537,77 @@ export default function RafiqModal({ open, onClose, context: contextProp, initia
               {t}
             </span>
           ))}
+          <span
+            onClick={() => { setShowTripForm((v) => !v); }}
+            style={{ fontFamily: "'Inter',sans-serif", fontSize: '11px', background: showTripForm ? C.faience : C.limestone, border: `1.5px solid ${showTripForm ? `${C.faience}44` : `${C.solarBright}55`}`, borderRadius: 99, padding: '4px 11px', color: showTripForm ? C.limestone : C.faience, cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5 }}
+          >
+            {showTripForm ? <X size={10} strokeWidth={2.5} /> : <MapPin size={10} strokeWidth={2} />}
+            {showTripForm ? 'Cancel plan' : 'Plan my trip'}
+          </span>
         </div>
+
+        {/* Inline trip-plan form */}
+        {showTripForm && (
+          <div style={{ padding: '0 20px 10px', flexShrink: 0 }}>
+            <div style={{ background: C.limestone, border: `1px solid ${C.nile}20`, borderRadius: 12, padding: '12px', boxShadow: '0 4px 14px rgba(27,26,23,0.06)' }}>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '14px', fontWeight: 600, color: C.nile, marginBottom: 8 }}>
+                ✈️ Plan your trip in Egypt
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontFamily: "'Inter',sans-serif", fontSize: '10.5px', fontWeight: 600, color: '#A89880' }}>Interests (comma-separated)</label>
+                  <input
+                    value={tripInterests}
+                    onChange={(e) => setTripInterests(e.target.value)}
+                    placeholder="history, food, photography…"
+                    style={{ border: `1px solid ${C.nile}22`, borderRadius: 8, padding: '7px 10px', fontSize: '12.5px', fontFamily: "'Inter',sans-serif", outline: 'none', background: '#FFFFFF', color: C.basalt }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                    <label style={{ fontFamily: "'Inter',sans-serif", fontSize: '10.5px', fontWeight: 600, color: '#A89880' }}>Days</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={14}
+                      value={tripDays}
+                      onChange={(e) => setTripDays(Math.max(1, Math.min(14, Number(e.target.value) || 1)))}
+                      style={{ border: `1px solid ${C.nile}22`, borderRadius: 8, padding: '7px 10px', fontSize: '12.5px', fontFamily: "'Inter',sans-serif", outline: 'none', background: '#FFFFFF', color: C.basalt }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1.4 }}>
+                    <label style={{ fontFamily: "'Inter',sans-serif", fontSize: '10.5px', fontWeight: 600, color: '#A89880' }}>Budget</label>
+                    <select
+                      value={tripBudget}
+                      onChange={(e) => setTripBudget(e.target.value as 'budget' | 'mid' | 'luxury')}
+                      style={{ border: `1px solid ${C.nile}22`, borderRadius: 8, padding: '7px 10px', fontSize: '12.5px', fontFamily: "'Inter',sans-serif", outline: 'none', background: '#FFFFFF', color: C.basalt }}
+                    >
+                      <option value="budget">Budget</option>
+                      <option value="mid">Mid-range</option>
+                      <option value="luxury">Luxury</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontFamily: "'Inter',sans-serif", fontSize: '10.5px', fontWeight: 600, color: '#A89880' }}>Cities (optional, comma-separated)</label>
+                  <input
+                    value={tripCities}
+                    onChange={(e) => setTripCities(e.target.value)}
+                    placeholder="Cairo, Luxor, Aswan…"
+                    style={{ border: `1px solid ${C.nile}22`, borderRadius: 8, padding: '7px 10px', fontSize: '12.5px', fontFamily: "'Inter',sans-serif", outline: 'none', background: '#FFFFFF', color: C.basalt }}
+                  />
+                </div>
+                <button
+                  onClick={handlePlanTrip}
+                  disabled={!tripInterests.trim() || loading || tripLoading}
+                  style={{ background: tripInterests.trim() && !loading ? C.nile : C.limestoneDark, color: tripInterests.trim() && !loading ? C.limestone : '#A89880', border: 'none', borderRadius: 9, padding: '9px 12px', fontSize: '12px', fontWeight: 700, fontFamily: "'Inter',sans-serif", cursor: tripInterests.trim() && !loading ? 'pointer' : 'default' }}
+                >
+                  {tripLoading ? 'Planning your trip…' : 'Generate itinerary'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Input */}
         <div style={{ padding: '0 20px 18px', flexShrink: 0 }}>
