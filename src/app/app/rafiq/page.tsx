@@ -460,7 +460,11 @@ function RafiqPageContent() {
     setIdentifying(true);
     setError(null);
     try {
-      const result = await chatService.identify(file, { lat: lat ?? undefined, lon: lon ?? undefined });
+      const result = await chatService.identify(file, {
+        lat: lat ?? undefined,
+        lon: lon ?? undefined,
+        conversationId: conversationId || undefined,
+      });
       setInput(result.name);
     } catch (err: any) {
       setError(err?.message || "Image identification failed. Please try again.");

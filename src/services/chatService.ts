@@ -275,13 +275,14 @@ export const chatService = {
 
   identify: async (
     file: File,
-    context?: { lat?: number; lon?: number; radius?: number }
+    context?: { lat?: number; lon?: number; radius?: number; conversationId?: string }
   ): Promise<IdentifyResult> => {
     const formData = new FormData();
     formData.append("image", file);
     if (context?.lat !== undefined) formData.append("lat", String(context.lat));
     if (context?.lon !== undefined) formData.append("lon", String(context.lon));
     if (context?.radius !== undefined) formData.append("radius", String(context.radius));
+    if (context?.conversationId) formData.append("conversation_id", context.conversationId);
 
     const requestHeaders = new Headers({
       ...authHeaders(),
